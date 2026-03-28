@@ -1,0 +1,15 @@
+# Knowledge Base — MegaSimulator
+
+This folder contains formalized business rules, formulas, test vectors and source citations used by MegaSimulator. Each domain has a human-readable specification and machine-friendly formula entries.
+
+Structure
+- `loans.md` — loan product rules, amortization formulas, conventions.
+- `payroll.md` — salary, social charges, gross↔net rules and cases.
+- `insurance.md` — insurance premium rules and product-specific notes.
+- `retirement.md` — pension projection rules and assumptions.
+- `formula-schema.md` — schema for documenting formulas (JSON/Markdown).
+
+Guidelines
+- Each formula entry must include: `id`, `name`, `domain`, `description`, `inputs`, `outputs`, `units`, `formula` (text + canonical form), `source` (link), and `testVectors`.
+- Test vectors should cover edge cases and typical use cases with expected outputs.
+- Changes require source citation and test updates.

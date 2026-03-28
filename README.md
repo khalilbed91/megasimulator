@@ -51,6 +51,11 @@ We'll keep a dedicated folder `docs/knowledge-base/` where each domain (loans, i
 2. Install dependencies (per-app instructions will follow).
 3. Run unit tests for `packages/sim-core`.
 
+Or use the provided launch profile (sets local Postgres/Redis connection strings and enables Swagger):
+
+```powershell
+dotnet run --project src/Api --launch-profile LocalWithDeps
+```
 ## Contribution & Governance
 
 - All formula changes must include source links and test vectors.

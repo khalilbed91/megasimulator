@@ -1,0 +1,170 @@
+# Crédits (Loans) — Règles, formules et spécifications (France, 2026)
+
+## Objectif
+
+Fournir la logique métier et les formules nécessaires pour simuler les crédits immobiliers, personnels et auto en France (2026). Inclut : formule d'amortissement, règles HCSF (endettement), assurance emprunteur, contrôle du taux d'usure, calcul inverse de capacité d'emprunt, paramètres 2026 et signatures de fonctions.
+
+## 1. Formule d'amortissement (mensualité hors assurance)
+
+
+Formule standard (échéance constante) :
+
+$$
+M = \frac{K \times \tfrac{r}{12}}{1 - (1 + \tfrac{r}{12})^{-n}}
+$$
+
+où :
+- $K$ = capital emprunté (montant - apport)
+- $r$ = taux nominal annuel (format décimal, ex : 0.034 pour 3,4%) — **standardisé** sur le fichier `docs/knowledge-base/params/2026.json` (champ `rate_format` = "decimal")
+- $n$ = nombre total de mensualités (ex : 240 pour 20 ans)
+
+Implémentation : produire aussi le tableau d'amortissement (capital restant dû, intérêts, principal, assurance) si on calcule assurance sur CRD.
+
+## 2. Crédit immobilier — règles métier HCSF 2026
+
+A. Taux d'endettement maximum (règle HCSF)
+
+La mensualité (assurance incluse) ne doit pas dépasser 35% des revenus nets mensuels :
+
+$$
+Endettement = \frac{M + Mensualit\'e_{assur} + Autres\ Cr\'edits}{Revenus\ Nets\ Mensuels} \le 0{,}35
+$$
+
+B. Assurance emprunteur (TAEA) — modes de calcul
+
+- Sur capital initial (fixe) :
+
+  $$Mensualit\'e_{assur} = \frac{K \times Taux_{assur\_annuel}}{12}$$
+
+- Sur capital restant dû (variable) : la mensualité assurance décroit ; nécessite intégration dans le tableau d'amortissement (calcul par période).
+
+C. Taux d'usure (plafond légal)
+
+Le simulateur doit refuser ou signaler les simulations dont le TAEG dépasse le taux d'usure en vigueur.
+- Exemple Taux d'usure T1 2026 (20 ans+) : 5,13% (valeur indicative).
+- TAEG = Taux nominal + Assurance + Frais de dossier + Garantie.
+
+## 3. Crédit auto & prêt personnel
+
+- Moins de contraintes sur la durée, mais le TAEG est surveillé.
+- Taux moyens auto 2026 : 4,5% - 7,5% selon durée.
+- Coût total :
+
+$$Co\^ut = (M \times n) - K$$
+
+- Pour le conso, inclure frais de dossier et calculer TAEG réel.
+
+## 4. Calcul inverse — capacité d'emprunt
+
+Mensualité maximale :
+
+$$M_{max} = (Salaire\_net\_mensuel \times 0{,}35) - Charges\_existantes - Autres\_cr\'edits$$
+
+Conversion en capital max :
+
+$$
+K_{max} = M_{max} \times \frac{1 - (1 + \tfrac{i}{12})^{-n}}{\tfrac{i}{12}}
+$$
+
+Implémentation : prendre en compte apport, frais initiaux, reste à vivre minimal et taux d'usure.
+
+## 5. Variables et paramètres 2026 (exemple JSON)
+
+```json
+{
+  "version": "2026-01",
+  "effective_date": "2026-01-01",
+  "hcsf": {
+    "max_debt_ratio": 0.35,
+    "reste_a_vivre_min": 800
+  },
+  "taux_usure": {
+    "immo_20_plus": 0.0513
+  },
+  "assurance": {
+    "mode": "sur_capital_initial|sur_crd",
+    "example_rate_annuel": 0.003
+  },
+  "parameters": {
+    "apport_pct_min": 0.10,
+    "notary_fees_old_pct": 0.07,
+    "notary_fees_new_pct": 0.02,
+    "max_immo_duration_years": 25,
+    "max_immo_duration_with_works_years": 27
+  }
+}
+```
+
+## 6. Contrôles métiers à implémenter
+
+- Vérifier `TAEG <= taux_usure` (par périodicité des taux d'usure).
+- Vérifier `Endettement <= max_debt_ratio` (inclure assurance & autres crédits).
+- Vérifier `reste à vivre >= reste_a_vivre_min`.
+- Calculer tableau d'amortissement si assurance sur CRD ou pour afficher détail intérêts/principal.
+
+## 7. Exemples
+
+- Exemple simple :
+  - Salaire net = 3000 €/mois
+  - Mensualité auto existante = 200 €/mois
+  - M_max = 3000 × 0.35 − 200 = 850 €/mois
+
+  - Si i = 0.034 (3,4%), n = 240 mois (20 ans) :
+    - K_max = 850 × (1 − (1 + 0.034/12)^{-240}) / (0.034/12)
+
+## 8. Signatures de fonctions proposées
+
+- `monthlyPayment(K, annualRate, months) -> float`
+- `amortizationSchedule(K, annualRate, months, insuranceMode=None, insuranceRate=None) -> list` (renvoit lignes mois par mois)
+- `computeTAEG(annualRate, insuranceAnnualRate, fees, guaranteeCost) -> float`
+- `checkDebtRatio(monthlyPayment, insuranceMonthly, otherCreditsMonthly, netMonthlyIncome, maxDebtRatio=0.35) -> bool`
+- `maxCapitalFromPayment(Mmax, annualRate, months) -> float`
+
+## 9. Tests unitaires suggérés
+
+- Vérifier `monthlyPayment` contre vecteurs connus (K=200000, i=0.02, n=240).
+- Vérifier `amortizationSchedule` que le dernier capital restant dû ≈ 0.
+- Vérifier `checkDebtRatio` sur cas limites (exactement 35%).
+- Vérifier blocage si `TAEG > taux_usure`.
+
+## 10. Notes et limites
+
+- Les frais de dossier, garanties et pratiques de calcul du TAEG peuvent varier ; stocker ces éléments en paramètre.
+- Les taux d'usure sont publiés trimestriellement — intégrer une source de mise à jour.
+
+---
+
+Document créé pour l'implémentation des crédits dans le simulateur 2026.
+# Loans — Business Rules & Formulas
+
+## Overview
+
+This document describes loan product rules and formulas. Conventions (interest day count, fees, amortization type) must be stated per product.
+
+## Key Concepts
+- Principal: amount borrowed (EUR).
+- Annual nominal rate: APR (in percent).
+- Periods: number of payments (months for monthly repayment).
+- Amortization types: equal payment (annuity), equal principal, interest-only.
+
+## Canonical Formula — Equal Payment (Annuity)
+
+Description: monthly payment for fixed-rate loan with equal installments.
+
+Formula:
+
+payment = P * r / (1 - (1+r)^-n)
+
+Where:
+- P = principal
+- r = periodic rate (annualRate / 12 / 100)
+- n = number of periods (months)
+
+Implementation notes:
+- Round monetary outputs to cents (2 decimal places) for presentation; internal calculations use higher precision.
+- Validate inputs: principal > 0, n >= 1, annualRate >= 0.
+
+Test vector:
+- Inputs: P=100000 EUR, annualRate=5 (%), n=240 (20 years) → payment ≈ 659.96 EUR/month
+
+Source: standard financial math (for reference: https://en.wikipedia.org/wiki/Amortization_calculator)

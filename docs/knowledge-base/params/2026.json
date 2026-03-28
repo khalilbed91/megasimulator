@@ -1,0 +1,49 @@
+{
+  "version": "2026-01",
+  "effective_date": "2026-01-01",
+  "rate_format": "decimal",
+  "verified": false,
+  "sources": {
+    "notes": "Values marked verified=false are estimates; replace with official URSSAF / CNAV / Agirc-Arrco / Banque de France sources when available."
+  },
+  "smic": {
+    "hourly_brut": 12.02,
+    "monthly_brut_35h": 1823.03
+  },
+  "pmss": {
+    "monthly": 4005,
+    "annual": 48060
+  },
+  "pass": 48060,
+  "agirc_arrco": {
+    "tranche1_pct": 0.0787,
+    "tranche2_pct": 0.2159,
+    "valeur_point": 1.45,
+    "note": "Tranche rates are global (salarial+patronal). Split parts in payroll tables if needed. These are estimates and must be verified."
+  },
+  "csg_crds": {
+    "assiette_pct": 98.25,
+    "csg_deductible_pct": 0.068,
+    "csg_non_deductible_pct": 0.029
+  },
+  "jei": {
+    "pmss_multiple_for_plafond": 2,
+    "jei_plafond_manual": 8203.65,
+    "note": "JEI plafond: keep both derived (2 x PMSS) and manual estimate for reference. Verify with official source."
+  },
+  "loans": {
+    "taux_usure": {
+      "immo_20_plus": 0.0513
+    },
+    "max_immo_duration_years": 25,
+    "max_immo_duration_with_works_years": 27
+  },
+  "assurance_examples": {
+    "assurance_emprunteur_rate_example_min": 0.0010,
+    "assurance_emprunteur_rate_example_max": 0.0025
+  },
+  "savings": {
+    "inflation_estimate": 0.02,
+    "livret_a_rate": 0.03
+  }
+}

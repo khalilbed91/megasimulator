@@ -1,0 +1,18 @@
+{
+  "profiles": {
+    "LocalWithDeps": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:5000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "CONNECTION_STRINGS__DEFAULT": "Host=localhost;Port=5432;Database=simulator;Username=simu;Password=111aaa**",
+        "REDIS__CONNECTION": "",
+        "JWT__KEY": "super_secret_key_12345",
+        "JWT__ISSUER": "megasimulator",
+        "ENABLE_SWAGGER": "true"
+      }
+    }
+  }
+}

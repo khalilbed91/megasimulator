@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "dgSpecHash": "7fq0mZOYPTc=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\khali\\MegaSimulator\\tools\\ApplyMigrations\\ApplyMigrations.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\khali\\.nuget\\packages\\dapper\\2.1.1\\dapper.2.1.1.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.0\\microsoft.extensions.logging.abstractions.6.0.0.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\npgsql\\7.0.0\\npgsql.7.0.0.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'Npgsql' 7.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-x9vc-6hfv-hg8c",
+      "projectPath": "C:\\Users\\khali\\MegaSimulator\\tools\\ApplyMigrations\\ApplyMigrations.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\khali\\MegaSimulator\\tools\\ApplyMigrations\\ApplyMigrations.csproj",
+      "libraryId": "Npgsql",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "version": 2,
+  "dgSpecHash": "yvGIGMUgtAI=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\khali\\MegaSimulator\\tests\\MegaSimulator.Tests\\MegaSimulator.Tests.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\khali\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\devlooped.sponsorlink\\1.0.0\\devlooped.sponsorlink.1.0.0.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\microsoft.codecoverage\\18.3.0\\microsoft.codecoverage.18.3.0.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\microsoft.net.test.sdk\\18.3.0\\microsoft.net.test.sdk.18.3.0.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\microsoft.testplatform.objectmodel\\18.3.0\\microsoft.testplatform.objectmodel.18.3.0.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\microsoft.testplatform.testhost\\18.3.0\\microsoft.testplatform.testhost.18.3.0.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\moq\\4.20.0\\moq.4.20.0.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\ncalc\\1.3.8\\ncalc.1.3.8.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\netstandard.library\\1.6.1\\netstandard.library.1.6.1.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\pipelines.sockets.unofficial\\2.2.2\\pipelines.sockets.unofficial.2.2.2.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\stackexchange.redis\\2.6.90\\stackexchange.redis.2.6.90.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\system.diagnostics.eventlog\\6.0.0\\system.diagnostics.eventlog.6.0.0.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\xunit\\2.5.3\\xunit.2.5.3.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\xunit.abstractions\\2.0.3\\xunit.abstractions.2.0.3.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\xunit.analyzers\\1.4.0\\xunit.analyzers.1.4.0.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\xunit.assert\\2.5.3\\xunit.assert.2.5.3.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\xunit.core\\2.5.3\\xunit.core.2.5.3.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\xunit.extensibility.core\\2.5.3\\xunit.extensibility.core.2.5.3.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\xunit.extensibility.execution\\2.5.3\\xunit.extensibility.execution.2.5.3.nupkg.sha512",
+    "C:\\Users\\khali\\.nuget\\packages\\xunit.runner.visualstudio\\2.5.3\\xunit.runner.visualstudio.2.5.3.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1901",
+      "level": "Warning",
+      "message": "Package 'Moq' 4.20.0 has a known low severity vulnerability, https://github.com/advisories/GHSA-6r78-m64m-qwcf",
+      "projectPath": "C:\\Users\\khali\\MegaSimulator\\tests\\MegaSimulator.Tests\\MegaSimulator.Tests.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\khali\\MegaSimulator\\tests\\MegaSimulator.Tests\\MegaSimulator.Tests.csproj",
+      "libraryId": "Moq",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    },
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "message": "Package 'ncalc 1.3.8' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net10.0'. This package may not be fully compatible with your project.",
+      "projectPath": "C:\\Users\\khali\\MegaSimulator\\tests\\MegaSimulator.Tests\\MegaSimulator.Tests.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\khali\\MegaSimulator\\tests\\MegaSimulator.Tests\\MegaSimulator.Tests.csproj",
+      "libraryId": "ncalc",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
+}
