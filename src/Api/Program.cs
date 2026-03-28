@@ -124,30 +124,32 @@ using (var scope = app.Services.CreateScope())
     {
         await migrator.MigrateAsync();
     }
-}
-    // Ensure seeded admin has a password hash compatible with the runtime BCrypt implementation
-    try
-    {
-        using var conn2 = factory?.CreateConnection();
-        if (conn2 != null)
+
+        // Ensure seeded admin has a password hash compatible with the runtime BCrypt implementation
+        try
         {
-            if (conn2 is System.Data.Common.DbConnection dbConn2) await dbConn2.OpenAsync(); else conn2.Open();
-            var existing = await conn2.QueryFirstOrDefaultAsync<string>("SELECT password_hash FROM users WHERE username = @Username", new { Username = "admin" });
-            var plain = "111aaa**";
-            var needsUpdate = existing == null || !BCrypt.Net.BCrypt.Verify(plain, existing);
-            if (needsUpdate)
+            using var conn2 = factory?.CreateConnection();
+            if (conn2 != null)
             {
-                var newHash = BCrypt.Net.BCrypt.HashPassword(plain);
-                await conn2.ExecuteAsync("UPDATE users SET password_hash = @Hash, roles = ARRAY['admin'] WHERE username = @Username", new { Hash = newHash, Username = "admin" });
-                var logger2 = scope.ServiceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()?.CreateLogger("Startup");
-                logger2?.LogInformation("Admin password hash updated at startup to match runtime BCrypt implementation.");
+                if (conn2 is System.Data.Common.DbConnection dbConn2) await dbConn2.OpenAsync(); else conn2.Open();
+                var existing = await conn2.QueryFirstOrDefaultAsync<string>("SELECT password_hash FROM users WHERE username = @Username", new { Username = "admin" });
+                var plain = "111aaa**";
+                var needsUpdate = existing == null || !BCrypt.Net.BCrypt.Verify(plain, existing);
+                if (needsUpdate)
+                {
+                    var newHash = BCrypt.Net.BCrypt.HashPassword(plain);
+                    await conn2.ExecuteAsync("UPDATE users SET password_hash = @Hash, roles = ARRAY['admin'] WHERE username = @Username", new { Hash = newHash, Username = "admin" });
+                    var logger2 = scope.ServiceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()?.CreateLogger("Startup");
+                    logger2?.LogInformation("Admin password hash updated at startup to match runtime BCrypt implementation.");
+                }
             }
         }
-    }
-    catch (Exception ex)
-    {
-        var logger2 = scope.ServiceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()?.CreateLogger("Startup");
-        logger2?.LogWarning(ex, "Failed to ensure admin password at startup");
+        catch (Exception ex)
+        {
+            var logger2 = scope.ServiceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()?.CreateLogger("Startup");
+            logger2?.LogWarning(ex, "Failed to ensure admin password at startup");
+        }
+
     }
 
 var enableSwagger = app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("ENABLE_SWAGGER", false);

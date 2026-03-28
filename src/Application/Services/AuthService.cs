@@ -63,6 +63,12 @@ namespace MegaSimulator.Application.Services
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenKey = Encoding.ASCII.GetBytes(key);
+            // Ensure key length is sufficient for HMAC-SHA256 (>= 256 bits). If not, derive a 256-bit key from the provided secret.
+            if (tokenKey.Length < 32)
+            {
+                using var sha = System.Security.Cryptography.SHA256.Create();
+                tokenKey = sha.ComputeHash(Encoding.UTF8.GetBytes(key));
+            }
             var claims = new[] {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
