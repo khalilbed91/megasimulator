@@ -15,10 +15,15 @@ namespace MegaSimulator.Application.Params
 
         [JsonPropertyName("agirc_arrco")]
         public AgircArrco? AgircArrco { get; set; }
+
+        [JsonPropertyName("jei")]
+        public Jei? Jei { get; set; }
     }
 
     public class Smic { public double hourly_brut { get; set; } public double monthly_brut_35h { get; set; } }
     public class Pmss { public double monthly { get; set; } public double annual { get; set; } }
     public class CsgCrds { public double assiette_pct { get; set; } public double csg_deductible_pct { get; set; } public double csg_non_deductible_pct { get; set; } }
     public class AgircArrco { public double tranche1_pct { get; set; } public double tranche2_pct { get; set; } public double valeur_point { get; set; } }
+
+    public class Jei { public int pmss_multiple_for_plafond { get; set; } public double jei_plafond_manual { get; set; } }
 }
