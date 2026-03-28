@@ -775,11 +775,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj",
+      "projectUniqueName": "c:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj",
       "projectName": "Application",
-      "projectPath": "C:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj",
+      "projectPath": "c:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj",
       "packagesPath": "C:\\Users\\khali\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\khali\\MegaSimulator\\src\\Application\\obj\\",
+      "outputPath": "c:\\Users\\khali\\MegaSimulator\\src\\Application\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\khali\\AppData\\Roaming\\NuGet\\NuGet.Config",

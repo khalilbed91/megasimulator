@@ -6,7 +6,7 @@ export default function App(){
   const [result, setResult] = useState(null)
   const callPayroll = async () => {
     try{
-      const res = await fetch('http://localhost:5000/api/payroll/brut-to-net', {
+      const res = await fetch('/api/payroll/brut-to-net', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ Brut: brut, Statut: statut })

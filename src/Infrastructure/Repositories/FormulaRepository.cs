@@ -21,21 +21,21 @@ namespace MegaSimulator.Infrastructure.Repositories
         public async Task AddAsync(Formula formula)
         {
             using var conn = _factory.CreateConnection();
-            const string sql = "INSERT INTO formulas (id, name, expression, description, created_at) VALUES (@Id, @Name, @Expression, @Description, @CreatedAt)";
+            const string sql = "INSERT INTO formulas (id, name, expression, metadata, created_at) VALUES (@Id, @Name, @Expression, jsonb_build_object('description', @Description), @CreatedAt)";
             await conn.ExecuteAsync(sql, formula);
         }
 
         public async Task<Formula?> GetByNameAsync(string name)
         {
             using var conn = _factory.CreateConnection();
-            const string sql = "SELECT id, name, expression, description, created_at as CreatedAt FROM formulas WHERE name = @Name";
+            const string sql = "SELECT id, name, expression, metadata->>\'description\' as description, created_at as CreatedAt FROM formulas WHERE name = @Name";
             return await conn.QueryFirstOrDefaultAsync<Formula>(sql, new { Name = name });
         }
 
         public async Task<IEnumerable<Formula>> ListAllAsync()
         {
             using var conn = _factory.CreateConnection();
-            const string sql = "SELECT id, name, expression, description, created_at as CreatedAt FROM formulas ORDER BY name";
+            const string sql = "SELECT id, name, expression, metadata->>\'description\' as description, created_at as CreatedAt FROM formulas ORDER BY name";
             return await conn.QueryAsync<Formula>(sql);
         }
     }

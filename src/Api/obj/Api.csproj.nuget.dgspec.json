@@ -28,14 +28,14 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj": {
-                "projectPath": "C:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj"
+              "c:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj": {
+                "projectPath": "c:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj"
               },
               "C:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj": {
                 "projectPath": "C:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj"
               },
-              "C:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\Infrastructure.csproj": {
-                "projectPath": "C:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\Infrastructure.csproj"
+              "c:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\Infrastructure.csproj": {
+                "projectPath": "c:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\Infrastructure.csproj"
               }
             }
           }
@@ -506,14 +506,14 @@
         }
       }
     },
-    "C:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj": {
+    "c:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj",
+        "projectUniqueName": "c:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj",
         "projectName": "Application",
-        "projectPath": "C:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj",
+        "projectPath": "c:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj",
         "packagesPath": "C:\\Users\\khali\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\khali\\MegaSimulator\\src\\Application\\obj\\",
+        "outputPath": "c:\\Users\\khali\\MegaSimulator\\src\\Application\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\khali\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -1206,14 +1206,14 @@
         }
       }
     },
-    "C:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\Infrastructure.csproj": {
+    "c:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\Infrastructure.csproj",
+        "projectUniqueName": "c:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\Infrastructure.csproj",
         "projectName": "Infrastructure",
-        "projectPath": "C:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\Infrastructure.csproj",
+        "projectPath": "c:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\Infrastructure.csproj",
         "packagesPath": "C:\\Users\\khali\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\obj\\",
+        "outputPath": "c:\\Users\\khali\\MegaSimulator\\src\\Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\khali\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -1230,8 +1230,8 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj": {
-                "projectPath": "C:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj"
+              "c:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj": {
+                "projectPath": "c:\\Users\\khali\\MegaSimulator\\src\\Application\\Application.csproj"
               },
               "C:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj": {
                 "projectPath": "C:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj"
