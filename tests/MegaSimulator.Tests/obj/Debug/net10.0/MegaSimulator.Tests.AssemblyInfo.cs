@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MegaSimulator.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+37b67877d0d9b9d9e38ee7e25ecf7b2048f08647")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8a75a770d35195690723d2a065273d32a215f6e2")]
 [assembly: System.Reflection.AssemblyProductAttribute("MegaSimulator.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MegaSimulator.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

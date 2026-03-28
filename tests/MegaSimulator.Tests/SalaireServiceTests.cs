@@ -20,7 +20,7 @@ namespace MegaSimulator.Tests
             mockRepo.Setup(r => r.AddAsync(It.IsAny<Salaire>())).Returns(Task.CompletedTask)
                 .Verifiable();
 
-            var service = new SalaireService(mockRepo.Object);
+            var service = new SalaireService(mockRepo.Object, Mock.Of<System.IServiceProvider>(), null);
 
             var dto = new SalaireDto(Guid.Empty, Guid.NewGuid(), 1000m, 100m, DateTime.UtcNow);
             var result = await service.CreateAsync(dto);
@@ -42,7 +42,7 @@ namespace MegaSimulator.Tests
             var mockRepo = new Mock<ISalaireRepository>();
             mockRepo.Setup(r => r.ListByEmployeeAsync(employeeId)).ReturnsAsync(sample);
 
-            var service = new SalaireService(mockRepo.Object);
+            var service = new SalaireService(mockRepo.Object, Mock.Of<System.IServiceProvider>(), null);
 
             var list = await service.ListByEmployeeAsync(employeeId);
             Assert.Single(list);

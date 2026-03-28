@@ -110,3 +110,16 @@ C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\obj\Debug\net10.0\refint\
 C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\obj\Debug\net10.0\MegaSimulator.Tests.pdb
 C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\obj\Debug\net10.0\MegaSimulator.Tests.genruntimeconfig.cache
 C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\obj\Debug\net10.0\ref\MegaSimulator.Tests.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\BCrypt.Net-Next.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\Microsoft.Extensions.Caching.Abstractions.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\Microsoft.Extensions.Caching.Memory.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\Microsoft.Extensions.Options.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\Microsoft.Extensions.Primitives.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\khali\MegaSimulator\tests\MegaSimulator.Tests\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
