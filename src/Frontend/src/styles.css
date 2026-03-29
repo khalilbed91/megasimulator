@@ -645,6 +645,27 @@ body.app-dark .bg-dark            { background: #0f172a !important; }
 }
 
 /* Portage fee badge */
+/* Avantage chips (ticket resto, télétravail, etc.) */
+.avantage-chip {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  border: 1.5px solid var(--border);
+  background: var(--card-el);
+  color: var(--muted);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: var(--tr);
+  font-family: inherit;
+  line-height: 1.3;
+}
+.avantage-chip:hover { border-color: var(--success); color: var(--success); }
+.avantage-chip.active {
+  background: rgba(16,185,129,0.1);
+  border-color: var(--success);
+  color: var(--success);
+}
+
 .portage-fee-badge {
   display: inline-flex; align-items: center; gap: 6px;
   background: rgba(245,158,11,0.1);

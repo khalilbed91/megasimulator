@@ -70,7 +70,8 @@ namespace MegaSimulator.Application.Services
         // New: full simulate flow returns detailed DTO and persists simulation when repository available
         public virtual async Task<MegaSimulator.Application.DTOs.PayrollResponseDto> Simulate(MegaSimulator.Application.DTOs.PayrollRequestDto req, System.Guid? userId = null)
         {
-            var brut = req.Brut;
+            // Effective monthly brut = declared brut + monthly avantages + monthly primes
+            var brut = req.Brut + req.RevenusAnnexes + req.Primes;
             var statut = req.Statut ?? "non-cadre";
 
             var net = await BrutToNet(brut, statut);

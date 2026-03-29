@@ -86,6 +86,40 @@ const fmt = (v, lang) =>
     ? v.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : '—'
 
+/* ─────────────────────────────────────────────
+   EuroInput — module-level so React never
+   remounts it on re-render (fixes focus loss)
+───────────────────────────────────────────── */
+function EuroInput({ value, onChange, placeholder, error, unit }) {
+  return (
+    <div>
+      <div style={{ position: 'relative' }}>
+        <input
+          className="field-input"
+          inputMode="decimal"
+          placeholder={placeholder}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          style={{ paddingRight: unit ? 54 : 36 }}
+        />
+        <span style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', color:'var(--muted)', fontSize:13, fontWeight:600, whiteSpace:'nowrap' }}>
+          {unit ? `€ ${unit}` : '€'}
+        </span>
+      </div>
+      {error && <div className="field-error" style={{marginTop:4}}>{error}</div>}
+    </div>
+  )
+}
+
+/* Preset avantages chips */
+const AVANTAGE_PRESETS = [
+  { id: 'resto',    labelFr: 'Ticket restaurant', labelEn: 'Meal voucher',    amount: 220, hintFr: '11€ × 20j × 60%',     hintEn: '11€ × 20d × 60%' },
+  { id: 'ttx',      labelFr: 'Forfait télétravail', labelEn: 'Remote work',   amount: 60,  hintFr: '3€/j × 20j',           hintEn: '3€/d × 20d' },
+  { id: 'tel',      labelFr: 'Forfait téléphone', labelEn: 'Phone allowance', amount: 25,  hintFr: 'Usage pro',             hintEn: 'Pro usage' },
+  { id: 'transport',labelFr: 'Transports', labelEn: 'Transport',              amount: 82,  hintFr: '50% carte Navig. ~82€', hintEn: '50% transit pass' },
+  { id: 'prime',    labelFr: 'Prime mensuelle', labelEn: 'Monthly bonus',     amount: 100, hintFr: 'Prime variable',        hintEn: 'Variable bonus' },
+]
+
 /** PAS 2026 rate suggestion based on estimated annual net */
 function suggestRetenue(brutAnn) {
   if (!brutAnn || brutAnn <= 0) return 0
@@ -281,6 +315,7 @@ export default function PayrollSimulator({ lang = 'fr' }){
   /* Common */
   const [brutAnnuel,     setBrutAnnuel]     = useState('')
   const [revenusAnnexes, setRevenusAnnexes] = useState('')
+  const [avantagesActifs, setAvantagesActifs] = useState([])
   const [primes,         setPrimes]         = useState('')
   const [result,         setResult]         = useState(null)
   const [loading,        setLoading]        = useState(false)
@@ -379,7 +414,7 @@ export default function PayrollSimulator({ lang = 'fr' }){
 
   const reset = () => {
     setBrutAnnuel(''); setCaAnnuel(''); setCaMensuel('')
-    setRevenusAnnexes(''); setPrimes(''); setRetenuePct(0); setParts(1)
+    setRevenusAnnexes(''); setAvantagesActifs([]); setPrimes(''); setRetenuePct(0); setParts(1)
     setPortagePercent(10); setPortageCompany(''); setFraisPro('')
     setSituationFam('celibataire'); setEnfants(0)
     setResult(null); setFiscalMode('parts')
@@ -401,17 +436,6 @@ export default function PayrollSimulator({ lang = 'fr' }){
   const employerCost = result?.employerCost ?? null
   const socialCont   = result?.socialContribution ?? null
 
-  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Input for Euro amounts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-  const EuroInput = ({ value, onChange, placeholder, error }) => (
-    <div>
-      <div style={{ position: 'relative' }}>
-        <input className="field-input" inputMode="numeric" placeholder={placeholder} value={value}
-          onChange={e => onChange(e.target.value)} style={{ paddingRight: 36 }} />
-        <span style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', color:'var(--muted)', fontSize:14, fontWeight:600 }}>€</span>
-      </div>
-      {error && <div className="field-error" style={{marginTop:4}}>{error}</div>}
-    </div>
-  )
 
   return (
     <div className="sim-shell">
@@ -435,13 +459,39 @@ export default function PayrollSimulator({ lang = 'fr' }){
                 <div className="field-hint">≈ {fmt(+brutAnnuel / 12, lang)} € / mois brut</div>
               )}
             </div>
-            <div className="field-group">
-              <label className="field-label">{t.revenusAnnexes}</label>
-              <EuroInput value={revenusAnnexes} onChange={setRevenusAnnexes} placeholder="0" />
+            <div className="field-group" style={{ gridColumn: '1/-1' }}>
+              <label className="field-label">{t.revenusAnnexes} <span className="field-hint" style={{display:'inline',marginLeft:4}}>(€/mois)</span></label>
+              {/* Preset chips */}
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:8 }}>
+                {AVANTAGE_PRESETS.map(p => {
+                  const active = avantagesActifs.includes(p.id)
+                  return (
+                    <button key={p.id} type="button"
+                      className={`avantage-chip${active ? ' active' : ''}`}
+                      onClick={() => {
+                        if (active) {
+                          setAvantagesActifs(a => a.filter(x => x !== p.id))
+                          setRevenusAnnexes(v => String(Math.max(0, (+v || 0) - p.amount)))
+                        } else {
+                          setAvantagesActifs(a => [...a, p.id])
+                          setRevenusAnnexes(v => String((+v || 0) + p.amount))
+                        }
+                      }}
+                    >
+                      <span style={{fontWeight:700}}>{lang === 'fr' ? p.labelFr : p.labelEn}</span>
+                      <span style={{opacity:0.7, fontSize:11}}>+{p.amount}€</span>
+                    </button>
+                  )
+                })}
+              </div>
+              <EuroInput value={revenusAnnexes} onChange={v => { setRevenusAnnexes(v); setAvantagesActifs([]) }} placeholder="0" unit="/mois" />
+              {revenusAnnexes > 0 && (
+                <div className="field-hint" style={{marginTop:4}}>≈ {fmt(+revenusAnnexes * 12, lang)} €/an · impact net estimé: +{fmt(+revenusAnnexes * 0.78, lang)} €/mois</div>
+              )}
             </div>
             <div className="field-group">
-              <label className="field-label">{t.primes}</label>
-              <EuroInput value={primes} onChange={setPrimes} placeholder="0" />
+              <label className="field-label">{t.primes} <span className="field-hint" style={{display:'inline',marginLeft:4}}>(€/mois)</span></label>
+              <EuroInput value={primes} onChange={setPrimes} placeholder="0" unit="/mois" />
             </div>
           </div>
         )}
