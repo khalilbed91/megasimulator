@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import './login.css'
+import Logo from './components/Logo'
 
 export default function Login({ onLoginSuccess, switchToSignup, onClose }){
   const [username, setUsername] = useState('')
@@ -37,9 +38,8 @@ export default function Login({ onLoginSuccess, switchToSignup, onClose }){
       const j = await res.json()
       // persist token
       if (j.token) {
-        // store in sessionStorage (less persistent than localStorage). For best security,
-        // set a HttpOnly secure cookie from the server instead of storing tokens in JS.
-        sessionStorage.setItem('msim_token', j.token)
+        // persist token for app flow
+        localStorage.setItem('msim_token', j.token)
       }
       onLoginSuccess?.(j.token)
     }catch(err){
@@ -60,28 +60,7 @@ export default function Login({ onLoginSuccess, switchToSignup, onClose }){
         <div className="login-card">
           <div className="text-center mb-3">
             <div style={{display:'inline-block', width:84, height:84}} aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84 84" width="84" height="84" role="img" aria-label="Mega Simulator logo">
-                <defs>
-                  <linearGradient id="g1" x1="0" x2="1">
-                    <stop offset="0" stopColor="#60a5fa" />
-                    <stop offset="1" stopColor="#2563eb" />
-                  </linearGradient>
-                </defs>
-                <rect width="84" height="84" rx="16" fill="url(#g1)" />
-                {/* wallet body: dark body, flap, clasp */}
-                <g transform="translate(10,22)" aria-hidden="true">
-                  <rect x="0" y="6" width="56" height="28" rx="6" fill="#0b1220" />
-                  <rect x="0" y="6" width="46" height="10" rx="5" fill="#0e1726" />
-                  <rect x="44" y="14" width="8" height="8" rx="2" fill="#f59e0b" />
-                  <path d="M6 22h34" stroke="#111827" strokeWidth="1" strokeLinecap="round" opacity="0.35" />
-                </g>
-                {/* bill emerging from wallet */}
-                <g transform="translate(34,6) rotate(-8 16 14)">
-                  <rect x="2" y="8" width="36" height="20" rx="3" fill="#fff" opacity="0.95" />
-                  <rect x="4" y="10" width="32" height="16" rx="2" fill="#e6f2ff" />
-                  <text x="20" y="22" textAnchor="middle" fontFamily="Inter, Arial, sans-serif" fontWeight="700" fontSize="14" fill="#0b1220">$</text>
-                </g>
-              </svg>
+              <Logo size={84} />
             </div>
             <h3 className="logo mt-2">Mega Simulator</h3>
             <div className="text-muted small">Simulations rapides — connectez-vous pour enregistrer vos simulations</div>

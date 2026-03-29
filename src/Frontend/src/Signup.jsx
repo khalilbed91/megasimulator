@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import './login.css'
+import Logo from './components/Logo'
 
 export default function Signup({ onSignupSuccess, switchToLogin }){
   const [email, setEmail] = useState('')
@@ -42,8 +43,8 @@ export default function Signup({ onSignupSuccess, switchToLogin }){
         <div className="login-card">
           <div className="card p-4" style={{width:480}}>
             <div className="d-flex align-items-center mb-3">
-              <img src="/logo.svg" alt="logo" style={{width:40,height:40,marginRight:12}} />
-              <div>
+              <Logo size={40} />
+              <div style={{marginLeft:12}}>
                 <h4 className="m-0">Create account</h4>
                 <div className="text-muted small">Quick signup to save and manage simulations</div>
               </div>
