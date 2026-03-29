@@ -97,5 +97,54 @@ namespace MegaSimulator.Api.Controllers
             if (u == null) return NotFound();
             return Ok(u);
         }
+
+        public record GoogleTokenRequest(string IdToken);
+
+        /// <summary>
+        /// Verify a Google ID token issued by the frontend GSI library.
+        /// No client secret required — just verifies via Google tokeninfo endpoint.
+        /// </summary>
+        [HttpPost("google/token")]
+        public async Task<IActionResult> GoogleToken([FromBody] GoogleTokenRequest req)
+        {
+            if (string.IsNullOrWhiteSpace(req.IdToken))
+                return BadRequest("idToken is required");
+
+            var clientId = _config["GOOGLE:ClientId"] ?? Environment.GetEnvironmentVariable("GOOGLE__CLIENTID");
+            if (string.IsNullOrEmpty(clientId))
+                return StatusCode(503, "Google auth not configured on server");
+
+            var info = await _googleClient.VerifyIdTokenAsync(req.IdToken, clientId);
+            if (info == null || string.IsNullOrEmpty(info.Email))
+                return Unauthorized();
+
+            var userRepo = HttpContext.RequestServices.GetService(typeof(MegaSimulator.Domain.Interfaces.IUserRepository)) as MegaSimulator.Domain.Interfaces.IUserRepository;
+            MegaSimulator.Domain.Entities.User? user = null;
+            if (userRepo != null)
+            {
+                user = await userRepo.GetByUsernameAsync(info.Email!);
+                if (user == null)
+                {
+                    user = new MegaSimulator.Domain.Entities.User
+                    {
+                        Id           = Guid.NewGuid(),
+                        Username     = info.Email!,
+                        Email        = info.Email!,
+                        FirstName    = info.Given_Name,
+                        LastName     = info.Family_Name,
+                        CreatedAt    = DateTime.UtcNow,
+                        PasswordHash = null,
+                        Roles        = new[] { "user" }
+                    };
+                    try { await userRepo.AddAsync(user); } catch { /* log */ }
+                }
+            }
+
+            if (user == null) return StatusCode(500, "Could not find or create user");
+            var token = _auth.GenerateTokenForUser(user);
+            if (string.IsNullOrEmpty(token)) return StatusCode(500, "Token generation failed");
+
+            return Ok(new { token });
+        }
     }
 }

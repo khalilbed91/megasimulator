@@ -6,6 +6,11 @@ namespace MegaSimulator.Application.Interfaces
     {
         Task<string?> ExchangeCodeForAccessTokenAsync(string code, string redirectUri);
         Task<GoogleUserInfo?> GetUserInfoAsync(string accessToken);
+        /// <summary>
+        /// Verify a Google ID token (credential) obtained by the frontend GSI library.
+        /// Calls Google tokeninfo endpoint — no client secret required.
+        /// </summary>
+        Task<GoogleUserInfo?> VerifyIdTokenAsync(string idToken, string expectedAudience);
     }
 
     public class GoogleUserInfo

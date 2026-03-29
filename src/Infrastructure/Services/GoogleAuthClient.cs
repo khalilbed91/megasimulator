@@ -60,5 +60,39 @@ namespace MegaSimulator.Infrastructure.Services
                 return null;
             }
         }
+
+        public async Task<GoogleUserInfo?> VerifyIdTokenAsync(string idToken, string expectedAudience)
+        {
+            // Use Google's tokeninfo endpoint — no client secret needed
+            var url = $"https://oauth2.googleapis.com/tokeninfo?id_token={Uri.EscapeDataString(idToken)}";
+            var res = await _client.GetAsync(url);
+            if (!res.IsSuccessStatusCode) return null;
+
+            var txt = await res.Content.ReadAsStringAsync();
+            try
+            {
+                using var doc = JsonDocument.Parse(txt);
+                var root = doc.RootElement;
+
+                // Verify the token was issued for our client ID
+                if (root.TryGetProperty("aud", out var aud))
+                {
+                    if (aud.GetString() != expectedAudience) return null;
+                }
+
+                return new GoogleUserInfo
+                {
+                    Sub        = root.TryGetProperty("sub",         out var sub)  ? sub.GetString()  : null,
+                    Email      = root.TryGetProperty("email",       out var em)   ? em.GetString()   : null,
+                    Name       = root.TryGetProperty("name",        out var nm)   ? nm.GetString()   : null,
+                    Given_Name = root.TryGetProperty("given_name",  out var gn)   ? gn.GetString()   : null,
+                    Family_Name= root.TryGetProperty("family_name", out var fn)   ? fn.GetString()   : null,
+                };
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

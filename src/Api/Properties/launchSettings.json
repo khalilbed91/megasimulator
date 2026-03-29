@@ -11,7 +11,9 @@
         "REDIS__CONNECTION": "",
         "JWT__KEY": "super_secret_key_12345",
         "JWT__ISSUER": "megasimulator",
-        "ENABLE_SWAGGER": "true"
+        "ENABLE_SWAGGER": "true",
+        "GOOGLE__CLIENTID": "874107145454-8vao5905rvg7v56h6rustrk3dbbbul62.apps.googleusercontent.com",
+        "FRONTEND__URL": "http://localhost:5174"
       }
     }
   }
