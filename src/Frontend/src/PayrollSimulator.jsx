@@ -405,7 +405,15 @@ export default function PayrollSimulator({ lang = 'fr' }){
         CaAnnuel: isFreelance ? +caAnnuel : null,
         CaMensuel: isPortage  ? +caMensuel : null,
       }
-      const res  = await fetch('/api/payroll/simulate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const tok  = localStorage.getItem('msim_token')
+      const res  = await fetch('/api/payroll/simulate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(tok ? { Authorization: 'Bearer ' + tok } : {}),
+        },
+        body: JSON.stringify(payload),
+      })
       const json = await res.json()
       setResult(json)
     } catch(e) { setResult({ error: e.message }) }
