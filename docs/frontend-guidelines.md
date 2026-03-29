@@ -1,6 +1,6 @@
 # Frontend — Guidelines techniques
 
-_Dernière mise à jour : 2026-03-29_
+_Dernière mise à jour : 2026-03-29 (session 3)_
 
 ---
 
@@ -20,15 +20,15 @@ _Dernière mise à jour : 2026-03-29_
 
 ```
 src/Frontend/
-  index.html                  ← Root HTML (charset UTF-8 obligatoire)
+  index.html                  ← Root HTML (charset UTF-8 obligatoire, Google GSI script async)
   vite.config.js              ← Proxy /api → backend
   src/
     App.jsx                   ← Router racine, dark/lang toggle, localStorage
     Home.jsx                  ← Shell: sidebar 230px + top-bar + page-body + hamburger mobile
     PayrollSimulator.jsx      ← Simulateur de paie (composant principal)
-    RetirementSimulator.jsx   ← Simulateur retraite (À CRÉER — voir section 7)
+    RetirementSimulator.jsx   ← Simulateur retraite (✅ implémenté — voir section 7)
     SimulationHistory.jsx     ← Historique des simulations (GET /api/simulation/mine)
-    Login.jsx                 ← Page auth split-screen
+    Login.jsx                 ← Page auth split-screen + bouton Google GSI
     Signup.jsx                ← Page inscription
     Account.jsx               ← Page profil utilisateur
     Contact.jsx               ← Page contact
@@ -65,7 +65,7 @@ Se référer à `docs/brand-guidelines.md` pour la palette, tokens et règles vi
 - Hamburger visible ≤768px → sidebar en drawer slide-over (`.sidebar-overlay` backdrop)
 - `tab-bar` centré dans `page-body` pour les sous-onglets du simulateur (Paie / Retraite / Prêts)
 - Le hero (logo + titre) a été supprimé pour réduire le scroll
-- Pages "coming soon" pour les onglets non encore implémentés
+- Pages "coming soon" pour les onglets non encore implémentés (**Prêts** uniquement — Retraite est maintenant implémenté)
 
 ---
 
@@ -159,9 +159,9 @@ Appelle `GET /api/simulation/mine` (endpoint sécurisé `[Authorize]`). Affiche 
 
 ---
 
-## 9. RetirementSimulator.jsx — Spec d'implémentation
+## 9. RetirementSimulator.jsx — implémenté ✅
 
-> **Statut : À CRÉER** — même pattern que `PayrollSimulator.jsx`.
+> **Statut : IMPLÉMENTÉ** (`src/Frontend/src/RetirementSimulator.jsx`). Même pattern que `PayrollSimulator.jsx`.
 
 ### 7.1 Structure
 
@@ -271,6 +271,8 @@ const T = {
 - Décodage JWT côté client pour vérifier le rôle admin (composant `isAdmin()` dans `PayrollSimulator.jsx`)
 - Toujours inclure `Authorization: Bearer <token>` dans les appels simulate (payroll ET retraite)
 - Ne jamais exposer les erreurs techniques brutes à l'utilisateur
+- **Google OAuth GSI** : `index.html` charge `accounts.google.com/gsi/client` async ; `Login.jsx` initialise le bouton officiel Google dans un `useEffect` avec `google.accounts.id.initialize` ; l'ID token est soumis à `POST /api/auth/google/token` ; **aucun redirect**, aucun client secret needed
+- Important : ajouter `http://localhost:5174` dans **Authorized JavaScript origins** de la Google Cloud Console pour le client `874107145454-8...`
 
 ---
 

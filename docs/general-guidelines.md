@@ -1,7 +1,7 @@
 # MegaSimulator — General Guidelines & Project Status
 
 _Document interne — usage agent/équipe uniquement_  
-_Dernière mise à jour : 2026-03-29 (session 2)_
+_Dernière mise à jour : 2026-03-29 (session 3)_
 
 ---
 
@@ -26,27 +26,31 @@ _Dernière mise à jour : 2026-03-29 (session 2)_
 |---|---|
 | ✅ Solution .NET multi-projets | Api / Application / Domain / Infrastructure — architecture clean |
 | ✅ PostgreSQL via Docker Compose | DB `simulator`, user `simu`, migrations versionnées dans `src/Infrastructure/Migrations/` |
-| ✅ Migrations 001–006 | Création tables `users`, `salaires`, `simulations`, `formulas` ; ajout credentials admin ; nullable userId sur simulations |
+| ✅ Migrations 001–007 | Création tables `users`, `salaires`, `simulations`, `formulas` ; ajout credentials admin ; nullable userId sur simulations ; **migration 007 corrige le hash BCrypt admin** |
 | ✅ Tool `ApplyMigrations` | `tools/ApplyMigrations/Program.cs` — applique les migrations SQL au démarrage |
 | ✅ Authentification JWT | `AuthController`, `AuthService`, `UserRepository` — login, register, change password |
-| ✅ Google OAuth (partiel) | `IGoogleAuthClient` interface définie, endpoint `/api/auth/google` présent — **non testé en prod** |
+| ✅ Google OAuth (GSI) | `VerifyIdTokenAsync` dans `IGoogleAuthClient` + `GoogleAuthClient`; new endpoint `POST /api/auth/google/token` — **aucun client secret nécessaire**; client ID configuré dans `launchSettings.json` |
 | ✅ PayrollController | `POST /api/payroll/simulate` (brut→net) et `POST /api/payroll/brut-to-net` |
 | ✅ PayrollService | Calcul complet : cotisations salariales/patronales, CSG/CRDS, Agirc-Arrco, APEC cadre, JEI, retenue à la source (PAS), net imposable |
 | ✅ PayrollParams (2026) | `src/Application/Params/PayrollParams.cs` + `docs/knowledge-base/params/2026.json` |
 | ✅ FormulaService + Repository | Gestion des formules de calcul en base, CRUD |
 | ✅ SalaireService | Historique des salaires par utilisateur |
 | ✅ SimulationService | Persistance des simulations en base avec payload et résultats |
-| ✅ Seed admin | Utilisateur `admin` / `111aaa**` assuré par re-hash BCrypt au démarrage si hash vide |
-| ✅ Tests unitaires | `PayrollServiceTests`, `SalaireServiceTests`, `SimulationServiceTests`, `FormulaServiceTests`, `AuthServiceTests` |
+| ✅ **RetirementService** | `src/Application/Services/RetirementService.cs` — calcul CNAV + Agirc-Arrco + décote/surcote + retenue sociale 9.1% ; persiste en `simulations` table avec `type='retirement'` |
+| ✅ **IRetirementService** | `src/Application/Interfaces/IRetirementService.cs` — interface avec 5 méthodes |
+| ✅ **RetirementController** | `POST /api/retirement/simulate` — extraction userId depuis JWT, même pattern que PayrollController |
+| ✅ Seed admin | Migration 007 : hash BCrypt correct pour `admin/111aaa**` |
+| ✅ Tests unitaires | `PayrollServiceTests`, `SalaireServiceTests`, `SimulationServiceTests`, `FormulaServiceTests`, `AuthServiceTests`, **`RetirementServiceTests` (23 tests)** |
 | ✅ Tests d'intégration | Dossier `tests/MegaSimulator.Tests/Integration/` — base posée |
 
 ### 2.2 Sécurité & Auth
 
 | Fait | Description |
 |---|---|
-| ✅ BCrypt re-hash robust | Si le hash en base ne vérifie pas au démarrage, re-hash automatique |
+| ✅ BCrypt re-hash robust | Migration 007 : hash correct généré par `BCrypt.HashPassword("111aaa**", 12)` — hash placeholder de la migration 004 **ne fonctionnait pas** |
 | ✅ JWT key length guard | Clé JWT < 32 octets → dérivation SHA256 automatique pour éviter IDX10720 |
 | ✅ Rôles JWT | Claim `roles: ['admin']` émis et vérifié côté frontend pour la vue technique |
+| ✅ Google OAuth GSI | `POST /api/auth/google/token` vérifie l'ID token via `tokeninfo` (pas de client secret) ; `VerifyIdTokenAsync` dans `GoogleAuthClient` vérifie le champ `aud` |
 | ⚠️ Token dans localStorage | Acceptable en MVP — **à migrer vers cookie HttpOnly** |
 
 ### 2.3 Frontend — UI/UX
@@ -103,117 +107,37 @@ _Dernière mise à jour : 2026-03-29 (session 2)_
 | ✅ `GET /user/{userId}` restreint | Rôle `admin` requis |
 | ✅ `UseAuthentication` + `UseAuthorization` | Ajoutés dans `Program.cs` — sans eux le JWT n'était jamais parsé |
 
+### 2.7 RetirementSimulator — implémenté ✅
+
+| Fait | Description |
+|---|---|
+| ✅ `RetirementRequestDto` | `AnneeNaissance`, `AgeDepart`, `SalaireAnnuelMoyen`, `TrimestresValides/Requis`, `PointsComplementaires`, `Regime`, `RevenusAnnuelsActuels` |
+| ✅ `RetirementResponseDto` | `PensionBaseAnnuelle`, `PensionComplementaireAnnuelle`, `PensionBruteTotaleAnnuelle`, `PensionNetteAnnuelle`, `PensionNetteMensuelle`, `TauxRemplacement`, `DecotePct`, `SurcotePct`, `TrimestresManquants` |
+| ✅ `RetirementService` | Calcul complet : décote/surcote (1.25%/trimestre), facteur trimestres, pension CNAV, Agirc-Arrco (valeur point 1.45), retenue sociale 9.1%, taux de remplacement |
+| ✅ Décote plafonnée | Max 25% (20 trimestres manquants) |
+| ✅ Surcote | +1.25%/trimestre supplémentaire, facteur trimestres plafonné à 1 |
+| ✅ Persistance | Simulation sauvegardée en table `simulations` avec `type='retirement'`, `userId` depuis JWT |
+| ✅ `RetirementController` | `POST /api/retirement/simulate` — userId extrait du token ; même pattern que PayrollController |
+| ✅ `RetirementSimulator.jsx` | Formulaire : année naissance (auto-remplit trimestres requis), chips âge départ, SAM, barre progression trimestres, points Agirc-Arrco, revenus actuels optionnels |
+| ✅ KPI cards | Pension mensuelle nette (principal), pension annuelle nette, taux de remplacement |
+| ✅ Breakdown panel | Base CNAV + complémentaire + brute totale ; panel trimestres (décote/surcote/manquants en couleur) |
+| ✅ Warning V1 | Message d'avertissement régimes spéciaux non couverts |
+| ✅ Home.jsx wired | Tab `retirement` renderise `<RetirementSimulator>` — plus de "coming soon" |
+| ✅ 23 xUnit tests | `GetTrimestresRequis` (8 théories), `GetAgeLegal` (4), décote (3), surcote (2), simulate (6) — tous verts |
+
 ---
 
 ## 3. Ce qui reste à faire
 
-### 3.1 Priorité immédiate — Simulateur Retraite (NEXT)
-
-Le simulateur retraite est la prochaine feature à implémenter. L'infrastructure est identique à celle de payroll — suivre le même pattern.
-
-#### 3.1.1 Backend — DTOs et service
-
-**Créer `RetirementRequestDto.cs`** (`src/Application/DTOs/`) :
-```csharp
-public class RetirementRequestDto {
-    public int AgeActuel { get; set; }           // âge actuel
-    public int AgeDepart { get; set; } = 64;     // âge de départ souhaité
-    public decimal SalaireAnnuelMoyen { get; set; } // SAM (25 meilleures années)
-    public int TrimestresValides { get; set; }   // trimestres déjà acquis
-    public int TrimestresRequis { get; set; } = 170; // selon génération
-    public int PointsComplComplementaires { get; set; } // points Agirc-Arrco
-    public string Regime { get; set; } = "general"; // general | fonctionnaire | liberal | artisan
-    public decimal? RevenusAnnuelsActuels { get; set; } // pour le calcul prévisif
-    public int? AnneeNaissance { get; set; }
-}
-```
-
-**Créer `RetirementResponseDto.cs`** (`src/Application/DTOs/`) :
-```csharp
-public class RetirementResponseDto {
-    public decimal PensionBaseAnnuelle { get; set; }
-    public decimal PensionComplementaireAnnuelle { get; set; }
-    public decimal PensionBruteTotaleAnnuelle { get; set; }
-    public decimal PensionNetteAnnuelle { get; set; }
-    public decimal PensionNetteMensuelle { get; set; }
-    public decimal TauxRemplacement { get; set; }     // pension / salaire actuel
-    public int TrimestresValides { get; set; }
-    public int TrimestresRequis { get; set; }
-    public int TrimestresManquants { get; set; }
-    public decimal DecotePct { get; set; }
-    public decimal SurcotePct { get; set; }
-    public decimal Sam { get; set; }
-    public decimal ValeurPoint { get; set; }
-}
-```
-
-**Créer `RetirementService.cs`** (`src/Application/Services/`) :
-```csharp
-// Formule de base CNAV :
-// PensionBase = SAM × 0.50 × (trimValid / trimRequis) × (1 - décote) × (1 + surcote)
-// PensionCompl = Points × valeurPoint (1.45 en 2026)
-// PensionNette = (Base + Compl) × (1 - 0.091)
-
-// Paramètres 2026 depuis docs/knowledge-base/params/2026.json :
-// PASS = 48 060€, taux_plein = 50%, valeur_point = 1.45
-// décote = 1.25% / trimestre manquant
-// surcote = 1.25% / trimestre excédentaire
-// retenue sociale retraite = 9.1%
-```
-
-**Créer `IRetirementService.cs`** (`src/Application/Interfaces/`)
-
-**Créer `RetirementController.cs`** (`src/Api/Controllers/`) :
-- `POST /api/retirement/simulate` — `[Authorize]` optionnel, même pattern que PayrollController
-- Extraire userId du JWT si présent, passer à service pour persistance
-
-#### 3.1.2 Base de données
-
-Aucune migration nécessaire — utiliser la table `simulations` existante avec `type = 'retirement'`. Le payload JSON contiendra Request + Response.
-
-#### 3.1.3 Frontend — `RetirementSimulator.jsx`
-
-Même structure et pattern que `PayrollSimulator.jsx` :
-- Layout `sim-shell` (grille 2 colonnes : formulaire + résultats)
-- Formulaire d'entrée (panneau gauche) :
-  - Âge actuel + âge de départ souhaité (sliders)
-  - Salaire annuel moyen (brut, input €)
-  - Trimestres validés (input numérique ou slider 0–200)
-  - Trimestres requis (pré-rempli selon génération, modifiable)
-  - Points Agirc-Arrco accumulés (input)
-  - Régime (selector : général / fonctionnaire / libéral / artisan)
-  - Revenus annuels actuels (pour calcul taux de remplacement)
-- Résultats KPI (panneau droit sticky) :
-  - Pension nette mensuelle (carte principale, vert)
-  - Pension brute totale annuelle
-  - Taux de remplacement (%)
-  - Détail : Base CNAV + Complémentaire Agirc-Arrco
-  - Décote ou surcote appliquée
-  - Trimestres manquants / excédentaires
-
-Appel API :
-```js
-POST /api/retirement/simulate
-Authorization: Bearer <token>
-Content-Type: application/json
-{ AgeActuel, AgeDepart, SalaireAnnuelMoyen, TrimestresValides, ... }
-```
-
-#### 3.1.4 Wiring dans Home.jsx
-
-- Remplacer le bloc "Coming soon" pour `tab === 'retirement'` par `<RetirementSimulator lang={lang} onLangChange={onLangChange} />`
-- Importer `RetirementSimulator` depuis `./RetirementSimulator`
-- Supprimer le badge "Bientôt" sur l'item sidebar Retraite
-
-### 3.2 Priorité haute
+### 3.1 Priorité haute
 
 | # | Tâche | Contexte |
 |---|---|---|
 | P1 | **Migration vers cookie HttpOnly** | Sécuriser le token JWT (actuellement `localStorage`, vulnérable XSS). Patch `AuthController` : `Response.Cookies.Append(...)` + CORS `credentials: 'include'` |
 | P2 | **Simulateur Prêts** | Même pattern que Retraite. Règles dans `docs/knowledge-base/loans.md`. DTOs : `LoanRequestDto` (montant, durée, taux, type), `LoanResponseDto` (mensualité, coût total, TAEG) |
-| P3 | **Tests E2E retraite** | Après implémentation : tests `RetirementServiceTests.cs` avec cas de décote/plein/surcote |
+| P3 | **Tests E2E** | Tests `LoanServiceTests.cs`, tests Postman pour les endpoints auth/payroll/retirement |
 
-### 3.3 Priorité moyenne
+### 3.2 Priorité moyenne
 
 | # | Tâche | Contexte |
 |---|---|---|
@@ -221,16 +145,16 @@ Content-Type: application/json
 | M2 | **Affinage charges portage** | Intégrer la réserve congés (10%) et frais pro dans le calcul backend |
 | M3 | **Paramètres annuels versionnés** | Mécanisme de sélection de l'année de calcul (2025/2026/2027) |
 | M4 | **Export PDF** | Bulletin de simulation exportable |
-| M5 | **Tests unitaires manquants** | Cas freelance ME/EURL/SASU dans `PayrollServiceTests` ; `RetirementServiceTests` complets |
+| M5 | **Tests unitaires manquants** | Cas freelance ME/EURL/SASU dans `PayrollServiceTests` ; tests intégration auth/google |
 
-### 3.4 Priorité basse
+### 3.3 Priorité basse
 
 | # | Tâche | Contexte |
 |---|---|---|
 | L1 | **Simulateur épargne** | Règles dans `docs/knowledge-base/savings.md` |
 | L2 | **Simulateur assurance** | Règles dans `docs/knowledge-base/insurance.md` |
 | L3 | **Dashboard analytics admin** | Vue admin : simulations, utilisateurs, distributions |
-| L4 | **Google OAuth opérationnel** | Credentials Google + test callback |
+| L4 | **Enregistrer JS origins Google** | Ajouter `http://localhost:5174` + URL prod dans Google Cloud Console → Authorized JavaScript origins |
 
 ---
 
@@ -266,10 +190,11 @@ Content-Type: application/json
 | Élément | Valeur |
 |---|---|
 | API URL (local) | `http://localhost:5000` |
-| Frontend URL (local) | `http://localhost:5173` |
+| Frontend URL (local) | `http://localhost:5174` |
 | DB | `Host=localhost:5432; Database=simulator; Username=simu; Password=111aaa**` |
 | Admin login | username: `admin` / password: `111aaa**` |
 | JWT key (local) | Défini dans `src/Api/Properties/launchSettings.json` (`JWT__KEY`) |
+| Google Client ID | `874107145454-8vao5905rvg7v56h6rustrk3dbbbul62.apps.googleusercontent.com` |
 
 ---
 
@@ -284,6 +209,10 @@ Content-Type: application/json
 | 2026-03-29 | IDOR SimulationController | `GET /user/{userId}` sans auth → n'importe qui pouvait lire les simus d'autrui. Fix : `[Authorize]` + ownership check + endpoint `/mine` |
 | 2026-03-29 | UseAuthentication manquant | **Bug critique** : `app.UseAuthentication()` et `app.UseAuthorization()` absents de `Program.cs` → JWT jamais parsé → `userId` toujours null → toutes les simulations sauvegardées sans propriétaire. Fix : 2 lignes dans `Program.cs` |
 | 2026-03-29 | Authorization header manquant | `PayrollSimulator.jsx` appelait `/api/payroll/simulate` sans header Bearer → backend recevait aucun token. Fix : ajout du header dans `simulate()` |
+| 2026-03-29 | BCrypt hash admin invalide | Migration 004 contenait un hash placeholder qui ne correspondait pas à `111aaa**` → toute tentative de login échouait avec 401. Fix : migration 007 avec hash `BCrypt.HashPassword("111aaa**", 12)` généré par un projet .NET de test |
+| 2026-03-29 | Google OAuth — passage en GSI | L'ancien flow OAuth redirect nécessitait un client secret. Passage au flow Google Identity Services (GSI) : le frontend charge `accounts.google.com/gsi/client`, obtient un ID token signé par Google, et le soumet à `POST /api/auth/google/token`. Le backend valide via `tokeninfo` (pas de secret). Nouveau : `VerifyIdTokenAsync` dans `GoogleAuthClient`, endpoint `POST /api/auth/google/token` dans `AuthController`. |
+| 2026-03-29 | BCrypt hash admin invalide | Migration 004 contenait un hash placeholder qui ne correspondait pas à `111aaa**` → toute tentative de login échouait avec 401. Fix : migration 007 avec hash `BCrypt.HashPassword("111aaa**", 12)` généré par un projet .NET de test |
+| 2026-03-29 | Google OAuth — passage en GSI | L'ancien flow OAuth redirect nécessitait un client secret. Passage au flow Google Identity Services (GSI) : le frontend charge `accounts.google.com/gsi/client`, obtient un ID token signé par Google, et le soumet à `POST /api/auth/google/token`. Le backend valide via `tokeninfo` (pas de secret). Nouveau : `VerifyIdTokenAsync` dans `GoogleAuthClient`, endpoint `POST /api/auth/google/token` dans `AuthController`. |
 
 ---
 
