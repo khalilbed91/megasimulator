@@ -70,27 +70,16 @@ export default function SimulationHistory({ token, lang }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [userId, setUserId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
 
-  // 1. Get current userId from /api/auth/me
-  useEffect(() => {
-    if (!token) { setLoading(false); return }
-    fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } })
-      .then(r => r.ok ? r.json() : null)
-      .then(u => { if (u?.id) setUserId(u.id) })
-      .catch(() => {})
-  }, [token])
-
-  // 2. Fetch simulations once we have userId
   const load = useCallback(() => {
-    if (!userId) return
+    if (!token) { setLoading(false); return }
     setLoading(true)
-    fetch(`/api/simulation/user/${userId}`, { headers: { Authorization: 'Bearer ' + token } })
+    fetch('/api/simulation/mine', { headers: { Authorization: 'Bearer ' + token } })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => { setItems(data); setLoading(false) })
       .catch(() => { setError(tr.error); setLoading(false) })
-  }, [userId, token, tr.error])
+  }, [token, tr.error])
 
   useEffect(() => { load() }, [load])
 

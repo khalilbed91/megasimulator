@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MegaSimulator.Application.DTOs;
 using MegaSimulator.Application.Interfaces;
@@ -18,22 +19,44 @@ namespace MegaSimulator.Api.Controllers
             _service = service;
         }
 
+        // Returns the caller's own simulations — userId comes from JWT, not URL (prevents IDOR)
+        [HttpGet("mine")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<SimulationDto>>> ListMine()
+        {
+            var userId = GetCallerUserId();
+            if (userId == null) return Unauthorized();
+            var list = await _service.ListByUserAsync(userId.Value);
+            return Ok(list);
+        }
+
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<SimulationDto>> Get(Guid id)
         {
             var s = await _service.GetByIdAsync(id);
             if (s == null) return NotFound();
+            // Only the owner can read their simulation
+            var callerId = GetCallerUserId();
+            if (s.UserId != null && s.UserId != callerId) return Forbid();
             return Ok(s);
         }
 
-        [HttpGet("user/{userId}")]
-        public async Task<ActionResult<IEnumerable<SimulationDto>>> ListByUser(Guid userId)
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var list = await _service.ListByUserAsync(userId);
-            return Ok(list);
+            var s = await _service.GetByIdAsync(id);
+            if (s == null) return NotFound();
+            // Only the owner can delete their simulation
+            var callerId = GetCallerUserId();
+            if (s.UserId != null && s.UserId != callerId) return Forbid();
+            await _service.DeleteAsync(id);
+            return NoContent();
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<SimulationDto>> Create([FromBody] SimulationDto dto)
         {
             var created = await _service.CreateAsync(dto);
@@ -41,18 +64,31 @@ namespace MegaSimulator.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] SimulationDto dto)
         {
             if (id != dto.Id) return BadRequest();
+            var existing = await _service.GetByIdAsync(id);
+            if (existing == null) return NotFound();
+            var callerId = GetCallerUserId();
+            if (existing.UserId != null && existing.UserId != callerId) return Forbid();
             await _service.UpdateAsync(dto);
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
+        // Admin-only: list by explicit userId
+        [HttpGet("user/{userId}")]
+        [Authorize(Roles = "admin")]
+        public async Task<ActionResult<IEnumerable<SimulationDto>>> ListByUser(Guid userId)
         {
-            await _service.DeleteAsync(id);
-            return NoContent();
+            var list = await _service.ListByUserAsync(userId);
+            return Ok(list);
+        }
+
+        private Guid? GetCallerUserId()
+        {
+            var idStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            return Guid.TryParse(idStr, out var id) ? id : null;
         }
     }
 }
