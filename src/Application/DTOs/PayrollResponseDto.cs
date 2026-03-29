@@ -15,5 +15,7 @@ namespace MegaSimulator.Application.DTOs
         public decimal RetenueAmount { get; set; }
         public decimal NetAfterRetenue { get; set; }
         public decimal NetMonthly { get; set; }
+        public decimal Parts { get; set; }          // parts fiscales utilisées
+        public decimal NetImposable { get; set; }   // net avant retenue (pour affichage)
     }
 }

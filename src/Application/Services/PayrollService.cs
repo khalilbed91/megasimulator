@@ -74,14 +74,26 @@ namespace MegaSimulator.Application.Services
             var brut = req.Brut + req.RevenusAnnexes + req.Primes;
             var statut = req.Statut ?? "non-cadre";
 
-            var net = await BrutToNet(brut, statut);
+            var netBeforeRetenue = await BrutToNet(brut, statut);
             // Apply withholding (retenue) if provided in request
             var retenuePct = req.RetenuePct;
             decimal retenueAmount = 0m;
+            var net = netBeforeRetenue;
             if (retenuePct > 0)
             {
                 retenueAmount = decimal.Round(net * (retenuePct / 100m), 2);
                 net = decimal.Round(net - retenueAmount, 2);
+            }
+            else if (req.Parts > 0)
+            {
+                // Compute PAS (Prélèvement à la Source) from parts fiscales (barème 2026)
+                var estimatedRetenuePct = ComputePasTaux(net * 12m, req.Parts);
+                if (estimatedRetenuePct > 0)
+                {
+                    retenuePct = estimatedRetenuePct;
+                    retenueAmount = decimal.Round(net * (retenuePct / 100m), 2);
+                    net = decimal.Round(net - retenueAmount, 2);
+                }
             }
             var employerCost = await EmployerCost(brut);
             var (csgBase, csgDed, csgNonDed) = ComputeCsgComponents(brut);
@@ -94,6 +106,8 @@ namespace MegaSimulator.Application.Services
             {
                 Net = net,
                 NetMonthly = net,
+                NetImposable = netBeforeRetenue,
+                Parts = req.Parts,
                 EmployerCost = employerCost,
                 SocialContribution = socialContribution,
                 CsgBase = csgBase,
@@ -203,6 +217,31 @@ namespace MegaSimulator.Application.Services
             // services (BNC/BIC) use a mid value fallback
             var rate = 0.24m; // default between 21.2% and 25.6%
             return ca * (1 - rate);
+        }
+
+        /// <summary>
+        /// Barème PAS 2026 ajusté au quotient familial.
+        /// Calcule le taux de retenue à la source en fonction du revenu net annuel
+        /// et du nombre de parts fiscales (foyer fiscal).
+        /// </summary>
+        public decimal ComputePasTaux(decimal netAnnuel, decimal parts)
+        {
+            if (parts <= 0) parts = 1m;
+
+            // Revenu par part (quotient familial)
+            var qf = netAnnuel / parts;
+
+            // Barème PAS 2026 (tranches sur revenu net par part)
+            decimal taux;
+            if      (qf <= 14_490m)  taux = 0m;
+            else if (qf <= 21_917m)  taux = 2m;
+            else if (qf <= 31_425m)  taux = 7.5m;
+            else if (qf <= 58_360m)  taux = 14m;
+            else if (qf <= 80_669m)  taux = 22m;
+            else if (qf <= 177_106m) taux = 30m;
+            else                     taux = 41m;
+
+            return taux;
         }
     }
 }
