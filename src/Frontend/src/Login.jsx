@@ -30,9 +30,8 @@ export default function Login({ onLoginSuccess, switchToSignup, onClose }){
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // use conventional lower-case keys; backend should prefer HttpOnly cookie where possible
-        body: JSON.stringify({ username: username, password: password }),
-        // if you configure backend with CORS and cookies, consider adding `credentials: 'include'` here
+        // Backend expects TitleCase fields (LoginRequest record)
+        body: JSON.stringify({ Username: username, Password: password }),
       })
       if (!res.ok) throw new Error('Invalid credentials')
       const j = await res.json()
