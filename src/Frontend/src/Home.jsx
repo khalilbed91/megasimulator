@@ -3,6 +3,7 @@ import PayrollSimulator from './PayrollSimulator'
 import Login from './Login'
 import Account from './Account'
 import Contact from './Contact'
+import SimulationHistory from './SimulationHistory'
 import './styles.css'
 import Logo from './components/Logo'
 
@@ -11,27 +12,32 @@ const T = {
     appName: 'Mega Simulator', subtitle: 'Paie & Finance',
     navPayroll: 'Simulateur paie', navRetirement: 'Retraite', navLoans: 'Prêts',
     navAccount: 'Mon compte', navContact: 'Contact', navSignIn: 'Se connecter', navSignOut: 'Se déconnecter',
+    navHistory: 'Historique',
     sectionSim: 'Simulations', sectionUser: 'Utilisateur',
     comingSoon: 'Prochainement', comingSoonDesc: 'Ce module est en cours de développement.',
     tabPayroll: 'Paie', tabRetirement: 'Retraite', tabLoans: 'Prêts',
     guest: 'Invité', topbarPayroll: 'Simulateur de paie', topbarRetirement: 'Simulation retraite',
     topbarLoans: 'Simulation prêts', topbarAccount: 'Mon compte', topbarContact: 'Contact',
+    topbarHistory: 'Historique des simulations',
   },
   en: {
     appName: 'Mega Simulator', subtitle: 'Payroll & Finance',
     navPayroll: 'Payroll sim', navRetirement: 'Retirement', navLoans: 'Loans',
     navAccount: 'My account', navContact: 'Contact', navSignIn: 'Sign in', navSignOut: 'Sign out',
+    navHistory: 'History',
     sectionSim: 'Simulators', sectionUser: 'User',
     comingSoon: 'Coming soon', comingSoonDesc: 'This module is under development.',
     tabPayroll: 'Payroll', tabRetirement: 'Retirement', tabLoans: 'Loans',
     guest: 'Guest', topbarPayroll: 'Payroll simulator', topbarRetirement: 'Retirement planner',
     topbarLoans: 'Loan simulator', topbarAccount: 'My account', topbarContact: 'Contact',
+    topbarHistory: 'Simulation history',
   }
 }
 
 const topbarTitles = (t, tab) => ({
   payroll: t.topbarPayroll, retirement: t.topbarRetirement,
-  loans: t.topbarLoans, account: t.topbarAccount, contact: t.topbarContact
+  loans: t.topbarLoans, account: t.topbarAccount, contact: t.topbarContact,
+  history: t.topbarHistory
 })[tab] || t.topbarPayroll
 
 export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess, lang, onLangChange }){
@@ -93,6 +99,9 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
         <div className="nav-divider" />
         <div className="nav-section-label">{tr.sectionUser}</div>
 
+        {navItem('history', tr.navHistory,
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        )}
         {navItem('account', tr.navAccount,
           <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
         )}
@@ -164,6 +173,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
             </div>
           )}
 
+          {tab === 'history' && <SimulationHistory token={token} lang={lang} />}
           {tab === 'account' && <Account token={token} lang={lang} />}
           {tab === 'contact' && <Contact lang={lang} />}
         </div>
