@@ -10,5 +10,10 @@ namespace MegaSimulator.Application.DTOs
         public decimal CsgNonDeductible { get; set; }
         public decimal AgircArrco { get; set; }
         public bool IsJeiEligible { get; set; }
+        // Optional fields for frontend display
+        public decimal RetenuePct { get; set; }
+        public decimal RetenueAmount { get; set; }
+        public decimal NetAfterRetenue { get; set; }
+        public decimal NetMonthly { get; set; }
     }
 }

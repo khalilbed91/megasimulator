@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react'
 
-export default function Account({ token }){
+export default function Account({ token, lang = 'en' }){
+  const t = {
+    fr: { title: 'Compte', firstName: 'Prénom', lastName: 'Nom', phone: 'Téléphone', email: 'Email', save: 'Enregistrer', reset: 'Réinitialiser le mot de passe', loading: 'Chargement...', notSigned: "Non connecté" },
+    en: { title: 'Account', firstName: 'First name', lastName: 'Last name', phone: 'Phone', email: 'Email', save: 'Save', reset: 'Reset password', loading: 'Loading...', notSigned: 'Not signed in' }
+  }[lang || 'en']
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [phone, setPhone] = useState('')
@@ -57,34 +61,34 @@ export default function Account({ token }){
     }catch(e){ setMessage('Error: ' + e.message) }
   }
 
-  if (loading) return <div className="p-4">Loading...</div>
-  if (!userId) return <div className="p-4">Not signed in</div>
+  if (loading) return <div className="p-4">{t.loading}</div>
+  if (!userId) return <div className="p-4">{t.notSigned}</div>
 
   return (
     <div className="d-flex justify-content-center p-4">
       <div className="card p-3" style={{width:640}}>
-        <h4>Account</h4>
+        <h4>{t.title}</h4>
         <div className="row">
           <div className="col-md-6 mb-2">
-            <label className="form-label">First name</label>
+            <label className="form-label">{t.firstName}</label>
             <input className="form-control" value={firstName} onChange={e=>setFirstName(e.target.value)} />
           </div>
           <div className="col-md-6 mb-2">
-            <label className="form-label">Last name</label>
+            <label className="form-label">{t.lastName}</label>
             <input className="form-control" value={lastName} onChange={e=>setLastName(e.target.value)} />
           </div>
           <div className="col-md-6 mb-2">
-            <label className="form-label">Phone</label>
+            <label className="form-label">{t.phone}</label>
             <input className="form-control" value={phone} onChange={e=>setPhone(e.target.value)} />
           </div>
           <div className="col-md-6 mb-2">
-            <label className="form-label">Email</label>
+            <label className="form-label">{t.email}</label>
             <input className="form-control" value={email} onChange={e=>setEmail(e.target.value)} />
           </div>
         </div>
         <div className="mt-2">
-          <button className="btn btn-primary" onClick={save}>Save</button>
-          <button className="btn btn-secondary ms-2" onClick={resetPassword}>Reset password</button>
+          <button className="btn btn-primary" onClick={save}>{t.save}</button>
+          <button className="btn btn-secondary ms-2" onClick={resetPassword}>{t.reset}</button>
           {message && <span className="ms-3 text-muted">{message}</span>}
         </div>
       </div>

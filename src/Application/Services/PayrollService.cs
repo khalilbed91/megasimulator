@@ -74,6 +74,14 @@ namespace MegaSimulator.Application.Services
             var statut = req.Statut ?? "non-cadre";
 
             var net = await BrutToNet(brut, statut);
+            // Apply withholding (retenue) if provided in request
+            var retenuePct = req.RetenuePct;
+            decimal retenueAmount = 0m;
+            if (retenuePct > 0)
+            {
+                retenueAmount = decimal.Round(net * (retenuePct / 100m), 2);
+                net = decimal.Round(net - retenueAmount, 2);
+            }
             var employerCost = await EmployerCost(brut);
             var (csgBase, csgDed, csgNonDed) = ComputeCsgComponents(brut);
             var agirc = ComputeAgircArrcoContribution(brut);
@@ -84,13 +92,17 @@ namespace MegaSimulator.Application.Services
             var response = new MegaSimulator.Application.DTOs.PayrollResponseDto
             {
                 Net = net,
+                NetMonthly = net,
                 EmployerCost = employerCost,
                 SocialContribution = socialContribution,
                 CsgBase = csgBase,
                 CsgDeductible = csgDed,
                 CsgNonDeductible = csgNonDed,
                 AgircArrco = agirc,
-                IsJeiEligible = jei
+                IsJeiEligible = jei,
+                RetenuePct = retenuePct,
+                RetenueAmount = retenueAmount,
+                NetAfterRetenue = net
             };
 
             if (_simulationRepository != null)
@@ -98,7 +110,7 @@ namespace MegaSimulator.Application.Services
                 var sim = new Domain.Entities.Simulation
                 {
                     Id = System.Guid.NewGuid(),
-                    UserId = userId ?? System.Guid.Empty,
+                    UserId = userId, // nullable: store NULL for anonymous simulations
                     Name = "Payroll simulation",
                     Type = "payroll",
                     Payload = System.Text.Json.JsonSerializer.Serialize(new { Request = req, Response = response }),

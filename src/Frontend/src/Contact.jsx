@@ -1,6 +1,18 @@
 import React, { useState } from 'react'
 
-export default function Contact(){
+export default function Contact({ lang = 'en' }){
+  const t = {
+    fr: {
+      title: 'Contact',
+      help: "Besoin d'aide ou problème ? Envoyez-nous un message.",
+      name: 'Nom', email: 'Email', message: 'Message', send: 'Envoyer'
+    },
+    en: {
+      title: 'Contact',
+      help: "Need help or found an issue? Send us a message.",
+      name: 'Name', email: 'Email', message: 'Message', send: 'Send message'
+    }
+  }[lang || 'en']
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
@@ -25,23 +37,23 @@ export default function Contact(){
   return (
     <div className="d-flex justify-content-center p-4">
       <div className="card p-3" style={{maxWidth:720}}>
-        <h4>Contact</h4>
-        <p className="text-muted">Need help or found an issue? Send us a message and we'll reply shortly.</p>
+        <h4>{t.title}</h4>
+        <p className="text-muted">{t.help}</p>
         <form onSubmit={submit}>
           <div className="mb-2">
-            <label className="form-label">Name</label>
-            <input className="form-control" value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" />
+            <label className="form-label">{t.name}</label>
+            <input className="form-control" value={name} onChange={e=>setName(e.target.value)} placeholder={t.name} />
           </div>
           <div className="mb-2">
-            <label className="form-label">Email</label>
-            <input className="form-control" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@company.com" />
+            <label className="form-label">{t.email}</label>
+            <input className="form-control" value={email} onChange={e=>setEmail(e.target.value)} placeholder={t.email} />
           </div>
           <div className="mb-2">
-            <label className="form-label">Message</label>
-            <textarea className="form-control" rows={6} value={message} onChange={e=>setMessage(e.target.value)} placeholder="Describe your request or issue"></textarea>
+            <label className="form-label">{t.message}</label>
+            <textarea className="form-control" rows={6} value={message} onChange={e=>setMessage(e.target.value)} placeholder={t.message}></textarea>
           </div>
           <div className="d-flex align-items-center gap-2">
-            <button className="btn btn-primary" type="submit">Send message</button>
+            <button className="btn btn-primary" type="submit">{t.send}</button>
             {status === 'sending' && <div className="text-muted small">Sending…</div>}
             {status === 'sent' && <div className="text-success small">Message sent — thanks!</div>}
             {status === 'fallback' && <div className="text-warning small">Opened mail client as fallback.</div>}

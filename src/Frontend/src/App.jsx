@@ -5,53 +5,86 @@ import Home from './Home'
 import './styles.css'
 
 export default function App(){
-  const [view, setView] = useState('login') // 'login' | 'signup' | 'app'
+  const [view,  setView]  = useState('login')
   const [token, setToken] = useState(localStorage.getItem('msim_token'))
-  const [dark, setDark] = useState(localStorage.getItem('msim_dark') === '1')
+  const [dark,  setDark]  = useState(localStorage.getItem('msim_dark') === '1')
+  const [lang,  setLang]  = useState(localStorage.getItem('msim_lang') || 'fr')
 
   useEffect(()=>{
-    // parse token from URL if present
     try{
       const qp = new URLSearchParams(window.location.search)
-      const t = qp.get('token')
+      const t  = qp.get('token')
       if (t){
-        localStorage.setItem('msim_token', t)
-        setToken(t)
-        setView('app')
-        // remove token from url
+        localStorage.setItem('msim_token', t); setToken(t); setView('app')
         const url = new URL(window.location.href)
         url.searchParams.delete('token')
         window.history.replaceState({}, document.title, url.toString())
       } else if (localStorage.getItem('msim_token')){
-        setToken(localStorage.getItem('msim_token'))
-        setView('app')
+        setToken(localStorage.getItem('msim_token')); setView('app')
       }
-    }catch(e){}
+    }catch{}
   }, [])
 
   useEffect(()=>{
-    if (dark) document.body.classList.add('app-dark'); else document.body.classList.remove('app-dark')
+    document.body.classList.toggle('app-dark', dark)
     localStorage.setItem('msim_dark', dark ? '1' : '0')
   }, [dark])
 
-  const onLoginSuccess = (t) => {
-    setToken(t)
-    setView('app')
-  }
+  useEffect(()=>{ localStorage.setItem('msim_lang', lang) }, [lang])
 
-  const signOut = () => {
-    localStorage.removeItem('msim_token')
-    setToken(null)
-    setView('login')
-  }
+  const onLoginSuccess = (t) => { setToken(t); setView('app') }
+  const signOut = () => { localStorage.removeItem('msim_token'); setToken(null); setView('login') }
 
-  if (view === 'login') return <Login onLoginSuccess={onLoginSuccess} switchToSignup={()=>setView('signup')} />
-  if (view === 'signup') return <Signup onSignupSuccess={onLoginSuccess} switchToLogin={()=>setView('login')} />
+  // Floating controls: dark mode toggle + language flags
+  const Controls = (
+    <div className="controls-bar">
+      <button className="icon-ctrl" onClick={()=>setDark(d=>!d)}
+        title={dark ? 'Light mode' : 'Dark mode'}
+        aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
+        {dark ? (
+          /* Sun icon */
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+        ) : (
+          /* Moon icon */
+          <svg viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        )}
+      </button>
+
+      {/* FR flag */}
+      <button className="icon-ctrl" title="Français" aria-label="Changer en français"
+        onClick={()=>setLang('fr')}
+        style={lang==='fr' ? {borderColor:'var(--accent)',color:'var(--accent)'} : {}}>
+        <svg viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg" width="22" height="15" style={{borderRadius:2,display:'block'}}>
+          <rect width="1" height="2" x="0" fill="#0055A4"/>
+          <rect width="1" height="2" x="1" fill="#fff"/>
+          <rect width="1" height="2" x="2" fill="#EF4135"/>
+        </svg>
+      </button>
+
+      {/* EN flag */}
+      <button className="icon-ctrl" title="English" aria-label="Switch to English"
+        onClick={()=>setLang('en')}
+        style={lang==='en' ? {borderColor:'var(--accent)',color:'var(--accent)'} : {}}>
+        <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg" width="22" height="15" style={{borderRadius:2,display:'block'}}>
+          <rect width="60" height="30" fill="#012169"/>
+          <path d="M0 0L60 30M60 0L0 30" stroke="#fff" strokeWidth="6"/>
+          <path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" strokeWidth="4"/>
+          <rect x="26" width="8" height="30" fill="#fff"/>
+          <rect y="11" width="60" height="8" fill="#fff"/>
+          <rect x="28" width="4" height="30" fill="#C8102E"/>
+          <rect y="13" width="60" height="4" fill="#C8102E"/>
+        </svg>
+      </button>
+    </div>
+  )
+
+  if (view === 'login')  return (<>{Controls}<Login  onLoginSuccess={onLoginSuccess} switchToSignup={()=>setView('signup')} /></>)
+  if (view === 'signup') return (<>{Controls}<Signup onSignupSuccess={onLoginSuccess} switchToLogin={()=>setView('login')} /></>)
 
   return (
     <>
-      <button className="dark-toggle" onClick={()=>setDark(d=>!d)}>{dark? 'Light' : 'Dark'}</button>
-      <Home token={token} onSignOut={signOut} onRequestLogin={()=>setView('login')} onLoginSuccess={onLoginSuccess} />
+      {Controls}
+      <Home token={token} onSignOut={signOut} onRequestLogin={()=>setView('login')} onLoginSuccess={onLoginSuccess} lang={lang} onLangChange={setLang} />
     </>
   )
 }

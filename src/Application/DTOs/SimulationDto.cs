@@ -4,7 +4,7 @@ namespace MegaSimulator.Application.DTOs
 {
     public record SimulationDto(
         Guid Id,
-        Guid UserId,
+        Guid? UserId,
         string Name,
         string Type,
         string Payload,

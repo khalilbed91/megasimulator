@@ -67,7 +67,14 @@ builder.Services.AddSwaggerGen();
 // JWT Authentication
 if (!string.IsNullOrEmpty(jwtKey))
 {
-    var key = System.Text.Encoding.ASCII.GetBytes(jwtKey);
+    // Ensure the validation key is derived the same way tokens are signed in AuthService.
+    var keyBytes = System.Text.Encoding.ASCII.GetBytes(jwtKey);
+    if (keyBytes.Length < 32)
+    {
+        using var sha = System.Security.Cryptography.SHA256.Create();
+        keyBytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(jwtKey));
+    }
+
     builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
@@ -81,7 +88,7 @@ if (!string.IsNullOrEmpty(jwtKey))
             ValidateIssuer = false,
             ValidateAudience = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key)
+            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(keyBytes)
         };
     });
 

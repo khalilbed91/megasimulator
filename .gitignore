@@ -10,4 +10,13 @@ build/
 
 # OS
 Thumbs.db
+
+# .NET build artifacts
+bin/
+obj/
+*.user
+*.suo
+
+# Frontend build output
+src/Frontend/dist/
 ehthumbs.db
