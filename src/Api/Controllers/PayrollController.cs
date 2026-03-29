@@ -2,6 +2,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using MegaSimulator.Application.DTOs;
 using MegaSimulator.Application.Services;
+using MegaSimulator.Domain.Entities;
+using MegaSimulator.Domain.Interfaces;
+using System.Text.Json;
 
 namespace MegaSimulator.Api.Controllers
 {
@@ -21,6 +24,13 @@ namespace MegaSimulator.Api.Controllers
         {
             var net = await _payrollService.BrutToNet(req.Brut, req.Statut ?? "non-cadre");
             return Ok(new { net });
+        }
+
+        [HttpPost("simulate")]
+        public async Task<IActionResult> Simulate([FromBody] PayrollRequestDto req)
+        {
+            var response = await _payrollService.Simulate(req);
+            return Ok(response);
         }
     }
 }

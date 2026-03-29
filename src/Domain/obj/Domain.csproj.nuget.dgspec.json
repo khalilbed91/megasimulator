@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj": {}
+    "c:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj": {}
   },
   "projects": {
-    "C:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj": {
+    "c:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj",
+        "projectUniqueName": "c:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj",
         "projectName": "Domain",
-        "projectPath": "C:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj",
+        "projectPath": "c:\\Users\\khali\\MegaSimulator\\src\\Domain\\Domain.csproj",
         "packagesPath": "C:\\Users\\khali\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\khali\\MegaSimulator\\src\\Domain\\obj\\",
+        "outputPath": "c:\\Users\\khali\\MegaSimulator\\src\\Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\khali\\AppData\\Roaming\\NuGet\\NuGet.Config",

@@ -10,11 +10,18 @@ namespace MegaSimulator.Application.Services
     {
         private readonly IFormulaService _formulaService;
         private readonly PayrollParams _params;
+        private readonly Domain.Interfaces.ISimulationRepository? _simulationRepository;
 
-        public PayrollService(IFormulaService formulaService, PayrollParams @params)
+        public PayrollService(IFormulaService formulaService, PayrollParams @params, Domain.Interfaces.ISimulationRepository? simulationRepository = null)
         {
             _formulaService = formulaService;
             _params = @params;
+            _simulationRepository = simulationRepository;
+        }
+
+        // Backwards-compatible constructor used by tests/mocks that supply only two args
+        public PayrollService(IFormulaService formulaService, PayrollParams @params) : this(formulaService, @params, null)
+        {
         }
 
         // Simple brut->net using a percentage parameter or formula
@@ -58,6 +65,58 @@ namespace MegaSimulator.Application.Services
 
             var pct = 0.45m; // fallback
             return brut * (1 + pct);
+        }
+
+        // New: full simulate flow returns detailed DTO and persists simulation when repository available
+        public virtual async Task<MegaSimulator.Application.DTOs.PayrollResponseDto> Simulate(MegaSimulator.Application.DTOs.PayrollRequestDto req, System.Guid? userId = null)
+        {
+            var brut = req.Brut;
+            var statut = req.Statut ?? "non-cadre";
+
+            var net = await BrutToNet(brut, statut);
+            var employerCost = await EmployerCost(brut);
+            var (csgBase, csgDed, csgNonDed) = ComputeCsgComponents(brut);
+            var agirc = ComputeAgircArrcoContribution(brut);
+            var jei = IsJeiEligible(brut);
+
+            var socialContribution = decimal.Round(brut - net, 2);
+
+            var response = new MegaSimulator.Application.DTOs.PayrollResponseDto
+            {
+                Net = net,
+                EmployerCost = employerCost,
+                SocialContribution = socialContribution,
+                CsgBase = csgBase,
+                CsgDeductible = csgDed,
+                CsgNonDeductible = csgNonDed,
+                AgircArrco = agirc,
+                IsJeiEligible = jei
+            };
+
+            if (_simulationRepository != null)
+            {
+                var sim = new Domain.Entities.Simulation
+                {
+                    Id = System.Guid.NewGuid(),
+                    UserId = userId ?? System.Guid.Empty,
+                    Name = "Payroll simulation",
+                    Type = "payroll",
+                    Payload = System.Text.Json.JsonSerializer.Serialize(new { Request = req, Response = response }),
+                    IsActive = true,
+                    CreatedAt = System.DateTime.UtcNow
+                };
+
+                try
+                {
+                    await _simulationRepository.AddAsync(sim);
+                }
+                catch
+                {
+                    // swallow persistence errors to keep simulate non-blocking
+                }
+            }
+
+            return response;
         }
 
         public virtual async Task<decimal> ComputeCDDPrime(decimal totalBruts)

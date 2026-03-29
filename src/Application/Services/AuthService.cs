@@ -94,5 +94,45 @@ namespace MegaSimulator.Application.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
+
+        public string GenerateTokenForUser(MegaSimulator.Domain.Entities.User user)
+        {
+            var key = _config["JWT:Key"] ?? Environment.GetEnvironmentVariable("JWT__KEY");
+            var issuer = _config["JWT:Issuer"] ?? Environment.GetEnvironmentVariable("JWT__ISSUER") ?? "megasimulator";
+            if (string.IsNullOrEmpty(key)) return string.Empty;
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenKey = Encoding.ASCII.GetBytes(key);
+            if (tokenKey.Length < 32)
+            {
+                using var sha = System.Security.Cryptography.SHA256.Create();
+                tokenKey = sha.ComputeHash(Encoding.UTF8.GetBytes(key));
+            }
+
+            var claims = new System.Collections.Generic.List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+            };
+
+            if (user.Roles != null)
+            {
+                foreach (var r in user.Roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, r));
+                }
+            }
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(8),
+                Issuer = issuer,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
     }
 }

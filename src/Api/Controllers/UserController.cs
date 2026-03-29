@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using MegaSimulator.Application.DTOs;
 using MegaSimulator.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MegaSimulator.Api.Controllers
 {
@@ -45,6 +46,15 @@ namespace MegaSimulator.Api.Controllers
         {
             if (id != dto.Id) return BadRequest();
             await _service.UpdateAsync(dto);
+            return NoContent();
+        }
+
+        [HttpPost("{id}/password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(Guid id, [FromBody] ChangePasswordDto dto)
+        {
+            var ok = await _service.ChangePasswordAsync(id, dto.OldPassword, dto.NewPassword);
+            if (!ok) return BadRequest(new { message = "Password change failed" });
             return NoContent();
         }
 

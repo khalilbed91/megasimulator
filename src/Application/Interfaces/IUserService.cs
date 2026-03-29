@@ -11,5 +11,6 @@ namespace MegaSimulator.Application.Interfaces
         Task<UserDto> CreateAsync(UserDto dto);
         Task UpdateAsync(UserDto dto);
         Task DeleteAsync(Guid id);
+        Task<bool> ChangePasswordAsync(Guid id, string oldPassword, string newPassword);
     }
 }

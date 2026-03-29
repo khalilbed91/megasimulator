@@ -54,6 +54,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISimulationRepository, SimulationRepository>();
 builder.Services.AddScoped<IFormulaRepository, FormulaRepository>();
 builder.Services.AddScoped<ISimulationResultRepository, SimulationResultRepository>();
+// Google OAuth client (typed HttpClient for GoogleAuthClient)
+builder.Services.AddHttpClient<MegaSimulator.Application.Interfaces.IGoogleAuthClient, MegaSimulator.Infrastructure.Services.GoogleAuthClient>();
 
 // Migration runner
 builder.Services.AddScoped<IMigrationRunner, MigrationRunner>();

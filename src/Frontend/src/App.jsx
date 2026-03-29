@@ -1,39 +1,57 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import Login from './Login'
+import Signup from './Signup'
+import Home from './Home'
+import './styles.css'
 
 export default function App(){
-  const [brut, setBrut] = useState(3000)
-  const [statut, setStatut] = useState('non-cadre')
-  const [result, setResult] = useState(null)
-  const callPayroll = async () => {
+  const [view, setView] = useState('login') // 'login' | 'signup' | 'app'
+  const [token, setToken] = useState(localStorage.getItem('msim_token'))
+  const [dark, setDark] = useState(localStorage.getItem('msim_dark') === '1')
+
+  useEffect(()=>{
+    // parse token from URL if present
     try{
-      const res = await fetch('/api/payroll/brut-to-net', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Brut: brut, Statut: statut })
-      })
-      const json = await res.json()
-      setResult(json)
-    }catch(e){
-      setResult({ error: e.message })
-    }
+      const qp = new URLSearchParams(window.location.search)
+      const t = qp.get('token')
+      if (t){
+        localStorage.setItem('msim_token', t)
+        setToken(t)
+        setView('app')
+        // remove token from url
+        const url = new URL(window.location.href)
+        url.searchParams.delete('token')
+        window.history.replaceState({}, document.title, url.toString())
+      } else if (localStorage.getItem('msim_token')){
+        setToken(localStorage.getItem('msim_token'))
+        setView('app')
+      }
+    }catch(e){}
+  }, [])
+
+  useEffect(()=>{
+    if (dark) document.body.classList.add('app-dark'); else document.body.classList.remove('app-dark')
+    localStorage.setItem('msim_dark', dark ? '1' : '0')
+  }, [dark])
+
+  const onLoginSuccess = (t) => {
+    setToken(t)
+    setView('app')
   }
 
+  const signOut = () => {
+    localStorage.removeItem('msim_token')
+    setToken(null)
+    setView('login')
+  }
+
+  if (view === 'login') return <Login onLoginSuccess={onLoginSuccess} switchToSignup={()=>setView('signup')} />
+  if (view === 'signup') return <Signup onSignupSuccess={onLoginSuccess} switchToLogin={()=>setView('login')} />
+
   return (
-    <div style={{ padding: 20, fontFamily: 'Arial, sans-serif' }}>
-      <h2>Payroll Test</h2>
-      <div>
-        <label>Brut: </label>
-        <input type="number" value={brut} onChange={e=>setBrut(Number(e.target.value))} />
-      </div>
-      <div>
-        <label>Statut: </label>
-        <select value={statut} onChange={e=>setStatut(e.target.value)}>
-          <option value="non-cadre">non-cadre</option>
-          <option value="cadre">cadre</option>
-        </select>
-      </div>
-      <button onClick={callPayroll} style={{ marginTop: 10 }}>Compute Brut→Net</button>
-      <pre style={{ marginTop: 10 }}>{result ? JSON.stringify(result, null, 2) : 'No result yet'}</pre>
-    </div>
+    <>
+      <button className="dark-toggle" onClick={()=>setDark(d=>!d)}>{dark? 'Light' : 'Dark'}</button>
+      <Home onSignOut={signOut} onRequestLogin={()=>setView('login')} />
+    </>
   )
 }

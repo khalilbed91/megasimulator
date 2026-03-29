@@ -20,28 +20,28 @@ namespace MegaSimulator.Infrastructure.Repositories
         public async Task AddAsync(User user)
         {
             using var conn = _factory.CreateConnection();
-            const string sql = "INSERT INTO users (id, username, email, created_at, password_hash, roles) VALUES (@Id, @Username, @Email, @CreatedAt, @PasswordHash, @Roles)";
+            const string sql = "INSERT INTO users (id, username, email, first_name, last_name, phone, created_at, password_hash, roles) VALUES (@Id, @Username, @Email, @FirstName, @LastName, @Phone, @CreatedAt, @PasswordHash, @Roles)";
             await conn.ExecuteAsync(sql, user);
         }
 
         public async Task UpdateAsync(User user)
         {
             using var conn = _factory.CreateConnection();
-            const string sql = "UPDATE users SET username = @Username, email = @Email, password_hash = @PasswordHash, roles = @Roles WHERE id = @Id";
+            const string sql = "UPDATE users SET username = @Username, email = @Email, first_name = @FirstName, last_name = @LastName, phone = @Phone, password_hash = @PasswordHash, roles = @Roles WHERE id = @Id";
             await conn.ExecuteAsync(sql, user);
         }
 
         public async Task<User?> GetByIdAsync(Guid id)
         {
             using var conn = _factory.CreateConnection();
-            const string sql = "SELECT id, username, email, created_at as CreatedAt, password_hash as PasswordHash, roles FROM users WHERE id = @Id";
+            const string sql = "SELECT id, username, email, first_name as FirstName, last_name as LastName, phone as Phone, created_at as CreatedAt, password_hash as PasswordHash, roles FROM users WHERE id = @Id";
             return await conn.QueryFirstOrDefaultAsync<User>(sql, new { Id = id });
         }
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
             using var conn = _factory.CreateConnection();
-            const string sql = "SELECT id, username, email, created_at as CreatedAt, password_hash as PasswordHash, roles FROM users WHERE username = @Username";
+            const string sql = "SELECT id, username, email, first_name as FirstName, last_name as LastName, phone as Phone, created_at as CreatedAt, password_hash as PasswordHash, roles FROM users WHERE username = @Username";
             return await conn.QueryFirstOrDefaultAsync<User>(sql, new { Username = username });
         }
 
