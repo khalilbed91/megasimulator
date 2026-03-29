@@ -3,17 +3,17 @@ import PayrollSimulator from './PayrollSimulator'
 import Login from './Login'
 import Signup from './Signup'
 import Account from './Account'
+import Contact from './Contact'
 import './styles.css'
 import Logo from './components/Logo'
 
-export default function Home({ onSignOut, onRequestLogin }){
+export default function Home({ token, onSignOut, onRequestLogin }){
   const [tab, setTab] = React.useState('payroll')
   const [showLogin, setShowLogin] = React.useState(false)
   const [user, setUser] = useState(null)
 
   useEffect(()=>{
     const load = async ()=>{
-      const token = localStorage.getItem('msim_token')
       if (!token) return setUser(null)
       try{
         const res = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } })
@@ -23,7 +23,7 @@ export default function Home({ onSignOut, onRequestLogin }){
       }catch(e){ setUser(null) }
     }
     load()
-  }, [showLogin])
+  }, [token, showLogin])
 
   return (
     <div className="app-shell d-flex">
@@ -37,10 +37,6 @@ export default function Home({ onSignOut, onRequestLogin }){
         </div>
 
         <div className="nav d-flex flex-column mb-4">
-          <button className={`btn btn-link text-start ${tab==='payroll' ? 'text-danger fw-bold' : 'text-success'}`} onClick={()=>setTab('payroll')}>Payroll</button>
-          <button className={`btn btn-link text-start ${tab==='retirement' ? 'text-danger fw-bold' : 'text-success'}`} onClick={()=>setTab('retirement')}>Retirement</button>
-          <button className={`btn btn-link text-start ${tab==='loans' ? 'text-danger fw-bold' : 'text-success'}`} onClick={()=>setTab('loans')}>Loans</button>
-          <hr />
           <button className={`btn btn-link text-start ${tab==='account' ? 'text-danger fw-bold' : 'text-muted'}`} onClick={()=>setTab('account')}>Account</button>
           <button className={`btn btn-link text-start ${tab==='contact' ? 'text-danger fw-bold' : 'text-muted'}`} onClick={()=>setTab('contact')}>Contact</button>
         </div>
@@ -52,7 +48,7 @@ export default function Home({ onSignOut, onRequestLogin }){
               <div className="small text-muted">{user.email}</div>
               <div className="mt-2">
                 <button className="btn btn-outline-secondary btn-sm me-2" onClick={()=>setTab('account')}>Account</button>
-                <button className="btn btn-outline-danger btn-sm" onClick={()=>{ localStorage.removeItem('msim_token'); window.location.reload(); }}>Sign out</button>
+                <button className="btn btn-outline-danger btn-sm" onClick={()=>{ if (typeof onSignOut === 'function') return onSignOut(); }}>Sign out</button>
               </div>
             </div>
           ) : (

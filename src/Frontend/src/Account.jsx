@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-export default function Account(){
+export default function Account({ token }){
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [phone, setPhone] = useState('')
@@ -11,10 +11,10 @@ export default function Account(){
 
   useEffect(()=>{
     const load = async ()=>{
-      const token = localStorage.getItem('msim_token')
-      if (!token) { setLoading(false); return }
+      const t = token || localStorage.getItem('msim_token')
+      if (!t) { setLoading(false); return }
       try{
-        const res = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } })
+        const res = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + t } })
         if (!res.ok) { setLoading(false); return }
         const j = await res.json()
         setUserId(j.id)
@@ -33,9 +33,9 @@ export default function Account(){
     setMessage(null)
     if (!userId) { setMessage('Not signed in'); return }
     try{
-      const token = localStorage.getItem('msim_token')
+      const t = token || localStorage.getItem('msim_token')
       const dto = { Id: userId, Username: (firstName || lastName) ? `${firstName} ${lastName}`.trim() : email, Email: email, FirstName: firstName, LastName: lastName, Phone: phone }
-      const res = await fetch('/api/user/' + userId, { method: 'PUT', headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify(dto) })
+      const res = await fetch('/api/user/' + userId, { method: 'PUT', headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + t }, body: JSON.stringify(dto) })
       if (!res.ok) throw new Error('Update failed')
       setMessage('Saved')
     } catch (e) {
@@ -50,8 +50,8 @@ export default function Account(){
     if (!newp) return
     if (newp.length < 6) { alert('Password must be at least 6 characters'); return }
     try{
-      const token = localStorage.getItem('msim_token')
-      const res = await fetch('/api/user/' + userId + '/password', { method: 'POST', headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ oldPassword: oldp, newPassword: newp }) })
+      const t = token || localStorage.getItem('msim_token')
+      const res = await fetch('/api/user/' + userId + '/password', { method: 'POST', headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + t }, body: JSON.stringify({ oldPassword: oldp, newPassword: newp }) })
       if (!res.ok) throw new Error('Password change failed')
       setMessage('Password updated')
     }catch(e){ setMessage('Error: ' + e.message) }
