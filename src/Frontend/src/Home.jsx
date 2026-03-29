@@ -76,8 +76,8 @@ export default function Home({ token, onSignOut, onRequestLogin }){
           {tab === 'payroll' && <PayrollSimulator />}
           {tab === 'retirement' && <div className="card"><h2>Retirement</h2><p>Coming soon</p></div>}
           {tab === 'loans' && <div className="card"><h2>Loans</h2><p>Coming soon</p></div>}
-          {tab === 'account' && <Account />}
-          {tab === 'contact' && <div className="card"><h2>Contact</h2></div>}
+          {tab === 'account' && <Account token={token} />}
+          {tab === 'contact' && <Contact />}
         </div>
       </div>
 
