@@ -7,7 +7,7 @@ import Contact from './Contact'
 import './styles.css'
 import Logo from './components/Logo'
 
-export default function Home({ token, onSignOut, onRequestLogin }){
+export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess }){
   const [tab, setTab] = React.useState('payroll')
   const [showLogin, setShowLogin] = React.useState(false)
   const [user, setUser] = useState(null)
@@ -81,7 +81,7 @@ export default function Home({ token, onSignOut, onRequestLogin }){
         </div>
       </div>
 
-      {showLogin && <div className="modal-overlay"><Login onClose={()=>setShowLogin(false)} /></div>}
+      {showLogin && <div className="modal-overlay"><Login onLoginSuccess={(t)=>{ if (typeof onLoginSuccess === 'function') onLoginSuccess(t); setShowLogin(false); }} onClose={()=>setShowLogin(false)} /></div>}
     </div>
   )
 }

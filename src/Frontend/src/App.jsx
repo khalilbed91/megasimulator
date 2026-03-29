@@ -51,7 +51,7 @@ export default function App(){
   return (
     <>
       <button className="dark-toggle" onClick={()=>setDark(d=>!d)}>{dark? 'Light' : 'Dark'}</button>
-      <Home token={token} onSignOut={signOut} onRequestLogin={()=>setView('login')} />
+      <Home token={token} onSignOut={signOut} onRequestLogin={()=>setView('login')} onLoginSuccess={onLoginSuccess} />
     </>
   )
 }
