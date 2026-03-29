@@ -29,7 +29,12 @@ namespace MegaSimulator.Api.Controllers
         [HttpPost("simulate")]
         public async Task<IActionResult> Simulate([FromBody] PayrollRequestDto req)
         {
-            var response = await _payrollService.Simulate(req);
+            Guid? userId = null;
+            var idStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(idStr) && Guid.TryParse(idStr, out var parsed))
+                userId = parsed;
+
+            var response = await _payrollService.Simulate(req, userId);
             return Ok(response);
         }
     }
