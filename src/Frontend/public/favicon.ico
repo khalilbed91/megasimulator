@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <defs>
+    <linearGradient id="lg" x1="0" x2="1">
+      <stop offset="0" stop-color="#0ea5ff" />
+      <stop offset="0.5" stop-color="#3b82f6" />
+      <stop offset="1" stop-color="#1e40af" />
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="24" fill="url(#lg)" />
+  <g transform="translate(18 22)" fill="#fff">
+    <path d="M12 4h48c12 0 22 10 22 22v10c0 12-10 22-22 22H28c-6 0-12-6-12-12V4z" opacity="0.06" />
+    <!-- wallet icon and MS monogram -->
+    <g transform="translate(8 8)">
+      <rect x="6" y="8" width="72" height="48" rx="8" fill="#fff" opacity="0.12" />
+      <path d="M66 18h10a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H66v-14z" fill="#fff" opacity="0.16" />
+      <!-- wallet flap -->
+      <path d="M52 10c2-4 8-6 12-4" stroke="#fff" stroke-opacity="0.18" stroke-width="2" fill="none" />
+      <text x="10" y="46" font-family="Inter, Arial, sans-serif" font-weight="800" font-size="36">MS</text>
+    </g>
+  </g>
+</svg>

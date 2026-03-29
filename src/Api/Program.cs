@@ -48,6 +48,7 @@ builder.Services.AddScoped<IFormulaService, FormulaService>();
 builder.Services.AddSingleton<IParamsLoader, ParamsLoader>();
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IParamsLoader>().Load());
 builder.Services.AddScoped<PayrollService>();
+builder.Services.AddScoped<MegaSimulator.Application.Interfaces.IRetirementService, MegaSimulator.Application.Services.RetirementService>();
 // Infrastructure repositories
 builder.Services.AddScoped<ISalaireRepository, SalaireRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();

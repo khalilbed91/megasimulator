@@ -4,6 +4,7 @@ import Login from './Login'
 import Account from './Account'
 import Contact from './Contact'
 import SimulationHistory from './SimulationHistory'
+import RetirementSimulator from './RetirementSimulator'
 import './styles.css'
 import Logo from './components/Logo'
 
@@ -165,7 +166,9 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
           {/* Tab content */}
           {tab === 'payroll' && <PayrollSimulator lang={lang} onLangChange={onLangChange} />}
 
-          {(tab === 'retirement' || tab === 'loans') && (
+          {tab === 'retirement' && <RetirementSimulator lang={lang} />}
+
+          {tab === 'loans' && (
             <div className="sim-result-empty" style={{marginTop:40}}>
               <svg viewBox="0 0 24 24" fill="none"><path d="M12 6v6m0 4h.01M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               <div style={{fontWeight:700,fontSize:18,color:'var(--text)'}}>{tr.comingSoon}</div>
