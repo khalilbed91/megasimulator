@@ -38,6 +38,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
   const [tab, setTab] = useState('payroll')
   const [showLogin, setShowLogin] = useState(false)
   const [user, setUser] = useState(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const tr = T[lang] || T['en']
 
   useEffect(()=>{
@@ -62,8 +63,11 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
 
   return (
     <div className="app-shell">
+      {/* Mobile overlay */}
+      {sidebarOpen && <div className="sidebar-overlay" onClick={()=>setSidebarOpen(false)} />}
+
       {/* ── Sidebar ── */}
-      <aside className="sidebar">
+      <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
         <div className="sidebar-brand">
           <Logo size={34} />
           <div>
@@ -123,22 +127,17 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
       <div className="main-content">
         {/* Top bar */}
         <div className="top-bar">
+          {/* Hamburger for mobile */}
+          <button className="hamburger" onClick={()=>setSidebarOpen(o=>!o)} aria-label="Menu">
+            <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
           <div className="top-bar-title">{topbarTitles(tr, tab)}</div>
         </div>
 
         <div className="page-body">
-          {/* Hero — shown only on simulator tabs */}
-          {['payroll','retirement','loans'].includes(tab) && (
-            <div className="hero">
-              <Logo size={60} />
-              <div className="hero-title">{tr.appName}</div>
-              <div className="hero-subtitle">{tr.subtitle}</div>
-            </div>
-          )}
-
           {/* Simulator sub-tabs */}
           {['payroll','retirement','loans'].includes(tab) && (
-            <div className="tab-bar" role="tablist" style={{marginTop:20}}>
+            <div className="tab-bar" role="tablist">
               <button role="tab" aria-selected={tab==='payroll'} className={`tab-btn${tab==='payroll'?' active':''}`} onClick={()=>setTab('payroll')}>
                 <svg viewBox="0 0 24 24" fill="none"><path d="M9 7h6M9 11h6M9 15h4M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
                 {tr.tabPayroll}
