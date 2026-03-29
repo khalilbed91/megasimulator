@@ -1,56 +1,72 @@
 # Retraite — Règles, formules et spécifications (France, 2026)
 
+_Dernière mise à jour : 2026-03-29 — Prêt pour implémentation_
+
 ## But du document
 
-Fournir une spécification complète et prête à l'implémentation pour le calcul des retraites en France (2026). Contenu : formules de la retraite de base et complémentaire, paramètres 2026, règles pour indépendants, algorithmes pas à pas et modèles de données JSON exploitables.
+Fournir une spécification complète et prête à l'implémentation pour le calcul des retraites en France (2026). Contenu : formules de la retraite de base et complémentaire, paramètres 2026, règles pour indépendants, algorithmes pas à pas, DTOs backend et modèles de données JSON exploitables.
+
+---
 
 ## 1. Contexte (réforme 2023 / état 2026)
 
-- Âge légal (exemples génériques) : 64 ans pour certaines générations (ex : natifs 1962/1963 selon calendrier de la réforme).
-- PASS / Plafonds 2026 : 48 060 € (utilisé pour plafonner les salaires dans le calcul du SAM).
+- Âge légal de départ : **64 ans** pour les générations 1962 et postérieures (réforme 2023)
+- PASS 2026 : **48 060 €** — utilisé pour plafonner les salaires dans le calcul du SAM
+- PMSS 2026 : **4 005 €/mois**
+- Taux plein retraite de base : **50 %**
+- Retenue sociale sur pensions : **9,1 %** (CSG + CRDS retraités)
+
+---
 
 ## 2. Retraite de base (CNAV) — formule générale
 
-La pension de base pour un salarié du privé s'exprime par :
-
 $$
-Pension_{Base} = SAM \times Taux_{plein} \times \frac{Trimestres_{validés}}{Trimestres_{requis}}
+Pension_{Base} = SAM \times Taux_{plein} \times \frac{Trimestres_{validés}}{Trimestres_{requis}} \times (1 - décote) \times (1 + surcote)
 $$
 
 Définitions :
-- $SAM$ (Salaire Annuel Moyen) : moyenne des 25 meilleures années de salaire brut, chaque année plafonnée au PASS de l'année correspondante.
-- $Taux_{plein}$ : 50% (taux plein pour la retraite de base).
-- $Trimestres_{validés}$ : trimestres réellement acquis par l'assuré.
-- $Trimestres_{requis}$ : nombre de trimestres requis pour le taux plein (ex : 170 trimestres pour la génération 1963).
+- **SAM** (Salaire Annuel Moyen) : moyenne des 25 meilleures années de salaire brut, chaque année plafonnée au PASS de l'année correspondante
+- **Taux plein** : 50 %
+- **Trimestres_validés** : trimestres réellement acquis par l'assuré
+- **Trimestres_requis** : 170 pour la génération 1963 (paramétrable)
+- **Décote** : −1,25 % par trimestre manquant, appliquée au taux de 50 %
+- **Surcote** : +1,25 % par trimestre au-delà du requis
 
-Décote / Surcote :
-- Décote : réduction du taux si trimestres manquants. Exemple courant : -1,25% par trimestre manquant sur le taux de 50% (paramétrable selon génération).
-- Surcote : +1,25% par trimestre supplémentaire.
+### Trimestres requis par génération (2026)
 
-Remarques d'implémentation :
-- Pour calculer le `SAM`, collecter l'historique salarial (au moins 25 années). Pour chaque année : utiliser le salaire brut, le plafonner au `PASS` de l'année, puis prendre la moyenne des 25 plus hautes valeurs.
-- Le simulateur doit accepter des jeux de `PASS` historiques pour un calcul exact multi-années.
+| Année de naissance | Trimestres requis | Âge légal |
+|---|---|---|
+| 1961 | 169 | 63 ans + 6 mois |
+| 1962 | 169 | 64 ans |
+| 1963 | 170 | 64 ans |
+| 1964 | 171 | 64 ans |
+| 1965 et + | 172 | 64 ans |
+
+---
 
 ## 3. Retraite complémentaire (Agirc-Arrco) — système par points
 
-Formule :
-
 $$
-Pension_{Compl\'ementaire} = Points_{totaux} \times Valeur\_du\_point
+Pension_{Complémentaire} = Points_{totaux} \times Valeur_{du\_point}
 $$
 
 Acquisition des points (annuelle) :
 
 $$
-Points = \frac{Salaire\_Brut\_annuel \times Taux\_de\_calcul}{Prix\_d'achat\_du\_point}
+Points = \frac{Salaire_{Brut\_annuel} \times Taux_{de\_calcul}}{Prix_{d'achat\_du\_point}}
 $$
 
-Paramètres 2026 : les valeurs estimées sont centralisées dans `docs/knowledge-base/params/2026.json`.
+Paramètres 2026 (`docs/knowledge-base/params/2026.json`) :
+- `agirc_arrco.tranche1_pct` = 7,87 % (global sal+pat, salaire ≤ PMSS)
+- `agirc_arrco.tranche2_pct` = 21,59 % (global sal+pat, salaire entre 1 et 8 PMSS)
+- `agirc_arrco.valeur_point` = **1,45 €** (valeur du point 2026 — à vérifier)
 
-- `agirc_arrco.tranche1_pct`, `agirc_arrco.tranche2_pct`, `agirc_arrco.valeur_point` contiennent les taux/valeur du point (format décimal). Ces valeurs sont marquées `verified: false` et doivent être vérifiées contre les sources officielles.
+> ⚠️ Ces valeurs sont marquées `verified: false` — vérifier sur les sources Agirc-Arrco officielles
 
 Notes :
 - Le calcul réel détaille la part salariale et patronale pour chaque tranche; pour un simulateur performant, stocker ces parts si on veut produire un bulletin détaillé.
+
+---
 
 ## 4. Cas freelance / micro-entrepreneur (validation de trimestres)
 
@@ -64,111 +80,120 @@ Pour valider 4 trimestres en 2026, seuils approximatifs suivants :
 
 Remarque : ces seuils permettent d'acquérir les trimestres, mais n'assurent pas un niveau de pension élevé (pensions souvent faibles en micro-entreprise).
 
-## 5. Paramètres et constantes (extrait JSON 2026)
+---
 
-```json
-{
-  "version": "2026-01",
-  "effective_date": "2026-01-01",
-  "pass": 48060,
-  "taux_plein": 0.50,
-  "trimestres_requis": {
-    "1963": 170
-  },
-  "age_legal": {
-    "1963": 64
-  },
-  "agirc_arrco": "see docs/knowledge-base/params/2026.json",
-  "decote_pct_par_trimestre": 0.0125,
-  "surcote_pct_par_trimestre": 0.0125,
-  "retraites_social_deductions_pct": 9.1,
-  "freelance_quarter_thresholds": {
-    "vente_bic_q": 4150,
-    "prestations_q": 2450,
-    "liberal_q": 2700
-  }
+## 5. DTOs backend — prêts à implémenter
+
+### `RetirementRequestDto.cs`
+
+```csharp
+public class RetirementRequestDto {
+    public int? AnneeNaissance { get; set; }
+    public int AgeDepart { get; set; } = 64;
+    public decimal SalaireAnnuelMoyen { get; set; }   // SAM en €
+    public int TrimestresValides { get; set; }
+    public int TrimestresRequis { get; set; } = 170;
+    public decimal PointsComplementaires { get; set; } // points Agirc-Arrco
+    public string Regime { get; set; } = "general";   // general|fonctionnaire|liberal|artisan
+    public decimal? RevenusAnnuelsActuels { get; set; } // pour taux de remplacement
 }
 ```
 
-## 6. Algorithme détaillé (logique métier) — ordre d'exécution
+### `RetirementResponseDto.cs`
 
-1. Vérifier l'éligibilité : si $Age < Age\_legal$, signaler inéligibilité ou calculer pension théorique différée.
-2. Calculer le `SAM` :
-   - Récupérer l'historique annuel des salaires bruts.
-   - Pour chaque année, plafonner le salaire au `PASS` de l'année.
-   - Prendre les 25 meilleures années : $SAM = \frac{\sum_{i=1}^{25} salaire\_plafonne_i}{25}$.
-3. Appliquer prorata trimestres :
-   - facteur_trimestres = $\frac{Trimestres_{valid\'es}}{Trimestres_{requis}}$.
-4. Calculer la base :
-
-$$
-Pension_{Base} = SAM \times Taux_{plein} \times facteur\_trimestres\times(1 - decote)\times(1 + surcote)
-$$
-
-   - `decote` et `surcote` calculés en fonction des trimestres manquants/en trop.
-5. Calculer la complémentaire :
-   - Agréger `Points_{totaux}` sur la carrière.
-   - $Pension_{Compl\'ementaire} = Points_{totaux} \times Valeur\_du\_point$.
-6. Somme :
-
-$$
-Pension_{Brute\_Totale} = Pension_{Base} + Pension_{Compl\'ementaire}
-$$
-
-7. Nettoyage social (retenues) :
-
-$$
-Pension_{Net} = Pension_{Brute\_Totale} \times (1 - 0.091)
-$$
-
-## 7. Exemples numériques rapides
-
-- Exemple simplifié (hypothétique) :
-  - `SAM` = 40 000 €
-  - `Trimestres_validés` = 170 (plein)
-  - `Pension_Base` = 40 000 × 0.50 × (170/170) = 20 000 € / an
-  - `Pension_Complémentaire` (si Points_totaux = 8 000) = 8 000 × 1.45 = 11 600 € / an
-  - `Pension_Brute_Totale` = 31 600 € / an
-  - `Pension_Net` ≈ 31 600 × (1 - 0.091) ≈ 28 726 € / an
-
-## 8. Fonctions proposées (signatures)
-
-- `computeSAM(salaryHistory, passByYear) -> float`
-- `computeBasePension(SAM, tauxPlein, trimestresValides, trimestresRequis, decoteRate, surcoteRate) -> float`
-- `computePointsFromSalary(salary, tauxCalcul, prixPoint) -> float`
-- `computeComplementaryPension(pointsTotal, valeurPoint) -> float`
-- `computePensionNet(bruteTotal, socialDeductionPct=9.1) -> float`
-
-## 9. Tests unitaires suggérés
-
-- Cas 1 : salarié avec 170 trimestres, SAM connu → vérifier Pension_Base calculée.
-- Cas 2 : salarié avec trimestres manquants → vérifier application décote.
-- Cas 3 : freelance micro-valide trimestres → seuils trimestriels.
-
-## 10. Notes et limitations
-
-- Les règles réelles comportent de nombreux cas particuliers (régimes spéciaux, droit à majoration, bonification, bonification pour enfants, majorations de durée d'assurance, exonérations partielles). Ce document fournit le socle mathématique et les paramètres 2026 ; l'enrichissement métier se fera itérativement.
-- Les valeurs numériques fournies (valeur du point, PASS, seuils micro) doivent être vérifiées sur les sources officielles (URSSAF, CNAV, Agirc-Arrco) et versionnées.
+```csharp
+public class RetirementResponseDto {
+    public decimal PensionBaseAnnuelle { get; set; }
+    public decimal PensionComplementaireAnnuelle { get; set; }
+    public decimal PensionBruteTotaleAnnuelle { get; set; }
+    public decimal PensionNetteAnnuelle { get; set; }
+    public decimal PensionNetteMensuelle { get; set; }
+    public decimal TauxRemplacement { get; set; }
+    public int TrimestresValides { get; set; }
+    public int TrimestresRequis { get; set; }
+    public int TrimestresManquants { get; set; }
+    public decimal DecotePct { get; set; }
+    public decimal SurcotePct { get; set; }
+    public decimal Sam { get; set; }
+    public decimal ValeurPoint { get; set; }
+}
+```
 
 ---
 
-Document mis à jour pour permettre l'implémentation des calculs de retraite dans le simulateur 2026.
-# Retirement — Business Rules & Projection
+## 6. Algorithme d'implémentation — ordre d'exécution
 
-## Overview
+```
+1. Calculer trimestresManquants = max(0, trimestresRequis - trimestresValides)
+   Calculer trimestresSupplementaires = max(0, trimestresValides - trimestresRequis)
 
-Retirement projections estimate future pension revenue based on career history, contributions, and statutory rules. French retirement systems are complex; start with a simplified projection model and add regime-specific rules.
+2. Calculer décote et surcote :
+   decote = trimestresManquants * 0.0125          // 1.25% par trimestre manquant
+   surcote = trimestresSupplementaires * 0.0125   // 1.25% par trimestre en plus
 
-## Simplified projection (illustrative)
+3. Calculer pension de base CNAV :
+   facteur = trimestresValides / trimestresRequis (plafonné à 1 si surcote)
+   PensionBase = SAM * 0.50 * facteur * (1 - decote) * (1 + surcote)
 
-Estimate future pension as a function of average career salary, contribution rate, and accrual factor per year.
+4. Calculer pension complémentaire :
+   PensionCompl = PointsComplementaires * 1.45   // valeur du point 2026
 
-pension = averageSalary * accrualRate * creditedYears
+5. Total brut :
+   PensionBrute = PensionBase + PensionCompl
 
-Implementation notes:
-- Record contribution history per year, validate credited years and gaps.
-- Allow scenario assumptions: retirement age, career interruptions, part-time periods.
+6. Net (retenue sociale 9.1%) :
+   PensionNette = PensionBrute * (1 - 0.091)
+   PensionNetteMensuelle = PensionNette / 12
 
-Test vectors: provide example career histories and expected pension estimates using the simplified formula.
+7. Taux de remplacement (si revenus actuels fournis) :
+   TauxRemplacement = PensionNetteMensuelle / (RevenusAnnuelsActuels / 12)
+```
 
-Sources: official French pension administration documentation (to be added per rule).
+---
+
+## 7. Exemple numérique de référence
+
+Données : génération 1963, salaire moyen 40 000 €/an, 170 trimestres validés, 8 000 points Agirc-Arrco
+
+| Étape | Calcul | Résultat |
+|---|---|---|
+| Trimestres manquants | 170 - 170 | 0 |
+| Décote | 0 × 1.25% | 0 % |
+| Pension base | 40 000 × 50% × (170/170) | 20 000 €/an |
+| Pension complémentaire | 8 000 × 1.45 | 11 600 €/an |
+| Pension brute | 20 000 + 11 600 | 31 600 €/an |
+| Pension nette | 31 600 × (1 - 0.091) | **28 726 €/an** |
+| Pension nette mensuelle | 28 726 / 12 | **≈ 2 394 €/mois** |
+
+Exemple avec décote (150 trimestres validés au lieu de 170) :
+
+| Étape | Calcul | Résultat |
+|---|---|---|
+| Trimestres manquants | 170 - 150 | 20 |
+| Décote | 20 × 1.25% | 25 % |
+| Pension base | 40 000 × 50% × (150/170) × (1 - 0.25) | ≈ 13 235 €/an |
+| Pension nette | (13 235 + 11 600) × 0.909 | **≈ 22 583 €/an** |
+| Pension nette mensuelle | | **≈ 1 882 €/mois** |
+
+---
+
+## 8. Tests unitaires à écrire (`RetirementServiceTests.cs`)
+
+- **Cas 1** : taux plein (170 trimestres, SAM = 40 000 €) → PensionBase = 20 000 €/an
+- **Cas 2** : décote 20 trimestres manquants → vérifier décote 25% appliquée
+- **Cas 3** : surcote 4 trimestres supplémentaires → vérifier surcote 5% appliquée
+- **Cas 4** : pension complémentaire 8 000 points × 1.45 → 11 600 €/an
+- **Cas 5** : pension nette = brute × (1 - 0.091)
+- **Cas 6** : taux de remplacement calculé correctement
+
+---
+
+## 9. Notes et limitations
+
+- Les règles réelles comportent de nombreux cas particuliers (régimes spéciaux, bonification pour enfants, majorations de durée d'assurance, exonérations partielles). Ce document fournit le socle mathématique.
+- Les valeurs numériques (valeur du point, PASS, seuils micro) doivent être vérifiées sur les sources officielles (URSSAF, CNAV, Agirc-Arrco) et versionnées dans `params/2026.json`.
+- Pour la V1 du simulateur : ne pas implémenter les régimes spéciaux — afficher un message si régime `fonctionnaire` ou `liberal` sélectionné.
+
+---
+
+_Document consolidé le 2026-03-29 — prêt pour implémentation `RetirementService.cs`_

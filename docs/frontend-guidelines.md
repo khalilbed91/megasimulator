@@ -24,13 +24,16 @@ src/Frontend/
   vite.config.js              ← Proxy /api → backend
   src/
     App.jsx                   ← Router racine, dark/lang toggle, localStorage
-    Home.jsx                  ← Shell: sidebar 230px + top-bar + page-body
+    Home.jsx                  ← Shell: sidebar 230px + top-bar + page-body + hamburger mobile
     PayrollSimulator.jsx      ← Simulateur de paie (composant principal)
+    RetirementSimulator.jsx   ← Simulateur retraite (À CRÉER — voir section 7)
+    SimulationHistory.jsx     ← Historique des simulations (GET /api/simulation/mine)
     Login.jsx                 ← Page auth split-screen
     Signup.jsx                ← Page inscription
     Account.jsx               ← Page profil utilisateur
     Contact.jsx               ← Page contact
-    Logo.jsx                  ← Composant logo centralisé
+    components/
+      Logo.jsx                ← Composant logo centralisé
     styles.css                ← Design system global (tokens CSS + composants)
     login.css                 ← Styles spécifiques à la page auth
 ```
@@ -57,11 +60,12 @@ Se référer à `docs/brand-guidelines.md` pour la palette, tokens et règles vi
 ## 5. Home.jsx — Shell principal
 
 - Sidebar fixe 230px avec sections de navigation labelisées :
-  - *Simulations* : Simulateur de paie, Retraite (à venir), Prêts (à venir)
-  - *Utilisateur* : Mon compte, Contact
-- `tab-bar` pour les sous-onglets du simulateur
-- Affichage conditionnel des pages via `activePage` interne
-- Pages "coming soon" pour retraite et prêts : afficher un état vide avec message
+  - *Simulations* : Simulateur de paie, Retraite, Prêts (à venir)
+  - *Utilisateur* : Historique, Mon compte, Contact
+- Hamburger visible ≤768px → sidebar en drawer slide-over (`.sidebar-overlay` backdrop)
+- `tab-bar` centré dans `page-body` pour les sous-onglets du simulateur (Paie / Retraite / Prêts)
+- Le hero (logo + titre) a été supprimé pour réduire le scroll
+- Pages "coming soon" pour les onglets non encore implémentés
 
 ---
 
@@ -149,7 +153,109 @@ POST /api/payroll/simulate
 
 ---
 
-## 7. Login.jsx — Auth split-screen
+Appelle `GET /api/simulation/mine` (endpoint sécurisé `[Authorize]`). Affiche les simulations payroll et retraite de l'utilisateur connecté sous forme de cartes avec suppression.
+
+**Classes CSS clés** : `.history-card`, `.history-badge--{statut}`, `.history-figure`, `.history-delete-btn`
+
+---
+
+## 9. RetirementSimulator.jsx — Spec d'implémentation
+
+> **Statut : À CRÉER** — même pattern que `PayrollSimulator.jsx`.
+
+### 7.1 Structure
+
+Layout `sim-shell` (grille `1fr 400px`) identique au simulateur de paie :
+- **Panneau gauche** : formulaire de saisie (`.sim-form-card`)
+- **Panneau droit** : résultats (`.sim-result-card`, sticky)
+
+### 7.2 Formulaire de saisie
+
+| Champ | Type | Défaut | Notes |
+|---|---|---|---|
+| Année de naissance | number input | — | Pour déduire trimestres requis et âge légal |
+| Âge actuel | calculé | auto | Déduit de l'année de naissance |
+| Âge de départ souhaité | slider 60–70 | 64 | Affiche alerte si < âge légal |
+| Salaire annuel moyen brut (SAM) | EuroInput | — | Moyenne 25 meilleures années |
+| Trimestres validés | slider 0–200 | — | Nombre de trimestres acquis |
+| Trimestres requis | number input | 170 | Pré-rempli selon génération, modifiable |
+| Points Agirc-Arrco | number input | — | Points complémentaires accumulés |
+| Régime | selector chips | général | général / fonctionnaire / libéral / artisan |
+| Revenus annuels actuels | EuroInput | — | Pour calcul taux de remplacement |
+
+### 7.3 Payload API
+
+```json
+POST /api/retirement/simulate
+Authorization: Bearer <token>
+Content-Type: application/json
+{
+  "AnneeNaissance": 1963,
+  "AgeDepart": 64,
+  "SalaireAnnuelMoyen": 40000,
+  "TrimestresValides": 160,
+  "TrimestresRequis": 170,
+  "PointsComplementaires": 8000,
+  "Regime": "general",
+  "RevenusAnnuelsActuels": 52000
+}
+```
+
+### 7.4 Résultats affichés (KPI cards)
+
+| KPI | Couleur | Valeur |
+|---|---|---|
+| Pension nette mensuelle | vert `--success` | Principal |
+| Pension brute annuelle | teal `--accent` | |
+| Taux de remplacement | indigo `--indigo` | pension / revenu actuel |
+| Pension base CNAV | muted | Détail |
+| Pension complémentaire | muted | Détail |
+| Décote appliquée | rouge `--danger` | Si trimestres manquants |
+| Surcote appliquée | vert | Si trimestres en plus |
+| Trimestres manquants | orange | Si < requis |
+
+### 7.5 Wiring dans Home.jsx
+
+Remplacer le bloc `tab === 'retirement'` :
+```jsx
+import RetirementSimulator from './RetirementSimulator'
+// ...
+{tab === 'retirement' && <RetirementSimulator lang={lang} onLangChange={onLangChange} />}
+```
+Supprimer le badge `Bientôt` sur l'item sidebar Retraite.
+
+### 7.6 Traductions requises (T object)
+
+```js
+const T = {
+  fr: {
+    title: 'Simulateur de retraite',
+    anneeNaissance: 'Année de naissance',
+    ageDepart: 'Âge de départ souhaité',
+    sam: 'Salaire annuel moyen (SAM)',
+    trimValides: 'Trimestres validés',
+    trimRequis: 'Trimestres requis',
+    points: 'Points Agirc-Arrco',
+    regime: 'Régime',
+    revenusActuels: 'Revenus annuels actuels',
+    simulate: 'Calculer',
+    reset: 'Réinitialiser',
+    pensionNetteMensuelle: 'Pension nette mensuelle',
+    pensionBruteAnnuelle: 'Pension brute annuelle',
+    tauxRemplacement: 'Taux de remplacement',
+    baseLabel: 'Retraite de base (CNAV)',
+    complLabel: 'Complémentaire (Agirc-Arrco)',
+    decote: 'Décote appliquée',
+    surcote: 'Surcote appliquée',
+    trimManquants: 'Trimestres manquants',
+  },
+  en: { /* ... */ }
+}
+```
+
+---
+
+## 8. SimulationHistory.jsx
 
 - Panneau gauche (420px) : fond dégradé sombre, orbes lumineux, 3 cartes stat
 - Panneau droit : formulaire centré, inputs décorés icônes, bouton OAuth Google
@@ -158,16 +264,17 @@ POST /api/payroll/simulate
 
 ---
 
-## 8. Sécurité / Auth
+## 10. Sécurité / Auth
 
 - Token JWT stocké dans `localStorage` (clé `msim_token`) — **temporaire, acceptable pour MVP**
 - **À migrer** vers cookie `HttpOnly; Secure; SameSite=Strict` côté serveur (voir `AuthController.cs`)
 - Décodage JWT côté client pour vérifier le rôle admin (composant `isAdmin()` dans `PayrollSimulator.jsx`)
+- Toujours inclure `Authorization: Bearer <token>` dans les appels simulate (payroll ET retraite)
 - Ne jamais exposer les erreurs techniques brutes à l'utilisateur
 
 ---
 
-## 9. Internationalisation
+## 11. Internationalisation
 
 - Objet de traductions `T` en haut de chaque composant majeur (fr/en)
 - La langue est transmise via la prop `lang` depuis `App.jsx`
@@ -176,15 +283,24 @@ POST /api/payroll/simulate
 
 ---
 
-## 10. Checklist avant commit
+## 12. Responsive / Mobile
 
-- [ ] Build Vite propre : `npm run build` → `✔ 39 modules transformed`
+- **≤ 768px** : hamburger visible, sidebar en drawer slide-over (`.sidebar-overlay`), `sidebar.sidebar-open`
+- **≤ 1024px** : `sim-shell` passe en 1 colonne (`grid-template-columns: 1fr`), `.sim-result-card` non sticky
+- **≤ 480px** : labels des tabs masqués (icônes seules)
+- Toujours tester avec Chrome DevTools en mode mobile après chaque modification
+
+---
+
+## 13. Checklist avant commit
+
+- [ ] Build Vite propre : `npm run build` → `✔ 40 modules transformed`
 - [ ] Pas de caractères corrompus (`Ã`, `â€`) dans les fichiers JSX/CSS
-- [ ] Linting OK (pas d'erreurs ESLint critiques)
-- [ ] Responsive testé (mobile < 860px)
+- [ ] `Authorization: Bearer` envoyé dans tous les appels API authentifiés
+- [ ] Responsive testé (mobile ≤ 768px, tablette ≤ 1024px)
 - [ ] Dark mode fonctionnel
 - [ ] API proxy vérifié (`/api` → port 5000)
-
+- [ ] `EuroInput` et composants locaux définis au niveau MODULE (pas dans la fonction composant)
 
 But: résumer les décisions récentes et fournir des consignes exploitables pour les développeurs frontend.
 
