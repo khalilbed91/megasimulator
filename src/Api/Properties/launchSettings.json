@@ -13,7 +13,9 @@
         "JWT__ISSUER": "megasimulator",
         "ENABLE_SWAGGER": "true",
         "GOOGLE__CLIENTID": "874107145454-8vao5905rvg7v56h6rustrk3dbbbul62.apps.googleusercontent.com",
-        "FRONTEND__URL": "http://localhost:5174"
+        "GOOGLE__CLIENTSECRET": "",
+        "GOOGLE__REDIRECT": "http://localhost:5000/api/auth/google/callback",
+        "FRONTEND__URL": "http://localhost:5173"
       }
     }
   }

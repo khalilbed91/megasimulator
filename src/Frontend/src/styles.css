@@ -588,6 +588,51 @@ body.app-dark .bg-dark            { background: #0f172a !important; }
 .history-badge--cadre      { background: rgba(14,165,164,0.12); color: var(--accent); }
 .history-badge--freelance  { background: rgba(245,158,11,0.12); color: var(--warning); }
 .history-badge--portage    { background: rgba(16,185,129,0.12); color: var(--success); }
+.history-badge--retirement { background: rgba(139,92,246,0.14); color: #a78bfa; }
+.history-badge--payroll    { background: rgba(99,102,241,0.14); color: var(--indigo); }
+.history-badge--loan       { background: rgba(59,130,246,0.12); color: #60a5fa; }
+.history-badge--other      { background: rgba(148,163,184,0.12); color: var(--muted); }
+
+/* Account / Contact panels (same look as simulators) */
+.page-panel {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 4px 32px;
+}
+.page-panel-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  box-shadow: var(--sh-sm);
+}
+.page-panel-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 6px;
+  letter-spacing: -0.3px;
+}
+.page-panel-desc {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0 0 22px;
+  line-height: 1.5;
+}
+.page-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 18px;
+}
+.page-panel-message {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.page-panel-message--ok { color: var(--success); }
+.page-panel-message--err { color: var(--danger); }
 
 .history-card-figures {
   display: flex;

@@ -247,6 +247,29 @@
   .auth-form-card { padding: 28px 22px; border-radius: 14px; }
 }
 
+/* Full-screen auth stack above main app */
+.auth-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  overflow-y: auto;
+  background: #07090f;
+}
+
+.auth-page--embedded {
+  min-height: auto;
+}
+.auth-page--embedded .auth-form-panel {
+  min-height: auto;
+  padding: 28px 18px;
+}
+.auth-dismiss-wrap {
+  text-align: center;
+  margin-top: 14px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(226,232,240,0.08);
+}
+
 /* ─ Legacy selectors (kept for safety) ─ */
 .login-page, .login-wrap, .login-card, .login-form { /* cleared */ }
 .primary, .google, .signup-prompt, .link, .error, .logo, .tag, .or { /* cleared */ }

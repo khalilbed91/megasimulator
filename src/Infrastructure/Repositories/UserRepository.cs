@@ -40,9 +40,20 @@ namespace MegaSimulator.Infrastructure.Repositories
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
+            var login = username?.Trim() ?? string.Empty;
+            if (login.Length == 0) return null;
+
             using var conn = _factory.CreateConnection();
-            const string sql = "SELECT id, username, email, first_name as FirstName, last_name as LastName, phone as Phone, created_at as CreatedAt, password_hash as PasswordHash, roles FROM users WHERE username = @Username";
-            return await conn.QueryFirstOrDefaultAsync<User>(sql, new { Username = username });
+            // Email or username; if several rows share the same email (e.g. Google account without password),
+            // prefer the row that can log in with a password.
+            const string sql = @"SELECT id, username, email, first_name as FirstName, last_name as LastName, phone as Phone, created_at as CreatedAt, password_hash as PasswordHash, roles
+FROM users
+WHERE username = @Login OR LOWER(TRIM(COALESCE(email, ''))) = LOWER(@Login)
+ORDER BY
+  CASE WHEN NULLIF(BTRIM(COALESCE(password_hash, '')), '') IS NOT NULL THEN 0 ELSE 1 END,
+  CASE WHEN username = @Login THEN 0 ELSE 1 END
+LIMIT 1";
+            return await conn.QueryFirstOrDefaultAsync<User>(sql, new { Login = login });
         }
 
         public async Task DeleteAsync(Guid id)

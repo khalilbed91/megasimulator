@@ -4,7 +4,7 @@ const T = {
   fr: {
     title: 'Historique des simulations',
     empty: 'Aucune simulation trouvée.',
-    emptyHint: 'Lancez une simulation de paie pour la retrouver ici.',
+    emptyHint: 'Lancez une simulation de paie ou de retraite pour la retrouver ici.',
     loading: 'Chargement…',
     error: 'Impossible de charger l\'historique.',
     colDate: 'Date',
@@ -13,15 +13,26 @@ const T = {
     colNet: 'Net mensuel',
     colRetenue: 'Retenue',
     colParts: 'Parts',
+    colBirthYear: 'Année de naissance',
+    colSam: 'SAM',
+    colPensionNet: 'Pension nette / mois',
+    colPensionGross: 'Brut annuel',
+    colTaux: 'Taux rempl.',
+    typePayroll: 'Paie',
+    typeRetirement: 'Retraite',
+    typeLoan: 'Prêt',
+    typeOther: 'Simulation',
     deleteBtn: 'Supprimer',
     deleteConfirm: 'Supprimer cette simulation ?',
     statuts: { 'non-cadre': 'Non-cadre', 'cadre': 'Cadre', 'freelance': 'Freelance', 'portage': 'Portage', '': '—' },
     loginRequired: 'Connectez-vous pour voir votre historique.',
+    loginCta: 'Se connecter',
+    signupCta: 'Créer un compte',
   },
   en: {
     title: 'Simulation history',
     empty: 'No simulations found.',
-    emptyHint: 'Run a payroll simulation to see it here.',
+    emptyHint: 'Run a payroll or retirement simulation to see it here.',
     loading: 'Loading…',
     error: 'Could not load history.',
     colDate: 'Date',
@@ -30,10 +41,21 @@ const T = {
     colNet: 'Monthly net',
     colRetenue: 'Withholding',
     colParts: 'Parts',
+    colBirthYear: 'Birth year',
+    colSam: 'Avg. salary (SAM)',
+    colPensionNet: 'Net pension / mo.',
+    colPensionGross: 'Gross annual',
+    colTaux: 'Repl. rate',
+    typePayroll: 'Payroll',
+    typeRetirement: 'Retirement',
+    typeLoan: 'Loan',
+    typeOther: 'Simulation',
     deleteBtn: 'Delete',
     deleteConfirm: 'Delete this simulation?',
     statuts: { 'non-cadre': 'Non-exec', 'cadre': 'Exec', 'freelance': 'Freelance', 'portage': 'Portage', '': '—' },
     loginRequired: 'Sign in to view your history.',
+    loginCta: 'Sign in',
+    signupCta: 'Create account',
   },
 }
 
@@ -65,7 +87,15 @@ function parsePayload(payloadStr) {
   }
 }
 
-export default function SimulationHistory({ token, lang }) {
+function simTypeOf(sim) {
+  const t = (sim.type ?? sim.Type ?? '').toString().toLowerCase()
+  if (t === 'retirement') return 'retirement'
+  if (t === 'payroll') return 'payroll'
+  if (t === 'loan' || t === 'loans') return 'loan'
+  return t || 'other'
+}
+
+export default function SimulationHistory({ token, lang, onRequestLogin, onRequestSignup }) {
   const tr = T[lang] || T.fr
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -77,7 +107,7 @@ export default function SimulationHistory({ token, lang }) {
     setLoading(true)
     fetch('/api/simulation/mine', { headers: { Authorization: 'Bearer ' + token } })
       .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => { setItems(data); setLoading(false) })
+      .then(data => { setItems(Array.isArray(data) ? data : []); setLoading(false); setError(null) })
       .catch(() => { setError(tr.error); setLoading(false) })
   }, [token, tr.error])
 
@@ -96,9 +126,15 @@ export default function SimulationHistory({ token, lang }) {
 
   if (!token) {
     return (
-      <div className="sim-result-empty" style={{ marginTop: 60 }}>
-        <svg viewBox="0 0 24 24" fill="none"><path d="M12 6v6m0 4h.01M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        <div style={{ fontWeight: 700, fontSize: 17 }}>{tr.loginRequired}</div>
+      <div className="page-panel">
+        <div className="sim-result-empty" style={{ marginTop: 40 }}>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 6v6m0 4h.01M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div style={{ fontWeight: 700, fontSize: 17 }}>{tr.loginRequired}</div>
+          <div className="page-panel-actions" style={{ justifyContent: 'center', marginTop: 16 }}>
+            <button type="button" className="btn-primary-custom" onClick={() => onRequestLogin?.()}>{tr.loginCta}</button>
+            <button type="button" className="btn-ghost" onClick={() => onRequestSignup?.()}>{tr.signupCta}</button>
+          </div>
+        </div>
       </div>
     )
   }
@@ -113,16 +149,18 @@ export default function SimulationHistory({ token, lang }) {
 
   if (items.length === 0) {
     return (
-      <div className="sim-result-empty" style={{ marginTop: 60 }}>
-        <svg viewBox="0 0 24 24" fill="none"><path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5M13 21l2-2m0 0 4-4m-4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        <div style={{ fontWeight: 700, fontSize: 17, color: 'var(--text)' }}>{tr.empty}</div>
-        <div style={{ fontSize: 14 }}>{tr.emptyHint}</div>
+      <div className="page-panel">
+        <div className="sim-result-empty" style={{ marginTop: 60 }}>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5M13 21l2-2m0 0 4-4m-4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div style={{ fontWeight: 700, fontSize: 17, color: 'var(--text)' }}>{tr.empty}</div>
+          <div style={{ fontSize: 14 }}>{tr.emptyHint}</div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto' }}>
+    <div className="page-panel" style={{ maxWidth: 960 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: 0 }}>{tr.title}</h2>
         <span style={{ fontSize: 13, color: 'var(--muted)' }}>{items.length} simulation{items.length > 1 ? 's' : ''}</span>
@@ -130,60 +168,154 @@ export default function SimulationHistory({ token, lang }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {items.map(sim => {
+          const kind = simTypeOf(sim)
           const { req, res } = parsePayload(sim.payload)
-          const statut = req.Statut ?? req.statut ?? ''
-          const brut = req.Brut ?? req.brut ?? null
-          const parts = req.Parts ?? req.parts ?? null
-          const net = res.NetMonthly ?? res.netMonthly ?? res.Net ?? res.net ?? null
-          const retenuePct = res.RetenuePct ?? res.retenuePct ?? null
-          const retenueAmt = res.RetenueAmount ?? res.retenueAmount ?? null
 
+          if (kind === 'retirement') {
+            const birth = req.AnneeNaissance ?? req.anneeNaissance ?? null
+            const sam = req.SalaireAnnuelMoyen ?? req.salaireAnnuelMoyen ?? null
+            const netM = res.PensionNetteMensuelle ?? res.pensionNetteMensuelle ?? null
+            const grossA = res.PensionBruteTotaleAnnuelle ?? res.pensionBruteTotaleAnnuelle ?? null
+            const taux = res.TauxRemplacement ?? res.tauxRemplacement ?? null
+
+            return (
+              <div key={sim.id} className="history-card">
+                <div className="history-card-left">
+                  <div className="history-date">{fmtDate(sim.createdAt)}</div>
+                  <span className="history-badge history-badge--retirement">{tr.typeRetirement}</span>
+                </div>
+                <div className="history-card-figures">
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colBirthYear}</div>
+                    <div className="history-figure-value">{birth ?? '—'}</div>
+                  </div>
+                  <div className="history-figure-sep">·</div>
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colSam}</div>
+                    <div className="history-figure-value">{fmt(sam)}</div>
+                  </div>
+                  <div className="history-figure-sep">→</div>
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colPensionNet}</div>
+                    <div className="history-figure-value history-figure-value--accent">{fmt(netM)}</div>
+                  </div>
+                  {grossA != null && !isNaN(Number(grossA)) && (
+                    <>
+                      <div className="history-figure-sep">·</div>
+                      <div className="history-figure">
+                        <div className="history-figure-label">{tr.colPensionGross}</div>
+                        <div className="history-figure-value">{fmt(grossA)}</div>
+                      </div>
+                    </>
+                  )}
+                  {taux > 0 && (
+                    <>
+                      <div className="history-figure-sep">·</div>
+                      <div className="history-figure">
+                        <div className="history-figure-label">{tr.colTaux}</div>
+                        <div className="history-figure-value">{fmtPct(taux)}</div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="history-card-actions">
+                  <button
+                    type="button"
+                    className="history-delete-btn"
+                    onClick={() => handleDelete(sim.id)}
+                    disabled={deletingId === sim.id}
+                    aria-label={tr.deleteBtn}
+                    title={tr.deleteBtn}
+                  >
+                    {deletingId === sim.id
+                      ? <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeDasharray="30 10"/></svg>
+                      : <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    }
+                  </button>
+                </div>
+              </div>
+            )
+          }
+
+          if (kind === 'payroll') {
+            const statut = req.Statut ?? req.statut ?? ''
+            const brut = req.Brut ?? req.brut ?? null
+            const parts = req.Parts ?? req.parts ?? null
+            const net = res.NetMonthly ?? res.netMonthly ?? res.Net ?? res.net ?? null
+            const retenuePct = res.RetenuePct ?? res.retenuePct ?? null
+            const retenueAmt = res.RetenueAmount ?? res.retenueAmount ?? null
+
+            return (
+              <div key={sim.id} className="history-card">
+                <div className="history-card-left">
+                  <div className="history-date">{fmtDate(sim.createdAt)}</div>
+                  <span className={`history-badge history-badge--${statut || 'non-cadre'}`} title={tr.typePayroll}>
+                    {tr.typePayroll} · {tr.statuts[statut] ?? statut ?? '—'}
+                  </span>
+                </div>
+                <div className="history-card-figures">
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colBrut}</div>
+                    <div className="history-figure-value">{fmt(brut)}</div>
+                  </div>
+                  <div className="history-figure-sep">→</div>
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colNet}</div>
+                    <div className="history-figure-value history-figure-value--accent">{fmt(net)}</div>
+                  </div>
+                  {retenueAmt > 0 && (
+                    <>
+                      <div className="history-figure-sep">·</div>
+                      <div className="history-figure">
+                        <div className="history-figure-label">{tr.colRetenue}</div>
+                        <div className="history-figure-value history-figure-value--warn">
+                          -{fmt(retenueAmt)} <span style={{ fontSize: 11, color: 'var(--muted)' }}>({fmtPct(retenuePct)})</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {parts > 0 && (
+                    <>
+                      <div className="history-figure-sep">·</div>
+                      <div className="history-figure">
+                        <div className="history-figure-label">{tr.colParts}</div>
+                        <div className="history-figure-value">{parts}</div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="history-card-actions">
+                  <button
+                    type="button"
+                    className="history-delete-btn"
+                    onClick={() => handleDelete(sim.id)}
+                    disabled={deletingId === sim.id}
+                    aria-label={tr.deleteBtn}
+                    title={tr.deleteBtn}
+                  >
+                    {deletingId === sim.id
+                      ? <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeDasharray="30 10"/></svg>
+                      : <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    }
+                  </button>
+                </div>
+              </div>
+            )
+          }
+
+          const label = kind === 'loan' ? tr.typeLoan : tr.typeOther
           return (
             <div key={sim.id} className="history-card">
-              {/* Left: date + statut badge */}
               <div className="history-card-left">
                 <div className="history-date">{fmtDate(sim.createdAt)}</div>
-                <span className={`history-badge history-badge--${statut || 'non-cadre'}`}>
-                  {tr.statuts[statut] ?? statut ?? '—'}
-                </span>
+                <span className={`history-badge history-badge--${kind === 'loan' ? 'loan' : 'other'}`}>{label}</span>
               </div>
-
-              {/* Center: key figures */}
-              <div className="history-card-figures">
-                <div className="history-figure">
-                  <div className="history-figure-label">{tr.colBrut}</div>
-                  <div className="history-figure-value">{fmt(brut)}</div>
-                </div>
-                <div className="history-figure-sep">→</div>
-                <div className="history-figure">
-                  <div className="history-figure-label">{tr.colNet}</div>
-                  <div className="history-figure-value history-figure-value--accent">{fmt(net)}</div>
-                </div>
-                {retenueAmt > 0 && (
-                  <>
-                    <div className="history-figure-sep">·</div>
-                    <div className="history-figure">
-                      <div className="history-figure-label">{tr.colRetenue}</div>
-                      <div className="history-figure-value history-figure-value--warn">
-                        -{fmt(retenueAmt)} <span style={{ fontSize: 11, color: 'var(--muted)' }}>({fmtPct(retenuePct)})</span>
-                      </div>
-                    </div>
-                  </>
-                )}
-                {parts > 0 && (
-                  <>
-                    <div className="history-figure-sep">·</div>
-                    <div className="history-figure">
-                      <div className="history-figure-label">{tr.colParts}</div>
-                      <div className="history-figure-value">{parts}</div>
-                    </div>
-                  </>
-                )}
+              <div className="history-card-figures" style={{ fontSize: 13, color: 'var(--muted)' }}>
+                {sim.name || kind}
               </div>
-
-              {/* Right: delete */}
               <div className="history-card-actions">
                 <button
+                  type="button"
                   className="history-delete-btn"
                   onClick={() => handleDelete(sim.id)}
                   disabled={deletingId === sim.id}
@@ -191,7 +323,7 @@ export default function SimulationHistory({ token, lang }) {
                   title={tr.deleteBtn}
                 >
                   {deletingId === sim.id
-                    ? <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{animation:'spin 1s linear infinite'}}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeDasharray="30 10"/></svg>
+                    ? <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeDasharray="30 10"/></svg>
                     : <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   }
                 </button>

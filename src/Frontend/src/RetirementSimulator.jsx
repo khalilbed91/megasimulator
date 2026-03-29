@@ -333,13 +333,13 @@ export default function RetirementSimulator({ lang = 'fr' }) {
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-          <button className="btn-simulate" onClick={simulate} disabled={loading} style={{ flex: 1 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+          <button type="button" className="btn-primary-custom" onClick={simulate} disabled={loading} style={{ flex: '1 1 160px', justifyContent: 'center' }}>
             {loading
-              ? <><span className="spinner" style={{ width: 16, height: 16, marginRight: 8 }} />{lang === 'fr' ? 'Calcul…' : 'Calculating…'}</>
+              ? <><span className="spinner" style={{ width: 16, height: 16, marginRight: 8, display: 'inline-block', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />{lang === 'fr' ? 'Calcul…' : 'Calculating…'}</>
               : t.calculate}
           </button>
-          <button className="btn-secondary" onClick={reset} style={{ flex: '0 0 auto', padding: '0 18px' }}>
+          <button type="button" className="btn-ghost" onClick={reset} style={{ flex: '0 0 auto' }}>
             {t.reset}
           </button>
         </div>

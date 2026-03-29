@@ -1,6 +1,6 @@
 # Frontend — Guidelines techniques
 
-_Dernière mise à jour : 2026-03-29 (session 3)_
+_Dernière mise à jour : 2026-03-30_
 
 ---
 
@@ -23,8 +23,8 @@ src/Frontend/
   index.html                  ← Root HTML (charset UTF-8 obligatoire, Google GSI script async)
   vite.config.js              ← Proxy /api → backend
   src/
-    App.jsx                   ← Router racine, dark/lang toggle, localStorage
-    Home.jsx                  ← Shell: sidebar 230px + top-bar + page-body + hamburger mobile
+    App.jsx                   ← Home toujours visible ; authScreen login/signup en overlay plein écran
+    Home.jsx                  ← Shell: sidebar + top-bar + page-body ; invités sans Historique/Compte
     PayrollSimulator.jsx      ← Simulateur de paie (composant principal)
     RetirementSimulator.jsx   ← Simulateur retraite (✅ implémenté — voir section 7)
     SimulationHistory.jsx     ← Historique des simulations (GET /api/simulation/mine)
@@ -48,24 +48,36 @@ Se référer à `docs/brand-guidelines.md` pour la palette, tokens et règles vi
 
 ---
 
-## 4. App.jsx — Router et état global
+## 4. App.jsx — État global et auth
 
-- États gérés : `view` (login/signup/home), `token` (JWT string ou null), `dark` (boolean), `lang` ('fr'|'en')
-- Persistance : `localStorage` clés `msim_token`, `msim_dark`, `msim_lang`
-- `controls-bar` (position fixed top-right) : toggle dark mode (icône lune/soleil) + toggle langue (drapeaux FR/EN SVG)
-- Passer `lang` en prop à tous les composants enfants
+- **Pas d’écran login obligatoire** : `Home` est toujours rendu ; les invités utilisent paie / retraite / contact.
+- États : `token` (JWT ou null), `authScreen` (`null` \| `'login'` \| `'signup'`), `dark`, `lang`.
+- Persistance : `localStorage` — `msim_token`, `msim_dark`, `msim_lang`.
+- Clic « Se connecter » → `setAuthScreen('login')` : overlay plein écran (`.auth-fullscreen-overlay`) avec `Login` / lien « Retour aux simulations » (`onDismiss`).
+- Query `?token=` (redirect OAuth Google) : stockage JWT + fermeture overlay (inchangé).
+- `controls-bar` (fixed top-right) : dark mode + drapeaux FR/EN.
+
+### 4.1 Google Sign-In (GSI) — `Login.jsx`
+
+- Client ID : `import.meta.env.VITE_GOOGLE_CLIENT_ID` (voir `.env.example`) ou valeur de repli dans le code ; **trim** ; validation suffixe `.apps.googleusercontent.com`.
+- `google.accounts.id.initialize` : `use_fedcm_for_button: false` pour limiter les erreurs `401 invalid_client` / flux FedCM si la console Google n’est pas alignée.
+- **Texte gris sous le bouton Google** : aide utilisateur / dev — rappelle d’ajouter **l’origine JavaScript exacte** (`window.location.origin`, plus `127.0.0.1:5173` si besoin) dans Google Cloud Console. Ce n’est **pas** un message d’erreur émis par l’API MegaSimulator ; c’est une consigne de configuration **Google**.
+- Redémarrer Vite après toute modification de `.env.local`.
+
+### 4.2 Styles boutons (pages formulaire)
+
+- Préférer **`btn-primary-custom`** et **`btn-ghost`** (`styles.css`) pour les actions principales / secondaires — aligné avec `PayrollSimulator`.
+- Pages **Account**, **Contact**, **RetirementSimulator** : panneaux **`.page-panel`** / **`.page-panel-card`** + champs **`.field-input`** / **`.field-label`**.
 
 ---
 
 ## 5. Home.jsx — Shell principal
 
-- Sidebar fixe 230px avec sections de navigation labelisées :
-  - *Simulations* : Simulateur de paie, Retraite, Prêts (à venir)
-  - *Utilisateur* : Historique, Mon compte, Contact
-- Hamburger visible ≤768px → sidebar en drawer slide-over (`.sidebar-overlay` backdrop)
-- `tab-bar` centré dans `page-body` pour les sous-onglets du simulateur (Paie / Retraite / Prêts)
-- Le hero (logo + titre) a été supprimé pour réduire le scroll
-- Pages "coming soon" pour les onglets non encore implémentés (**Prêts** uniquement — Retraite est maintenant implémenté)
+- Sidebar : section *Simulations* (Paie, Retraite sans badge « Bientôt », Prêts avec badge Bientôt / Soon).
+- Section *Espace personnel* : **Historique** et **Mon compte** uniquement si `token` ; **Contact** toujours visible ; invité → bouton **Se connecter**.
+- Si déconnexion ou perte de token alors que l’onglet actif est `history` / `account` → retour automatique sur **payroll** (`useEffect`).
+- `onRequestLogin` / `onRequestSignup` passés depuis `App.jsx` pour ouvrir l’overlay auth.
+- Hamburger ≤768px, `tab-bar` pour Paie / Retraite / Prêts, **Prêts** = coming soon seul.
 
 ---
 

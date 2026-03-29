@@ -4,14 +4,16 @@ export default function Contact({ lang = 'en' }){
   const t = {
     fr: {
       title: 'Contact',
-      help: "Besoin d'aide ou problème ? Envoyez-nous un message.",
-      name: 'Nom', email: 'Email', message: 'Message', send: 'Envoyer'
+      help: "Besoin d'aide ou un problème ? Envoyez-nous un message.",
+      name: 'Nom', email: 'Email', message: 'Message', send: 'Envoyer',
+      sending: 'Envoi…', sent: 'Message envoyé, merci !', fallback: 'Client mail ouvert (secours).',
     },
     en: {
       title: 'Contact',
-      help: "Need help or found an issue? Send us a message.",
-      name: 'Name', email: 'Email', message: 'Message', send: 'Send message'
-    }
+      help: 'Need help or found an issue? Send us a message.',
+      name: 'Name', email: 'Email', message: 'Message', send: 'Send message',
+      sending: 'Sending…', sent: 'Message sent — thanks!', fallback: 'Opened mail client as fallback.',
+    },
   }[lang || 'en']
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -22,41 +24,39 @@ export default function Contact({ lang = 'en' }){
     e.preventDefault()
     setStatus('sending')
     try{
-      // Best-effort: call backend contact endpoint if exists, otherwise show success
       const res = await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ name, email, message }) })
       if (!res.ok) throw new Error('Server error')
       setStatus('sent')
       setName(''); setEmail(''); setMessage('')
-    }catch(e){
-      // fallback: open mail client
+    }catch{
       window.location.href = `mailto:support@m-simulator.com?subject=${encodeURIComponent('Contact from ' + name)}&body=${encodeURIComponent(message + '\n\nFrom: ' + email)}`
       setStatus('fallback')
     }
   }
 
   return (
-    <div className="d-flex justify-content-center p-4">
-      <div className="card p-3" style={{maxWidth:720}}>
-        <h4>{t.title}</h4>
-        <p className="text-muted">{t.help}</p>
+    <div className="page-panel">
+      <div className="page-panel-card">
+        <h1 className="page-panel-title">{t.title}</h1>
+        <p className="page-panel-desc">{t.help}</p>
         <form onSubmit={submit}>
-          <div className="mb-2">
-            <label className="form-label">{t.name}</label>
-            <input className="form-control" value={name} onChange={e=>setName(e.target.value)} placeholder={t.name} />
+          <div className="field-group" style={{ marginBottom: 14 }}>
+            <label className="field-label" htmlFor="ct-name">{t.name}</label>
+            <input id="ct-name" className="field-input" value={name} onChange={e=>setName(e.target.value)} placeholder={t.name} required />
           </div>
-          <div className="mb-2">
-            <label className="form-label">{t.email}</label>
-            <input className="form-control" value={email} onChange={e=>setEmail(e.target.value)} placeholder={t.email} />
+          <div className="field-group" style={{ marginBottom: 14 }}>
+            <label className="field-label" htmlFor="ct-email">{t.email}</label>
+            <input id="ct-email" className="field-input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder={t.email} required />
           </div>
-          <div className="mb-2">
-            <label className="form-label">{t.message}</label>
-            <textarea className="form-control" rows={6} value={message} onChange={e=>setMessage(e.target.value)} placeholder={t.message}></textarea>
+          <div className="field-group" style={{ marginBottom: 14 }}>
+            <label className="field-label" htmlFor="ct-msg">{t.message}</label>
+            <textarea id="ct-msg" className="field-input" rows={6} value={message} onChange={e=>setMessage(e.target.value)} placeholder={t.message} required style={{ resize: 'vertical', minHeight: 120 }} />
           </div>
-          <div className="d-flex align-items-center gap-2">
-            <button className="btn btn-primary" type="submit">{t.send}</button>
-            {status === 'sending' && <div className="text-muted small">Sending…</div>}
-            {status === 'sent' && <div className="text-success small">Message sent — thanks!</div>}
-            {status === 'fallback' && <div className="text-warning small">Opened mail client as fallback.</div>}
+          <div className="page-panel-actions">
+            <button type="submit" className="btn-primary-custom">{t.send}</button>
+            {status === 'sending' && <span className="page-panel-message">{t.sending}</span>}
+            {status === 'sent' && <span className="page-panel-message page-panel-message--ok">{t.sent}</span>}
+            {status === 'fallback' && <span className="page-panel-message page-panel-message--err">{t.fallback}</span>}
           </div>
         </form>
       </div>

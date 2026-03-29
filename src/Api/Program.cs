@@ -135,22 +135,50 @@ using (var scope = app.Services.CreateScope())
         await migrator.MigrateAsync();
     }
 
-        // Ensure seeded admin has a password hash compatible with the runtime BCrypt implementation
+        // Ensure admin user exists and password matches known dev default (BCrypt may differ by runtime version)
         try
         {
             using var conn2 = factory?.CreateConnection();
             if (conn2 != null)
             {
                 if (conn2 is System.Data.Common.DbConnection dbConn2) await dbConn2.OpenAsync(); else conn2.Open();
-                var existing = await conn2.QueryFirstOrDefaultAsync<string>("SELECT password_hash FROM users WHERE username = @Username", new { Username = "admin" });
+                var logger2 = scope.ServiceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()?.CreateLogger("Startup");
                 var plain = "111aaa**";
-                var needsUpdate = existing == null || !BCrypt.Net.BCrypt.Verify(plain, existing);
-                if (needsUpdate)
+                var adminId = System.Guid.Parse("00000000-0000-0000-0000-000000000001");
+                var adminCount = await conn2.ExecuteScalarAsync<long>("SELECT COUNT(*)::bigint FROM users WHERE username = @Username", new { Username = "admin" });
+                if (adminCount == 0)
                 {
                     var newHash = BCrypt.Net.BCrypt.HashPassword(plain);
-                    await conn2.ExecuteAsync("UPDATE users SET password_hash = @Hash, roles = ARRAY['admin'] WHERE username = @Username", new { Hash = newHash, Username = "admin" });
-                    var logger2 = scope.ServiceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()?.CreateLogger("Startup");
-                    logger2?.LogInformation("Admin password hash updated at startup to match runtime BCrypt implementation.");
+                    var idTaken = await conn2.ExecuteScalarAsync<long>("SELECT COUNT(*)::bigint FROM users WHERE id = @Id", new { Id = adminId });
+                    if (idTaken > 0)
+                    {
+                        await conn2.ExecuteAsync(@"
+UPDATE users SET username = @Username, email = @Email, password_hash = @Hash, roles = ARRAY['admin']::text[],
+  first_name = COALESCE(NULLIF(BTRIM(COALESCE(first_name, '')), ''), 'Admin'),
+  last_name = COALESCE(NULLIF(BTRIM(COALESCE(last_name, '')), ''), 'User')
+WHERE id = @Id",
+                            new { Id = adminId, Username = "admin", Email = "admin@m-simulator.com", Hash = newHash });
+                        logger2?.LogInformation("Repaired admin row (id present but username was not admin); password set to dev default.");
+                    }
+                    else
+                    {
+                        await conn2.ExecuteAsync(@"
+INSERT INTO users (id, username, email, created_at, password_hash, roles, first_name, last_name, phone)
+VALUES (@Id, @Username, @Email, now(), @Hash, ARRAY['admin']::text[], 'Admin', 'User', @Phone)",
+                            new { Id = adminId, Username = "admin", Email = "admin@m-simulator.com", Hash = newHash, Phone = string.Empty });
+                        logger2?.LogInformation("Created missing admin user (username admin, password dev default).");
+                    }
+                }
+                else
+                {
+                    var existing = await conn2.QueryFirstOrDefaultAsync<string>("SELECT password_hash FROM users WHERE username = @Username", new { Username = "admin" });
+                    var needsUpdate = existing == null || !BCrypt.Net.BCrypt.Verify(plain, existing);
+                    if (needsUpdate)
+                    {
+                        var newHash = BCrypt.Net.BCrypt.HashPassword(plain);
+                        await conn2.ExecuteAsync("UPDATE users SET password_hash = @Hash, roles = ARRAY['admin'] WHERE username = @Username", new { Hash = newHash, Username = "admin" });
+                        logger2?.LogInformation("Admin password hash updated at startup to match runtime BCrypt implementation.");
+                    }
                 }
             }
         }

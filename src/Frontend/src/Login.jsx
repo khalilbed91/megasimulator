@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import './login.css'
 import Logo from './components/Logo'
 
-export default function Login({ onLoginSuccess, switchToSignup, onClose }){
+export default function Login({ onLoginSuccess, switchToSignup, onDismiss, embedded }){
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [errors,   setErrors]   = useState({ username: '', password: '' })
@@ -10,7 +10,9 @@ export default function Login({ onLoginSuccess, switchToSignup, onClose }){
   const [error,    setError]    = useState(null)
   const googleBtnRef = useRef(null)
 
-  const GOOGLE_CLIENT_ID = '874107145454-8vao5905rvg7v56h6rustrk3dbbbul62.apps.googleusercontent.com'
+  const rawClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''
+  const GOOGLE_CLIENT_ID = String(rawClientId).trim() || '874107145454-8vao5905rvg7v56h6rustrk3dbbbul62.apps.googleusercontent.com'
+  const clientIdLooksValid = /\.apps\.googleusercontent\.com$/.test(GOOGLE_CLIENT_ID)
 
   const handleGoogleCredential = async (response) => {
     setLoading(true); setError(null)
@@ -39,6 +41,8 @@ export default function Login({ onLoginSuccess, switchToSignup, onClose }){
         callback: handleGoogleCredential,
         auto_select: false,
         cancel_on_tap_outside: true,
+        // Évite le flux FedCM « lite » sur Chrome quand la config console ne le supporte pas (sinon 401 invalid_client fréquent)
+        use_fedcm_for_button: false,
       })
       if (googleBtnRef.current) {
         window.google.accounts.id.renderButton(googleBtnRef.current, {
@@ -96,8 +100,8 @@ export default function Login({ onLoginSuccess, switchToSignup, onClose }){
   }
 
   return (
-    <div className="auth-page">
-      {/* ── Brand panel ── */}
+    <div className={embedded ? 'auth-page auth-page--embedded' : 'auth-page'}>
+      {!embedded && (
       <div className="auth-brand">
         <div className="auth-brand-logo">
           <Logo size={52} />
@@ -143,8 +147,8 @@ export default function Login({ onLoginSuccess, switchToSignup, onClose }){
           </div>
         </div>
       </div>
+      )}
 
-      {/* ── Form panel ── */}
       <div className="auth-form-panel">
         <div className="auth-form-card">
           <div className="auth-form-header">
@@ -197,17 +201,34 @@ export default function Login({ onLoginSuccess, switchToSignup, onClose }){
           <div className="auth-divider">ou</div>
 
           {/* Google Sign-In button rendered by the GSI library */}
+          {!clientIdLooksValid && (
+            <div className="auth-error" role="alert">
+              Client Google invalide : définissez <code style={{ fontSize: 12 }}>VITE_GOOGLE_CLIENT_ID</code> dans <code style={{ fontSize: 12 }}>.env.local</code> (ID se terminant par .apps.googleusercontent.com).
+            </div>
+          )}
           <div ref={googleBtnRef} style={{ width: '100%', minHeight: 44, display: 'flex', justifyContent: 'center' }} />
+
+          <p className="auth-google-hint" style={{ fontSize: 12, color: 'rgba(226,232,240,0.55)', lineHeight: 1.5, marginTop: 12, textAlign: 'center' }}>
+            Si Google affiche <strong style={{ color: '#fca5a5' }}>401 invalid_client</strong> : dans Google Cloud Console → Identifiants → votre client de type <strong>Application Web</strong>, ajoutez exactement l’<strong>origine JavaScript</strong>{' '}
+            <code style={{ fontSize: 11 }}>{typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'}</code>
+            {' '}(et <code style={{ fontSize: 11 }}>http://127.0.0.1:5173</code> si vous ouvrez le site avec 127.0.0.1). Pas d’espace, pas de slash final. Redémarrez Vite après modification de <code style={{ fontSize: 11 }}>.env.local</code>.
+          </p>
 
           {error && <div className="auth-error" role="alert" aria-live="polite">{error}</div>}
 
           <div className="auth-footer">
             Pas encore de compte ?{' '}
-            <button className="auth-link" type="button"
-              onClick={()=>{ if (typeof switchToSignup === 'function') return switchToSignup(); if (typeof onClose === 'function') return onClose() }}>
+            <button className="auth-link" type="button" onClick={() => switchToSignup?.()}>
               Créer un compte
             </button>
           </div>
+          {onDismiss && (
+            <div className="auth-dismiss-wrap">
+              <button type="button" className="auth-link" onClick={onDismiss}>
+                {embedded ? 'Fermer' : 'Retour aux simulations'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>

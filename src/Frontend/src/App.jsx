@@ -5,8 +5,9 @@ import Home from './Home'
 import './styles.css'
 
 export default function App(){
-  const [view,  setView]  = useState('login')
-  const [token, setToken] = useState(localStorage.getItem('msim_token'))
+  const [token, setToken] = useState(() => localStorage.getItem('msim_token'))
+  /** Full-screen auth overlay: null | 'login' | 'signup' */
+  const [authScreen, setAuthScreen] = useState(null)
   const [dark,  setDark]  = useState(localStorage.getItem('msim_dark') === '1')
   const [lang,  setLang]  = useState(localStorage.getItem('msim_lang') || 'fr')
 
@@ -15,12 +16,12 @@ export default function App(){
       const qp = new URLSearchParams(window.location.search)
       const t  = qp.get('token')
       if (t){
-        localStorage.setItem('msim_token', t); setToken(t); setView('app')
+        localStorage.setItem('msim_token', t)
+        setToken(t)
+        setAuthScreen(null)
         const url = new URL(window.location.href)
         url.searchParams.delete('token')
         window.history.replaceState({}, document.title, url.toString())
-      } else if (localStorage.getItem('msim_token')){
-        setToken(localStorage.getItem('msim_token')); setView('app')
       }
     }catch{}
   }, [])
@@ -32,25 +33,29 @@ export default function App(){
 
   useEffect(()=>{ localStorage.setItem('msim_lang', lang) }, [lang])
 
-  const onLoginSuccess = (t) => { setToken(t); setView('app') }
-  const signOut = () => { localStorage.removeItem('msim_token'); setToken(null); setView('login') }
+  const onLoginSuccess = (t) => {
+    if (t) localStorage.setItem('msim_token', t)
+    setToken(t || localStorage.getItem('msim_token'))
+    setAuthScreen(null)
+  }
 
-  // Floating controls: dark mode toggle + language flags
+  const signOut = () => {
+    localStorage.removeItem('msim_token')
+    setToken(null)
+  }
+
   const Controls = (
     <div className="controls-bar">
       <button className="icon-ctrl" onClick={()=>setDark(d=>!d)}
         title={dark ? 'Light mode' : 'Dark mode'}
         aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
         {dark ? (
-          /* Sun icon */
           <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
         ) : (
-          /* Moon icon */
           <svg viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
         )}
       </button>
 
-      {/* FR flag */}
       <button className="icon-ctrl" title="Français" aria-label="Changer en français"
         onClick={()=>setLang('fr')}
         style={lang==='fr' ? {borderColor:'var(--accent)',color:'var(--accent)'} : {}}>
@@ -61,7 +66,6 @@ export default function App(){
         </svg>
       </button>
 
-      {/* EN flag */}
       <button className="icon-ctrl" title="English" aria-label="Switch to English"
         onClick={()=>setLang('en')}
         style={lang==='en' ? {borderColor:'var(--accent)',color:'var(--accent)'} : {}}>
@@ -78,13 +82,36 @@ export default function App(){
     </div>
   )
 
-  if (view === 'login')  return (<>{Controls}<Login  onLoginSuccess={onLoginSuccess} switchToSignup={()=>setView('signup')} /></>)
-  if (view === 'signup') return (<>{Controls}<Signup onSignupSuccess={onLoginSuccess} switchToLogin={()=>setView('login')} /></>)
-
   return (
     <>
       {Controls}
-      <Home token={token} onSignOut={signOut} onRequestLogin={()=>setView('login')} onLoginSuccess={onLoginSuccess} lang={lang} onLangChange={setLang} />
+      <Home
+        token={token}
+        onSignOut={signOut}
+        onRequestLogin={()=>setAuthScreen('login')}
+        onRequestSignup={()=>setAuthScreen('signup')}
+        lang={lang}
+        onLangChange={setLang}
+      />
+
+      {authScreen === 'login' && (
+        <div className="auth-fullscreen-overlay">
+          <Login
+            onLoginSuccess={onLoginSuccess}
+            switchToSignup={()=>setAuthScreen('signup')}
+            onDismiss={()=>setAuthScreen(null)}
+          />
+        </div>
+      )}
+      {authScreen === 'signup' && (
+        <div className="auth-fullscreen-overlay">
+          <Signup
+            onSignupSuccess={onLoginSuccess}
+            switchToLogin={()=>setAuthScreen('login')}
+            onDismiss={()=>setAuthScreen(null)}
+          />
+        </div>
+      )}
     </>
   )
 }

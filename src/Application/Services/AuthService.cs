@@ -27,6 +27,13 @@ namespace MegaSimulator.Application.Services
 
         public async Task<string?> AuthenticateAsync(string username, string password)
         {
+            username = username?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(username))
+            {
+                _logger.LogWarning("Authentication failed: empty username");
+                return null;
+            }
+
             var user = await _userRepo.GetByUsernameAsync(username);
             if (user == null)
             {

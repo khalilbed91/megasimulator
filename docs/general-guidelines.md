@@ -1,7 +1,7 @@
 # MegaSimulator — General Guidelines & Project Status
 
 _Document interne — usage agent/équipe uniquement_  
-_Dernière mise à jour : 2026-03-29 (session 3)_
+_Dernière mise à jour : 2026-03-30_
 
 ---
 
@@ -29,7 +29,7 @@ _Dernière mise à jour : 2026-03-29 (session 3)_
 | ✅ Migrations 001–007 | Création tables `users`, `salaires`, `simulations`, `formulas` ; ajout credentials admin ; nullable userId sur simulations ; **migration 007 corrige le hash BCrypt admin** |
 | ✅ Tool `ApplyMigrations` | `tools/ApplyMigrations/Program.cs` — applique les migrations SQL au démarrage |
 | ✅ Authentification JWT | `AuthController`, `AuthService`, `UserRepository` — login, register, change password |
-| ✅ Google OAuth (GSI) | `VerifyIdTokenAsync` dans `IGoogleAuthClient` + `GoogleAuthClient`; new endpoint `POST /api/auth/google/token` — **aucun client secret nécessaire**; client ID configuré dans `launchSettings.json` |
+| ✅ Google OAuth (GSI) | `POST /api/auth/google/token` — ID token vérifié via `tokeninfo` (**pas de secret** pour ce flux). **Secret client** (`GOOGLE:ClientSecret` / `GOOGLE__CLIENTSECRET`) uniquement pour le flux code → `/api/auth/google/callback` |
 | ✅ PayrollController | `POST /api/payroll/simulate` (brut→net) et `POST /api/payroll/brut-to-net` |
 | ✅ PayrollService | Calcul complet : cotisations salariales/patronales, CSG/CRDS, Agirc-Arrco, APEC cadre, JEI, retenue à la source (PAS), net imposable |
 | ✅ PayrollParams (2026) | `src/Application/Params/PayrollParams.cs` + `docs/knowledge-base/params/2026.json` |
@@ -50,7 +50,9 @@ _Dernière mise à jour : 2026-03-29 (session 3)_
 | ✅ BCrypt re-hash robust | Migration 007 : hash correct généré par `BCrypt.HashPassword("111aaa**", 12)` — hash placeholder de la migration 004 **ne fonctionnait pas** |
 | ✅ JWT key length guard | Clé JWT < 32 octets → dérivation SHA256 automatique pour éviter IDX10720 |
 | ✅ Rôles JWT | Claim `roles: ['admin']` émis et vérifié côté frontend pour la vue technique |
-| ✅ Google OAuth GSI | `POST /api/auth/google/token` vérifie l'ID token via `tokeninfo` (pas de client secret) ; `VerifyIdTokenAsync` dans `GoogleAuthClient` vérifie le champ `aud` |
+| ✅ Google OAuth GSI | Même `GOOGLE__CLIENTID` côté API et `VITE_GOOGLE_CLIENT_ID` côté front ; `VerifyIdTokenAsync` contrôle le champ `aud` |
+| ✅ Login email ou username | `UserRepository.GetByUsernameAsync` : `username = @Login OR email` (+ priorité ligne avec mot de passe si doublon email) |
+| ✅ Admin au démarrage | `Program.cs` : création / réparation ligne `admin` si absente ou mauvais username sur l’UUID seed |
 | ⚠️ Token dans localStorage | Acceptable en MVP — **à migrer vers cookie HttpOnly** |
 
 ### 2.3 Frontend — UI/UX
@@ -63,7 +65,8 @@ _Dernière mise à jour : 2026-03-29 (session 3)_
 | ✅ Sidebar navigation | Sections « Simulations » et « Utilisateur », indicateur actif, info utilisateur + déconnexion |
 | ✅ Login split-screen | Panneau marque gauche + panneau formulaire droit, responsive (masqué < 860px) |
 | ✅ Signup | Même pattern que Login |
-| ✅ Account page | Profil utilisateur avec token info |
+| ✅ Account / Contact | `.page-panel` + `btn-primary-custom` / `btn-ghost` ; invité → CTA connexion / inscription |
+| ✅ Mode invité | Accueil direct sur simulateurs ; pas d’Historique / Compte dans la sidebar sans JWT |
 | ✅ Logo centralisé | `Logo.jsx` — composant partagé |
 
 ### 2.4 PayrollSimulator — composant avancé
@@ -93,7 +96,7 @@ _Dernière mise à jour : 2026-03-29 (session 3)_
 | ✅ `SimulationHistory.jsx` | Page Historique dans la sidebar, appelle `GET /api/simulation/mine` |
 | ✅ `GET /api/simulation/mine` | Endpoint sécurisé `[Authorize]`, userId depuis JWT (pas URL) — empêche IDOR |
 | ✅ Suppression simulation | `DELETE /api/simulation/{id}` avec vérification owner avant suppression |
-| ✅ Cartes historique | Date/heure, badge statut coloré, brut→net, retenue, parts afichés par ligne |
+| ✅ Cartes historique | **Paie** : brut→net, retenue, parts ; **Retraite** : année naissance, SAM, pension nette mensuelle, etc. ; autres `type` → ligne générique |
 | ✅ Header Authorization | `PayrollSimulator.jsx` envoie désormais le token à chaque simulation |
 | ✅ `UseAuthentication()` ajouté | **Bug critique corrigé** : le middleware JWT n'était pas dans le pipeline → userId toujours null |
 | ✅ Simulations liées à l'user | Toutes nouvelles simulations sauvegardées avec `userid` (plus de NULL) |
@@ -117,7 +120,7 @@ _Dernière mise à jour : 2026-03-29 (session 3)_
 | ✅ Décote plafonnée | Max 25% (20 trimestres manquants) |
 | ✅ Surcote | +1.25%/trimestre supplémentaire, facteur trimestres plafonné à 1 |
 | ✅ Persistance | Simulation sauvegardée en table `simulations` avec `type='retirement'`, `userId` depuis JWT |
-| ✅ `RetirementController` | `POST /api/retirement/simulate` — userId extrait du token ; même pattern que PayrollController |
+| ✅ `RetirementController` | `POST /api/retirement/simulate` — `[AllowAnonymous]` ; userId si JWT présent (sinon simulation anonyme non liée) |
 | ✅ `RetirementSimulator.jsx` | Formulaire : année naissance (auto-remplit trimestres requis), chips âge départ, SAM, barre progression trimestres, points Agirc-Arrco, revenus actuels optionnels |
 | ✅ KPI cards | Pension mensuelle nette (principal), pension annuelle nette, taux de remplacement |
 | ✅ Breakdown panel | Base CNAV + complémentaire + brute totale ; panel trimestres (décote/surcote/manquants en couleur) |
@@ -154,7 +157,7 @@ _Dernière mise à jour : 2026-03-29 (session 3)_
 | L1 | **Simulateur épargne** | Règles dans `docs/knowledge-base/savings.md` |
 | L2 | **Simulateur assurance** | Règles dans `docs/knowledge-base/insurance.md` |
 | L3 | **Dashboard analytics admin** | Vue admin : simulations, utilisateurs, distributions |
-| L4 | **Enregistrer JS origins Google** | Ajouter `http://localhost:5174` + URL prod dans Google Cloud Console → Authorized JavaScript origins |
+| L4 | **Google Cloud — origines JS** | `http://localhost:5173` et si besoin `http://127.0.0.1:5173` ; client type **Application Web** ; voir README section dépannage `401 invalid_client` |
 
 ---
 

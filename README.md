@@ -47,15 +47,69 @@ We'll keep a dedicated folder `docs/knowledge-base/` where each domain (loans, i
 
 ## Getting Started (developer)
 
-1. Clone the repo.
-2. Install dependencies (per-app instructions will follow).
-3. Run unit tests for `packages/sim-core`.
+### Backend (API)
 
-Or use the provided launch profile (sets local Postgres/Redis connection strings and enables Swagger):
+Requires PostgreSQL (see connection string in `src/Api/Properties/launchSettings.json` profile `LocalWithDeps`).
 
 ```powershell
 dotnet run --project src/Api --launch-profile LocalWithDeps
 ```
+
+API listens on `http://localhost:5000` (Swagger when `ENABLE_SWAGGER=true`).
+
+### Frontend (Vite + React)
+
+```powershell
+cd src/Frontend
+npm install
+npm run dev
+```
+
+App: `http://localhost:5173`. Requests to `/api` are proxied to the API on port 5000.
+
+Optional: copy `src/Frontend/.env.example` to `.env.local` and set `VITE_GOOGLE_CLIENT_ID` if you use a different OAuth client than the default in code.
+
+### Google Sign-In (OAuth)
+
+- **Sign-In with Google (GSI / ID token)** — used by the login page: only the **client ID** is needed on the server (`GOOGLE__CLIENTID` in launch profile or env). No client secret required for this flow.
+- **Authorization code flow** (`/api/auth/google/callback`) — exchanging the code for tokens requires the **client secret**. Set it locally only, never commit it:
+  - PowerShell for the current session: `$env:GOOGLE__CLIENTSECRET = "your-secret"`
+  - Or .NET user secrets from `src/Api`:  
+    `dotnet user-secrets set "GOOGLE:ClientSecret" "your-secret"`
+  - Or add `GOOGLE__CLIENTSECRET` to your user-specific copy of environment variables (keep it out of git).
+
+In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), for a **Web application** client:
+
+- **Authorized JavaScript origins:** `http://localhost:5173`
+- **Authorized redirect URIs:** `http://localhost:5000/api/auth/google/callback`
+
+Set `FRONTEND__URL` to the Vite origin (e.g. `http://localhost:5173`) so OAuth redirects back correctly.
+
+If a client secret was ever exposed, **rotate it** in the console and update your local configuration.
+
+#### Sign-In button shows `401 invalid_client` / `GeneralOAuthLite`
+
+This comes from **Google** (before our API runs). Check, in order:
+
+1. **Client type** — Create an OAuth client **“Application Web”**, not “Application de bureau / Desktop” or “TV”. The Sign-In with Google (GIS) button only works with a **Web** client ID.
+
+2. **Authorized JavaScript origins** — Under that client, add **exactly** the origin you use in the browser (scheme + host + port, **no path**, **no trailing slash**), for example:
+   - `http://localhost:5173` if you open `http://localhost:5173/...`
+   - `http://127.0.0.1:5173` if you open `http://127.0.0.1:5173/...`  
+   `localhost` and `127.0.0.1` are **different** origins; add both if you switch.
+
+3. **Same client ID everywhere** — Copy the **Client ID** (ends with `.apps.googleusercontent.com`) into:
+   - `VITE_GOOGLE_CLIENT_ID` in `src/Frontend/.env.local` (then restart `npm run dev`)
+   - `GOOGLE__CLIENTID` for the API (launch profile or environment)  
+   The ID token’s audience must match the server’s `GOOGLE__CLIENTID` when `/api/auth/google/token` verifies it.
+
+4. **OAuth consent screen** — Configure the consent screen for the project. If the app is in **Testing**, add your Google account under **Test users**.
+
+5. After changing `.env.local`, always restart the Vite dev server.
+
+### Guest usage
+
+Users can open the app without signing in and run payroll and retirement simulations. History and account screens require login.
 ## Contribution & Governance
 
 - All formula changes must include source links and test vectors.

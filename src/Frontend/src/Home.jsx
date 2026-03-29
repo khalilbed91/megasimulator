@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import PayrollSimulator from './PayrollSimulator'
-import Login from './Login'
 import Account from './Account'
 import Contact from './Contact'
 import SimulationHistory from './SimulationHistory'
@@ -14,7 +13,7 @@ const T = {
     navPayroll: 'Simulateur paie', navRetirement: 'Retraite', navLoans: 'Prêts',
     navAccount: 'Mon compte', navContact: 'Contact', navSignIn: 'Se connecter', navSignOut: 'Se déconnecter',
     navHistory: 'Historique',
-    sectionSim: 'Simulations', sectionUser: 'Utilisateur',
+    sectionSim: 'Simulations', sectionUser: 'Espace personnel',
     comingSoon: 'Prochainement', comingSoonDesc: 'Ce module est en cours de développement.',
     tabPayroll: 'Paie', tabRetirement: 'Retraite', tabLoans: 'Prêts',
     guest: 'Invité', topbarPayroll: 'Simulateur de paie', topbarRetirement: 'Simulation retraite',
@@ -26,7 +25,7 @@ const T = {
     navPayroll: 'Payroll sim', navRetirement: 'Retirement', navLoans: 'Loans',
     navAccount: 'My account', navContact: 'Contact', navSignIn: 'Sign in', navSignOut: 'Sign out',
     navHistory: 'History',
-    sectionSim: 'Simulators', sectionUser: 'User',
+    sectionSim: 'Simulators', sectionUser: 'Account',
     comingSoon: 'Coming soon', comingSoonDesc: 'This module is under development.',
     tabPayroll: 'Payroll', tabRetirement: 'Retirement', tabLoans: 'Loans',
     guest: 'Guest', topbarPayroll: 'Payroll simulator', topbarRetirement: 'Retirement planner',
@@ -41,9 +40,8 @@ const topbarTitles = (t, tab) => ({
   history: t.topbarHistory
 })[tab] || t.topbarPayroll
 
-export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess, lang, onLangChange }){
+export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup, lang, onLangChange }){
   const [tab, setTab] = useState('payroll')
-  const [showLogin, setShowLogin] = useState(false)
   const [user, setUser] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const tr = T[lang] || T['en']
@@ -58,7 +56,11 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
       }catch{ setUser(null) }
     }
     load()
-  }, [token, showLogin])
+  }, [token])
+
+  useEffect(()=>{
+    if (!token && (tab === 'history' || tab === 'account')) setTab('payroll')
+  }, [token, tab])
 
   const navItem = (id, label, icon, badge) => (
     <button key={id} className={`nav-item${tab === id ? ' active' : ''}`} onClick={()=>setTab(id)}>
@@ -68,12 +70,20 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
     </button>
   )
 
+  const openLogin = () => {
+    setSidebarOpen(false)
+    if (typeof onRequestLogin === 'function') onRequestLogin()
+  }
+
+  const openSignup = () => {
+    setSidebarOpen(false)
+    if (typeof onRequestSignup === 'function') onRequestSignup()
+  }
+
   return (
     <div className="app-shell">
-      {/* Mobile overlay */}
       {sidebarOpen && <div className="sidebar-overlay" onClick={()=>setSidebarOpen(false)} />}
 
-      {/* ── Sidebar ── */}
       <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
         <div className="sidebar-brand">
           <Logo size={34} />
@@ -89,8 +99,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
           <svg viewBox="0 0 24 24" fill="none"><path d="M9 7h6M9 11h6M9 15h4M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
         )}
         {navItem('retirement', tr.navRetirement,
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/><path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>,
-          lang === 'fr' ? 'Bientôt' : 'Soon'
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/><path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
         )}
         {navItem('loans', tr.navLoans,
           <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h5l2 5 4-10 2 5h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
@@ -100,10 +109,10 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
         <div className="nav-divider" />
         <div className="nav-section-label">{tr.sectionUser}</div>
 
-        {navItem('history', tr.navHistory,
+        {token && navItem('history', tr.navHistory,
           <svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         )}
-        {navItem('account', tr.navAccount,
+        {token && navItem('account', tr.navAccount,
           <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
         )}
         {navItem('contact', tr.navContact,
@@ -126,18 +135,15 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
             </button>
           </div>
         ) : (
-          <button className="nav-item" onClick={()=>{ if (typeof onRequestLogin === 'function') onRequestLogin(); else setShowLogin(true) }}>
+          <button className="nav-item" onClick={openLogin}>
             <svg viewBox="0 0 24 24" fill="none"><path d="M10 17l5-5-5-5v3H4v4h6v3zM20 3h-8v2h8v14h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" fill="currentColor"/></svg>
             <span>{tr.navSignIn}</span>
           </button>
         )}
       </aside>
 
-      {/* ── Main area ── */}
       <div className="main-content">
-        {/* Top bar */}
         <div className="top-bar">
-          {/* Hamburger for mobile */}
           <button className="hamburger" onClick={()=>setSidebarOpen(o=>!o)} aria-label="Menu">
             <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
           </button>
@@ -145,7 +151,6 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
         </div>
 
         <div className="page-body">
-          {/* Simulator sub-tabs */}
           {['payroll','retirement','loans'].includes(tab) && (
             <div className="tab-bar" role="tablist">
               <button role="tab" aria-selected={tab==='payroll'} className={`tab-btn${tab==='payroll'?' active':''}`} onClick={()=>setTab('payroll')}>
@@ -163,7 +168,6 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
             </div>
           )}
 
-          {/* Tab content */}
           {tab === 'payroll' && <PayrollSimulator lang={lang} onLangChange={onLangChange} />}
 
           {tab === 'retirement' && <RetirementSimulator lang={lang} />}
@@ -176,17 +180,12 @@ export default function Home({ token, onSignOut, onRequestLogin, onLoginSuccess,
             </div>
           )}
 
-          {tab === 'history' && <SimulationHistory token={token} lang={lang} />}
-          {tab === 'account' && <Account token={token} lang={lang} />}
+          {tab === 'history' && <SimulationHistory token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}
+          {tab === 'account' && <Account token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}
           {tab === 'contact' && <Contact lang={lang} />}
         </div>
       </div>
 
-      {showLogin && (
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.6)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:2000,backdropFilter:'blur(4px)'}}>
-          <Login onLoginSuccess={(t)=>{ if (typeof onLoginSuccess === 'function') onLoginSuccess(t); setShowLogin(false) }} onClose={()=>setShowLogin(false)} />
-        </div>
-      )}
     </div>
   )
 }

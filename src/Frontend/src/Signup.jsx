@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import './login.css'
 import Logo from './components/Logo'
 
-export default function Signup({ onSignupSuccess, switchToLogin }){
+export default function Signup({ onSignupSuccess, switchToLogin, onDismiss, embedded }){
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
   const [name,     setName]     = useState('')
@@ -34,8 +34,8 @@ export default function Signup({ onSignupSuccess, switchToLogin }){
   }
 
   return (
-    <div className="auth-page">
-      {/* ── Brand panel ── */}
+    <div className={embedded ? 'auth-page auth-page--embedded' : 'auth-page'}>
+      {!embedded && (
       <div className="auth-brand">
         <div className="auth-brand-logo"><Logo size={52} /></div>
         <div className="auth-brand-title">Rejoignez Mega Simulator</div>
@@ -63,8 +63,8 @@ export default function Signup({ onSignupSuccess, switchToLogin }){
           </div>
         </div>
       </div>
+      )}
 
-      {/* ── Form panel ── */}
       <div className="auth-form-panel">
         <div className="auth-form-card">
           <div className="auth-form-header">
@@ -123,8 +123,15 @@ export default function Signup({ onSignupSuccess, switchToLogin }){
 
           <div className="auth-footer">
             Déjà un compte ?{' '}
-            <button className="auth-link" type="button" onClick={switchToLogin}>Se connecter</button>
+            <button className="auth-link" type="button" onClick={() => switchToLogin?.()}>Se connecter</button>
           </div>
+          {onDismiss && (
+            <div className="auth-dismiss-wrap">
+              <button type="button" className="auth-link" onClick={onDismiss}>
+                {embedded ? 'Fermer' : 'Retour aux simulations'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>

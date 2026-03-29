@@ -2,6 +2,9 @@ node_modules/
 dist/
 build/
 .env
+.env.local
+.env.*.local
+**/appsettings.*.local.json
 .DS_Store
 *.log
 /.idea

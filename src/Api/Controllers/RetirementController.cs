@@ -19,6 +19,7 @@ namespace MegaSimulator.Api.Controllers
         }
 
         [HttpPost("simulate")]
+        [AllowAnonymous]
         public async Task<IActionResult> Simulate([FromBody] RetirementRequestDto req)
         {
             Guid? userId = null;

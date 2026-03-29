@@ -18,3 +18,7 @@ dotnet test ./tests/MegaSimulator.Tests/MegaSimulator.Tests.csproj -f net10.0
 
 Notes
 - This test is intended as an integration-style unit test (controller + small service fakes). For full end-to-end tests that spin up the app and mock external HTTP endpoints, consider using `WebApplicationFactory<TEntryPoint>` and a custom `IHttpClientFactory` that returns mocked `HttpClient` handlers.
+
+Configuration Google (développement)
+- Voir le README racine : section **Google Sign-In (OAuth)** et dépannage **`401 invalid_client`** (client Web, origines JavaScript `http://localhost:5173` / `127.0.0.1:5173`, même Client ID front `VITE_GOOGLE_CLIENT_ID` et API `GOOGLE__CLIENTID`).
+- Ne jamais committer le **client secret** ; utiliser variables d’environnement ou `dotnet user-secrets`.
