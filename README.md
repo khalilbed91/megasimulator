@@ -67,6 +67,8 @@ npm run dev
 
 App: `http://localhost:5173`. Requests to `/api` are proxied to the API on port 5000.
 
+Each simulator has a **dedicated path** for sharing and SEO (e.g. `/simulateur-paie-brut-net`, `/simulation-retraite`, `/simulation-credit-pret`). For production builds, set **`VITE_PUBLIC_SITE_URL`** (public `https` origin, no trailing slash) so `npm run build` emits **`dist/sitemap.xml`** and **`dist/robots.txt`**. See `docs/frontend-guidelines.md` § 2.1.
+
 Optional: copy `src/Frontend/.env.example` to `.env.local` and set `VITE_GOOGLE_CLIENT_ID` if you use a different OAuth client than the default in code.
 
 ### Google Sign-In (OAuth)

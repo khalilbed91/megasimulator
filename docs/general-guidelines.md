@@ -177,6 +177,7 @@ _Dernière mise à jour : 2026-03-30 (doc stack local, sécurité API, contact D
 
 ### 4.2 Frontend (React)
 
+- **Routage & SEO** : `react-router-dom` (URLs dédiées par simulateur), `react-helmet-async` (title, meta, canonical, OG, JSON-LD). Voir `docs/frontend-guidelines.md` § 2.1 et `src/Frontend/src/seo/`.
 - Pas de class components — hooks uniquement
 - Props `lang` transmise de `App.jsx` vers tous les enfants
 - Objet de traductions `T` en haut de chaque composant (FR/EN)

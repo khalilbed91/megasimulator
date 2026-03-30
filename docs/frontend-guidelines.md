@@ -1,6 +1,6 @@
 # Frontend — Guidelines techniques
 
-_Dernière mise à jour : 2026-03-30 (nav Prêts/Épargne, contact API)_
+_Dernière mise à jour : 2026-03-30 (SEO, routage URL, Helmet)_
 
 ---
 
@@ -20,11 +20,18 @@ _Dernière mise à jour : 2026-03-30 (nav Prêts/Épargne, contact API)_
 
 ```
 src/Frontend/
-  index.html                  ← Root HTML (charset UTF-8 obligatoire, Google GSI script async)
-  vite.config.js              ← Proxy /api → backend
+  index.html                  ← Root HTML (lang=fr, meta description par défaut)
+  vite.config.js              ← Proxy /api ; post-build sitemap.xml + robots.txt (VITE_PUBLIC_SITE_URL)
+  vercel.json                 ← SPA fallback → index.html (hébergement Vercel)
+  public/_redirects           ← SPA fallback Netlify
   src/
-    App.jsx                   ← Home toujours visible ; authScreen login/signup en overlay plein écran
-    Home.jsx                  ← Shell: sidebar + top-bar + page-body ; invités sans Historique/Compte
+    main.jsx                  ← HelmetProvider + BrowserRouter
+    App.jsx                   ← Routes (redirections SEO alias) + AppShell (auth overlay)
+    Home.jsx                  ← Shell synchronisé sur useLocation ; lien logo → /simulateur-paie-brut-net
+    seo/
+      paths.js                ← Chemins canoniques FR
+      SeoHead.jsx             ← Helmet par onglet
+      SeoIntro.jsx            ← Paragraphe visible pédagogique / SEO léger
     PayrollSimulator.jsx      ← Simulateur de paie (composant principal)
     RetirementSimulator.jsx   ← Simulateur retraite (✅ implémenté — voir section 7)
     LoanSimulator.jsx         ← Prêts immo (PTZ, TVA réduite, PAL) + auto + conso
@@ -38,6 +45,26 @@ src/Frontend/
     styles.css                ← Design system global (tokens CSS + composants)
     login.css                 ← Styles spécifiques à la page auth
 ```
+
+### 2.1 SEO — chemins et alias
+
+Chemins **canoniques** (partage et balises `canonical`) — alignés sur `src/seo/paths.js` :
+
+| Chemin | Contenu |
+|--------|---------|
+| `/simulateur-paie-brut-net` | Paie (brut/net, portage, etc.) |
+| `/simulation-retraite` | Retraite |
+| `/simulation-credit-pret` | Prêts |
+| `/simulation-epargne` | Épargne (placeholder) |
+| `/contact` | Contact |
+| `/historique` | Historique (connecté) |
+| `/mon-compte` | Compte (connecté) |
+
+**Redirections 301 (client)** vers la canonique : `/` → paie ; `/portage-salarial`, `/salaire-brut-net`, `/simulation-portage-salarial`, `/simulateur-salaire` → paie ; `/pret-immobilier`, `/credit-immobilier`, `/simulateur-pret` → prêts ; `/simulation-retraite-bilan` → retraite.
+
+**Build prod** : définir `VITE_PUBLIC_SITE_URL` (origine publique, sans `/` final) pour générer `dist/sitemap.xml` et `dist/robots.txt`. Défaut : `http://localhost:5173`.
+
+**Limite** : application React CSR — l’indexation s’appuie sur l’exécution JS par Google et sur titres/métas/canonical ; pour du HTML pré-rendu serveur (SSR), il faudrait une évolution d’infra (hors scope actuel).
 
 ---
 

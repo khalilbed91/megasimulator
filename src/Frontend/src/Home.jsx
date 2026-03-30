@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import PayrollSimulator from './PayrollSimulator'
 import Account from './Account'
 import Contact from './Contact'
 import SimulationHistory from './SimulationHistory'
 import RetirementSimulator from './RetirementSimulator'
 import LoanSimulator from './LoanSimulator'
+import { PATH, pathToTab, pathForTab } from './seo/paths'
+import SeoHead from './seo/SeoHead'
+import SeoIntro from './seo/SeoIntro'
 import './styles.css'
 import Logo from './components/Logo'
 
@@ -42,7 +46,10 @@ const topbarTitles = (t, tab) => ({
 })[tab] || t.topbarPayroll
 
 export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup, lang, onLangChange }){
-  const [tab, setTab] = useState('payroll')
+  const navigate = useNavigate()
+  const location = useLocation()
+  const tab = pathToTab(location.pathname) ?? 'payroll'
+
   const [user, setUser] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const tr = T[lang] || T['en']
@@ -59,12 +66,25 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
     load()
   }, [token])
 
-  useEffect(()=>{
-    if (!token && (tab === 'history' || tab === 'account')) setTab('payroll')
-  }, [token, tab])
+  useEffect(() => {
+    if (pathToTab(location.pathname) === null) {
+      navigate(PATH.payroll, { replace: true })
+    }
+  }, [location.pathname, navigate])
+
+  useEffect(() => {
+    if (!token && (tab === 'history' || tab === 'account')) {
+      navigate(PATH.payroll, { replace: true })
+    }
+  }, [token, tab, navigate])
+
+  const goTab = (id) => {
+    navigate(pathForTab(id))
+    setSidebarOpen(false)
+  }
 
   const navItem = (id, label, icon, badge) => (
-    <button key={id} className={`nav-item${tab === id ? ' active' : ''}`} onClick={()=>setTab(id)}>
+    <button key={id} className={`nav-item${tab === id ? ' active' : ''}`} onClick={() => goTab(id)}>
       {icon}
       <span>{label}</span>
       {badge && <span className="nav-item-badge">{badge}</span>}
@@ -83,16 +103,17 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
 
   return (
     <div className="app-shell">
+      <SeoHead tab={tab} lang={lang} />
       {sidebarOpen && <div className="sidebar-overlay" onClick={()=>setSidebarOpen(false)} />}
 
       <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
-        <div className="sidebar-brand">
+        <Link to={PATH.payroll} className="sidebar-brand" onClick={() => setSidebarOpen(false)}>
           <Logo size={34} />
           <div>
             <div className="sidebar-brand-name">{tr.appName}</div>
             <div className="sidebar-brand-sub">{tr.subtitle}</div>
           </div>
-        </div>
+        </Link>
 
         <div className="nav-section-label">{tr.sectionSim}</div>
 
@@ -147,34 +168,36 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
       </aside>
 
       <div className="main-content">
-        <div className="top-bar">
+        <header className="top-bar">
           <button className="hamburger" onClick={()=>setSidebarOpen(o=>!o)} aria-label="Menu">
             <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
           </button>
-          <div className="top-bar-title">{topbarTitles(tr, tab)}</div>
-        </div>
+          <h1 className="top-bar-title">{topbarTitles(tr, tab)}</h1>
+        </header>
 
-        <div className="page-body">
+        <main className="page-body" id="main-content">
           {['payroll','retirement','loans','savings'].includes(tab) && (
             <div className="tab-bar" role="tablist">
-              <button role="tab" aria-selected={tab==='payroll'} className={`tab-btn${tab==='payroll'?' active':''}`} onClick={()=>setTab('payroll')}>
+              <button role="tab" aria-selected={tab==='payroll'} className={`tab-btn${tab==='payroll'?' active':''}`} onClick={()=>goTab('payroll')}>
                 <svg viewBox="0 0 24 24" fill="none"><path d="M9 7h6M9 11h6M9 15h4M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
                 {tr.tabPayroll}
               </button>
-              <button role="tab" aria-selected={tab==='retirement'} className={`tab-btn${tab==='retirement'?' active':''}`} onClick={()=>setTab('retirement')}>
+              <button role="tab" aria-selected={tab==='retirement'} className={`tab-btn${tab==='retirement'?' active':''}`} onClick={()=>goTab('retirement')}>
                 <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/><path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
                 {tr.tabRetirement}
               </button>
-              <button role="tab" aria-selected={tab==='loans'} className={`tab-btn${tab==='loans'?' active':''}`} onClick={()=>setTab('loans')}>
+              <button role="tab" aria-selected={tab==='loans'} className={`tab-btn${tab==='loans'?' active':''}`} onClick={()=>goTab('loans')}>
                 <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h5l2 5 4-10 2 5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 {tr.tabLoans}
               </button>
-              <button role="tab" aria-selected={tab==='savings'} className={`tab-btn${tab==='savings'?' active':''}`} onClick={()=>setTab('savings')}>
+              <button role="tab" aria-selected={tab==='savings'} className={`tab-btn${tab==='savings'?' active':''}`} onClick={()=>goTab('savings')}>
                 <svg viewBox="0 0 24 24" fill="none"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 {tr.tabSavings}
               </button>
             </div>
           )}
+
+          <SeoIntro tab={tab} lang={lang} />
 
           {tab === 'payroll' && <PayrollSimulator lang={lang} onLangChange={onLangChange} />}
 
@@ -193,7 +216,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
           {tab === 'history' && <SimulationHistory token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}
           {tab === 'account' && <Account token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}
           {tab === 'contact' && <Contact lang={lang} />}
-        </div>
+        </main>
       </div>
 
     </div>

@@ -21,6 +21,7 @@
 ## Notes
 
 - En local, le front utilise le proxy Vite vers `localhost:5000`. En prod, soit même origine (reverse proxy), soit CORS + URL API absolue dans le build (`VITE_…` si ajouté).
+- Définir **`VITE_PUBLIC_SITE_URL`** (origine HTTPS du front) au build pour **`sitemap.xml`** / **`robots.txt`** corrects. Hébergeur statique : fallback SPA (`vercel.json`, `public/_redirects` Netlify).
 - Après mise en ligne, retester connexion Google, simulations invité, contact, historique utilisateur connecté.
 
 ---

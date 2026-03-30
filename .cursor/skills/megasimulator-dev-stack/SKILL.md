@@ -38,6 +38,11 @@ Deux processus en parallèle (racine du dépôt `MegaSimulator`) :
 - `PayrollRequestDto.Parts` **défaut = 1**. Dans `PayrollService.Simulate`, si `RetenuePct` est 0 et `Parts > 0`, le barème **PAS** est appliqué sur le net — le net baisse fortement vs. un simple brut×(1−cotisations).
 - Pour des tests ou scénarios « net sans PAS », utiliser **`Parts = 0`** ou une retenue explicite selon le besoin.
 
+## SEO (frontend)
+
+- Routes FR canoniques : **`src/Frontend/src/seo/paths.js`** (ex. `/simulateur-paie-brut-net`). Build : **`VITE_PUBLIC_SITE_URL`** pour `dist/sitemap.xml` + `robots.txt` (`vite.config.js` plugin).
+- Hébergement SPA : **`vercel.json`** ou **`public/_redirects`** (Netlify).
+
 ## Déploiement & domaine (bientôt)
 
 - Checklist et tâches « partager avec des ami·e·s testeurs » : **`docs/planning/2026-03-31-deployment-and-domain.md`**
