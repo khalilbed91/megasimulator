@@ -42,6 +42,7 @@ if (!string.IsNullOrEmpty(redisConn))
 builder.Services.AddScoped<ISalaireService, SalaireService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<MegaSimulator.Application.Interfaces.IContactService, MegaSimulator.Application.Services.ContactService>();
 builder.Services.AddScoped<ISimulationService, SimulationService>();
 builder.Services.AddScoped<IFormulaService, FormulaService>();
 // Params loader and typed params
@@ -49,9 +50,11 @@ builder.Services.AddSingleton<IParamsLoader, ParamsLoader>();
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IParamsLoader>().Load());
 builder.Services.AddScoped<PayrollService>();
 builder.Services.AddScoped<MegaSimulator.Application.Interfaces.IRetirementService, MegaSimulator.Application.Services.RetirementService>();
+builder.Services.AddScoped<MegaSimulator.Application.Interfaces.ILoanService, MegaSimulator.Application.Services.LoanService>();
 // Infrastructure repositories
 builder.Services.AddScoped<ISalaireRepository, SalaireRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IContactRepository, ContactRequestRepository>();
 builder.Services.AddScoped<ISimulationRepository, SimulationRepository>();
 builder.Services.AddScoped<IFormulaRepository, FormulaRepository>();
 builder.Services.AddScoped<ISimulationResultRepository, SimulationResultRepository>();
@@ -64,6 +67,42 @@ builder.Services.AddScoped<IMigrationRunner, MigrationRunner>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Rate limiting (protect anonymous endpoints + auth)
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = 429;
+
+    options.AddPolicy("contact", httpContext =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+
+    options.AddPolicy("auth", httpContext =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+
+    options.AddPolicy("simulate", httpContext =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 15,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
 
 // JWT Authentication
 if (!string.IsNullOrEmpty(jwtKey))
@@ -197,6 +236,7 @@ if (enableSwagger)
     app.UseSwaggerUI();
 }
 
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

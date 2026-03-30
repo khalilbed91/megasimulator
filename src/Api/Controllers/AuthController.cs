@@ -26,6 +26,7 @@ namespace MegaSimulator.Api.Controllers
         public record LoginRequest(string Username, string Password);
 
         [HttpPost("login")]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
         public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
             _logger.LogInformation("Auth login attempt for user: {username}", req.Username);
@@ -105,6 +106,7 @@ namespace MegaSimulator.Api.Controllers
         /// No client secret required — just verifies via Google tokeninfo endpoint.
         /// </summary>
         [HttpPost("google/token")]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
         public async Task<IActionResult> GoogleToken([FromBody] GoogleTokenRequest req)
         {
             if (string.IsNullOrWhiteSpace(req.IdToken))

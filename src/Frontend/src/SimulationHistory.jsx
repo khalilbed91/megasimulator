@@ -4,7 +4,7 @@ const T = {
   fr: {
     title: 'Historique des simulations',
     empty: 'Aucune simulation trouvée.',
-    emptyHint: 'Lancez une simulation de paie ou de retraite pour la retrouver ici.',
+    emptyHint: 'Lancez une simulation de paie, retraite ou prêt pour la retrouver ici.',
     loading: 'Chargement…',
     error: 'Impossible de charger l\'historique.',
     colDate: 'Date',
@@ -32,7 +32,7 @@ const T = {
   en: {
     title: 'Simulation history',
     empty: 'No simulations found.',
-    emptyHint: 'Run a payroll or retirement simulation to see it here.',
+    emptyHint: 'Run a payroll, retirement, or loan simulation to see it here.',
     loading: 'Loading…',
     error: 'Could not load history.',
     colDate: 'Date',
@@ -46,6 +46,8 @@ const T = {
     colPensionNet: 'Net pension / mo.',
     colPensionGross: 'Gross annual',
     colTaux: 'Repl. rate',
+    colLoanCat: 'Loan type',
+    colLoanMonthly: 'Total monthly',
     typePayroll: 'Payroll',
     typeRetirement: 'Retirement',
     typeLoan: 'Loan',
@@ -217,6 +219,55 @@ export default function SimulationHistory({ token, lang, onRequestLogin, onReque
                       </div>
                     </>
                   )}
+                </div>
+                <div className="history-card-actions">
+                  <button
+                    type="button"
+                    className="history-delete-btn"
+                    onClick={() => handleDelete(sim.id)}
+                    disabled={deletingId === sim.id}
+                    aria-label={tr.deleteBtn}
+                    title={tr.deleteBtn}
+                  >
+                    {deletingId === sim.id
+                      ? <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeDasharray="30 10"/></svg>
+                      : <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    }
+                  </button>
+                </div>
+              </div>
+            )
+          }
+
+          if (kind === 'loan') {
+            const cat = (req.Category ?? req.category ?? '').toString()
+            const monthly = res.MonthlyTotalSteadyState ?? res.monthlyTotalSteadyState ?? null
+            const bankK = res.BankPrincipal ?? res.bankPrincipal ?? null
+            return (
+              <div key={sim.id} className="history-card">
+                <div className="history-card-left">
+                  <div className="history-date">{fmtDate(sim.createdAt)}</div>
+                  <span className="history-badge history-badge--loan">{tr.typeLoan}</span>
+                </div>
+                <div className="history-card-figures">
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colLoanCat}</div>
+                    <div className="history-figure-value">{cat || '—'}</div>
+                  </div>
+                  {bankK != null && !isNaN(Number(bankK)) && (
+                    <>
+                      <div className="history-figure-sep">·</div>
+                      <div className="history-figure">
+                        <div className="history-figure-label">Capital</div>
+                        <div className="history-figure-value">{fmt(bankK)}</div>
+                      </div>
+                    </>
+                  )}
+                  <div className="history-figure-sep">→</div>
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colLoanMonthly}</div>
+                    <div className="history-figure-value history-figure-value--accent">{fmt(monthly)}</div>
+                  </div>
                 </div>
                 <div className="history-card-actions">
                   <button

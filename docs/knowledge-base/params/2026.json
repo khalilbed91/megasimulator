@@ -36,7 +36,27 @@
       "immo_20_plus": 0.0513
     },
     "max_immo_duration_years": 25,
-    "max_immo_duration_with_works_years": 27
+    "max_immo_duration_with_works_years": 27,
+    "ptz_income_caps_eur_2026_reference": {
+      "source_note": "Barèmes indicatifs revenus fiscaux de référence (zones A bis/A, B1, B2, C) — revalorisations publiées dans la presse spécialisée et guides 2026 ; valider sur service-public.gouv.fr / décrets.",
+      "rows_household_persons_1_to_5plus": [
+        [49000, 34500, 31500, 28500],
+        [73500, 51750, 47250, 42750],
+        [88200, 62100, 56700, 51300],
+        [102900, 72450, 66150, 59850],
+        [117600, 82800, 75600, 68400]
+      ],
+      "ptz_amount_caps_indicative_by_zone_eur": [120000, 100000, 80000, 60000]
+    },
+    "action_logement": {
+      "rate_percent_typical": 1.0,
+      "max_amount_eur": 40000,
+      "source_note": "Taux et plafonds courants prêt accession — vérifier actionlogement.fr"
+    },
+    "tva_logement_neuf": {
+      "taux_percent": [20, 10, 5.5],
+      "note": "TVA 5,5 % soumise à conditions (ANRU, QPV, etc.) — France Rénov'"
+    }
   },
   "assurance_examples": {
     "assurance_emprunteur_rate_example_min": 0.0010,

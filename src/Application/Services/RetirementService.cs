@@ -56,6 +56,23 @@ namespace MegaSimulator.Application.Services
             return supplementaires * DecoteSurcoteParTrimestre;
         }
 
+        private (decimal pensionBase, decimal pensionCompl, decimal pensionBrute, decimal pensionNette, decimal pensionNetteMensuelle)
+            ComputePensionSnapshot(decimal sam, int trimVal, int trimReq, decimal points)
+        {
+            var decote = ComputeDecote(trimVal, trimReq);
+            var surcote = ComputeSurcote(trimVal, trimReq);
+            var facteur = trimReq > 0
+                ? Math.Min(1m, (decimal)trimVal / trimReq)
+                : 1m;
+
+            var pensionBase = decimal.Round(sam * TauxPlein * facteur * (1 - decote) * (1 + surcote), 2);
+            var pensionCompl = decimal.Round(points * ValeurPointAgircArrco, 2);
+            var pensionBrute = pensionBase + pensionCompl;
+            var pensionNette = decimal.Round(pensionBrute * (1 - RetenueSocialePct), 2);
+            var pensionNetteMensuelle = decimal.Round(pensionNette / 12m, 2);
+            return (pensionBase, pensionCompl, pensionBrute, pensionNette, pensionNetteMensuelle);
+        }
+
         public async Task<RetirementResponseDto> Simulate(RetirementRequestDto req, Guid? userId = null)
         {
             var trimReqis = req.TrimestresRequis > 0
@@ -67,24 +84,21 @@ namespace MegaSimulator.Application.Services
             var decote = ComputeDecote(trimVal, trimReqis);
             var surcote = ComputeSurcote(trimVal, trimReqis);
 
-            // Facteur trimestres: plafonné à 1 si surcote (on ne réduit pas la base)
-            var facteur = trimReqis > 0
-                ? Math.Min(1m, (decimal)trimVal / trimReqis)
-                : 1m;
-
             var sam = req.SalaireAnnuelMoyen;
+            var points = req.PointsComplementaires;
 
-            // Pension base CNAV
-            var pensionBase = sam * TauxPlein * facteur * (1 - decote) * (1 + surcote);
-            pensionBase = decimal.Round(pensionBase, 2);
+            var (pensionBase, pensionCompl, pensionBrute, pensionNette, pensionNetteMensuelle) =
+                ComputePensionSnapshot(sam, trimVal, trimReqis, points);
 
-            // Pension complémentaire Agirc-Arrco
-            var pensionCompl = req.PointsComplementaires * ValeurPointAgircArrco;
-            pensionCompl = decimal.Round(pensionCompl, 2);
+            // Reference: all required quarters validated (taux plein « au compte », sans surcote)
+            var (_, _, _, pensionNettePlein, pensionNetteMensuellePlein) =
+                ComputePensionSnapshot(sam, trimReqis, trimReqis, points);
 
-            var pensionBrute = pensionBase + pensionCompl;
-            var pensionNette = decimal.Round(pensionBrute * (1 - RetenueSocialePct), 2);
-            var pensionNetteMensuelle = decimal.Round(pensionNette / 12m, 2);
+            var ageDepart = req.AgeDepart > 0 ? req.AgeDepart : GetAgeLegal(req.AnneeNaissance);
+            var anneeDepart = req.AnneeNaissance + ageDepart;
+            var ageLegalPivot = GetAgeLegal(req.AnneeNaissance);
+            var potentielVersPlein = decimal.Round(pensionNetteMensuellePlein - pensionNetteMensuelle, 2);
+            var anneesIndicativesPlein = manquants > 0 ? (int)Math.Ceiling(manquants / 4.0) : 0;
 
             decimal tauxRemplacement = 0m;
             if (req.RevenusAnnuelsActuels > 0)
@@ -93,6 +107,34 @@ namespace MegaSimulator.Application.Services
                 tauxRemplacement = revMensuel > 0
                     ? decimal.Round(pensionNetteMensuelle / revMensuel * 100m, 1)
                     : 0m;
+            }
+
+            int? trimAddObjectif = null;
+            int? anneesIndicObjectif = null;
+            var objectifAtteignable = true;
+            if (req.ObjectifPensionMensuelleNet is { } objectif && objectif > 0)
+            {
+                if (pensionNetteMensuelle >= objectif)
+                {
+                    trimAddObjectif = 0;
+                    anneesIndicObjectif = 0;
+                    objectifAtteignable = true;
+                }
+                else
+                {
+                    objectifAtteignable = false;
+                    const int maxScan = 400;
+                    for (var tv = trimVal + 1; tv <= trimVal + maxScan; tv++)
+                    {
+                        var netM = ComputePensionSnapshot(sam, tv, trimReqis, points).pensionNetteMensuelle;
+                        if (netM < objectif) continue;
+                        var add = tv - trimVal;
+                        trimAddObjectif = add;
+                        anneesIndicObjectif = (int)Math.Ceiling(add / 4.0);
+                        objectifAtteignable = true;
+                        break;
+                    }
+                }
             }
 
             var response = new RetirementResponseDto
@@ -109,7 +151,17 @@ namespace MegaSimulator.Application.Services
                 DecotePct = decimal.Round(decote * 100m, 2),
                 SurcotePct = decimal.Round(surcote * 100m, 2),
                 Sam = sam,
-                ValeurPoint = ValeurPointAgircArrco
+                ValeurPoint = ValeurPointAgircArrco,
+                AgeDepart = ageDepart,
+                AnneeDepartRetraite = anneeDepart,
+                AgeLegalPivot = ageLegalPivot,
+                PensionNetteMensuelleTauxPleinTrimestres = pensionNetteMensuellePlein,
+                PensionNetteAnnuelleTauxPleinTrimestres = pensionNettePlein,
+                PotentielMensuelVersTauxPlein = potentielVersPlein,
+                AnneesIndicativesPourTauxPlein = anneesIndicativesPlein,
+                TrimestresAdditionnelsPourObjectif = trimAddObjectif,
+                AnneesIndicativesPourObjectif = anneesIndicObjectif,
+                ObjectifAtteignable = objectifAtteignable
             };
 
             if (_simulationRepository != null)

@@ -1,7 +1,7 @@
 # MegaSimulator — General Guidelines & Project Status
 
 _Document interne — usage agent/équipe uniquement_  
-_Dernière mise à jour : 2026-03-30_
+_Dernière mise à jour : 2026-03-30 (doc stack local, sécurité API, contact DB, tâche déploiement)_
 
 ---
 
@@ -26,7 +26,7 @@ _Dernière mise à jour : 2026-03-30_
 |---|---|
 | ✅ Solution .NET multi-projets | Api / Application / Domain / Infrastructure — architecture clean |
 | ✅ PostgreSQL via Docker Compose | DB `simulator`, user `simu`, migrations versionnées dans `src/Infrastructure/Migrations/` |
-| ✅ Migrations 001–007 | Création tables `users`, `salaires`, `simulations`, `formulas` ; ajout credentials admin ; nullable userId sur simulations ; **migration 007 corrige le hash BCrypt admin** |
+| ✅ Migrations 001–008 | Création tables `users`, `salaires`, `simulations`, `formulas` ; ajout credentials admin ; nullable userId sur simulations ; **007** hash BCrypt admin ; **008** `contact_requests` (formulaire contact) |
 | ✅ Tool `ApplyMigrations` | `tools/ApplyMigrations/Program.cs` — applique les migrations SQL au démarrage |
 | ✅ Authentification JWT | `AuthController`, `AuthService`, `UserRepository` — login, register, change password |
 | ✅ Google OAuth (GSI) | `POST /api/auth/google/token` — ID token vérifié via `tokeninfo` (**pas de secret** pour ce flux). **Secret client** (`GOOGLE:ClientSecret` / `GOOGLE__CLIENTSECRET`) uniquement pour le flux code → `/api/auth/google/callback` |
@@ -39,8 +39,11 @@ _Dernière mise à jour : 2026-03-30_
 | ✅ **RetirementService** | `src/Application/Services/RetirementService.cs` — calcul CNAV + Agirc-Arrco + décote/surcote + retenue sociale 9.1% ; persiste en `simulations` table avec `type='retirement'` |
 | ✅ **IRetirementService** | `src/Application/Interfaces/IRetirementService.cs` — interface avec 5 méthodes |
 | ✅ **RetirementController** | `POST /api/retirement/simulate` — extraction userId depuis JWT, même pattern que PayrollController |
+| ✅ **LoanService** | `POST /api/loan/simulate` — perso / auto / immo (TVA neuf, PTZ, Action Logement), HCSF et TAEG indicatif ; `type='loan'` |
+| ✅ **ContactService** | `POST /api/contact` — persistance `contact_requests`, JWT optionnel pour lier `userid` |
+| ✅ **Rate limiting** | `Program.cs` : politiques `contact` (5/min), `auth` (10/min), `simulate` (15/min) — attributs sur auth, contact, simulateurs |
 | ✅ Seed admin | Migration 007 : hash BCrypt correct pour `admin/111aaa**` |
-| ✅ Tests unitaires | `PayrollServiceTests`, `SalaireServiceTests`, `SimulationServiceTests`, `FormulaServiceTests`, `AuthServiceTests`, **`RetirementServiceTests` (23 tests)** |
+| ✅ Tests unitaires | `PayrollServiceTests`, `SalaireServiceTests`, `SimulationServiceTests`, `FormulaServiceTests`, `AuthServiceTests`, `RetirementServiceTests`, **`LoanServiceTests`** |
 | ✅ Tests d'intégration | Dossier `tests/MegaSimulator.Tests/Integration/` — base posée |
 
 ### 2.2 Sécurité & Auth
@@ -65,7 +68,7 @@ _Dernière mise à jour : 2026-03-30_
 | ✅ Sidebar navigation | Sections « Simulations » et « Utilisateur », indicateur actif, info utilisateur + déconnexion |
 | ✅ Login split-screen | Panneau marque gauche + panneau formulaire droit, responsive (masqué < 860px) |
 | ✅ Signup | Même pattern que Login |
-| ✅ Account / Contact | `.page-panel` + `btn-primary-custom` / `btn-ghost` ; invité → CTA connexion / inscription |
+| ✅ Account / Contact | `.page-panel` + `btn-primary-custom` / `btn-ghost` ; invité → CTA connexion / inscription ; contact → **`POST /api/contact`** (DB) |
 | ✅ Mode invité | Accueil direct sur simulateurs ; pas d’Historique / Compte dans la sidebar sans JWT |
 | ✅ Logo centralisé | `Logo.jsx` — composant partagé |
 
@@ -107,8 +110,9 @@ _Dernière mise à jour : 2026-03-30_
 |---|---|
 | ✅ IDOR corrigé | `SimulationController` : ownership check avant GET/DELETE/PUT |
 | ✅ Tous les endpoints simulation protégés | `[Authorize]` sur toutes les routes sauf `POST /payroll/simulate` (supporte anonyme) |
-| ✅ `GET /user/{userId}` restreint | Rôle `admin` requis |
+| ✅ `UserController` | `[Authorize]` classe ; lecture/modif/suppression du profil : propriétaire ou `admin` ; `GetByUsername` / `Create` : `admin` uniquement |
 | ✅ `UseAuthentication` + `UseAuthorization` | Ajoutés dans `Program.cs` — sans eux le JWT n'était jamais parsé |
+| ✅ Quotas requêtes | `AddRateLimiter` + `UseRateLimiter` — réduit abus brute-force / spam sur auth, contact, simulations |
 
 ### 2.7 RetirementSimulator — implémenté ✅
 
@@ -137,7 +141,7 @@ _Dernière mise à jour : 2026-03-30_
 | # | Tâche | Contexte |
 |---|---|---|
 | P1 | **Migration vers cookie HttpOnly** | Sécuriser le token JWT (actuellement `localStorage`, vulnérable XSS). Patch `AuthController` : `Response.Cookies.Append(...)` + CORS `credentials: 'include'` |
-| P2 | **Simulateur Prêts** | Même pattern que Retraite. Règles dans `docs/knowledge-base/loans.md`. DTOs : `LoanRequestDto` (montant, durée, taux, type), `LoanResponseDto` (mensualité, coût total, TAEG) |
+| P2 | **Simulateur Prêts** | ✅ MVP : `POST /api/loan/simulate`, `LoanSimulator.jsx` (immo + PTZ/TVA/PAL, auto, perso). Affinage TAEG / usure par échéance : à poursuivre |
 | P3 | **Tests E2E** | Tests `LoanServiceTests.cs`, tests Postman pour les endpoints auth/payroll/retirement |
 
 ### 3.2 Priorité moyenne
@@ -186,6 +190,13 @@ _Dernière mise à jour : 2026-03-30_
 - Messages de commit : format `[domaine]: description courte` (ex: `Frontend: améliore PayrollSimulator`)
 - Toujours tester le build avant de pousser
 
+### 4.4 Agent / IA (recherche web)
+
+- L’agent **peut** utiliser la recherche web ou la consultation d’URLs pour des informations à jour (réglementation, versions d’API, correctifs de sécurité, etc.).
+- **Avant** de lancer une recherche web ou un fetch réseau à cette fin, l’agent doit **demander l’accord explicite** à l’utilisateur (courte question du type : « Puis-je chercher sur le web pour … ? »).
+- Si l’utilisateur refuse ou ne répond pas, s’en tenir au dépôt, à la doc du projet et aux connaissances déjà disponibles.
+- Voir aussi la skill projet : `.cursor/skills/web-search-ask-first/SKILL.md`.
+
 ---
 
 ## 5. Accès et configuration
@@ -193,11 +204,30 @@ _Dernière mise à jour : 2026-03-30_
 | Élément | Valeur |
 |---|---|
 | API URL (local) | `http://localhost:5000` |
-| Frontend URL (local) | `http://localhost:5174` |
+| Frontend URL (local) | `http://localhost:5173` (voir `vite.config.js`) |
 | DB | `Host=localhost:5432; Database=simulator; Username=simu; Password=111aaa**` |
 | Admin login | username: `admin` / password: `111aaa**` |
 | JWT key (local) | Défini dans `src/Api/Properties/launchSettings.json` (`JWT__KEY`) |
 | Google Client ID | `874107145454-8vao5905rvg7v56h6rustrk3dbbbul62.apps.googleusercontent.com` |
+
+### 5.1 Démarrer le stack en local
+
+Deux terminaux depuis la racine du dépôt :
+
+```powershell
+# Terminal 1 — API (profil avec Postgres + JWT + Google ID dans launchSettings)
+dotnet run --project src/Api/Api.csproj --launch-profile LocalWithDeps
+```
+
+```powershell
+# Terminal 2 — Frontend (proxy `/api` → :5000)
+Set-Location src/Frontend; npm run dev
+```
+
+- App UI : **http://localhost:5173/**  
+- API : **http://localhost:5000** (Swagger si `ENABLE_SWAGGER=true`)
+
+Prérequis : PostgreSQL accessible avec la chaîne de connexion du profil `LocalWithDeps`.
 
 ---
 
@@ -216,11 +246,15 @@ _Dernière mise à jour : 2026-03-30_
 | 2026-03-29 | Google OAuth — passage en GSI | L'ancien flow OAuth redirect nécessitait un client secret. Passage au flow Google Identity Services (GSI) : le frontend charge `accounts.google.com/gsi/client`, obtient un ID token signé par Google, et le soumet à `POST /api/auth/google/token`. Le backend valide via `tokeninfo` (pas de secret). Nouveau : `VerifyIdTokenAsync` dans `GoogleAuthClient`, endpoint `POST /api/auth/google/token` dans `AuthController`. |
 | 2026-03-29 | BCrypt hash admin invalide | Migration 004 contenait un hash placeholder qui ne correspondait pas à `111aaa**` → toute tentative de login échouait avec 401. Fix : migration 007 avec hash `BCrypt.HashPassword("111aaa**", 12)` généré par un projet .NET de test |
 | 2026-03-29 | Google OAuth — passage en GSI | L'ancien flow OAuth redirect nécessitait un client secret. Passage au flow Google Identity Services (GSI) : le frontend charge `accounts.google.com/gsi/client`, obtient un ID token signé par Google, et le soumet à `POST /api/auth/google/token`. Le backend valide via `tokeninfo` (pas de secret). Nouveau : `VerifyIdTokenAsync` dans `GoogleAuthClient`, endpoint `POST /api/auth/google/token` dans `AuthController`. |
+| 2026-03-30 | Payroll test vs PAS | `Simulate_PersistsSimulationAndReturnsResponse` attendait 2349 € sans retenue ; défaut `Parts = 1` déclenchait le barème PAS sur le net → ~2172 €. Correction test : `Parts = 0` pour isoler le chemin brut→net simple. |
+| 2026-03-30 | Contact + rate limit + UserController | Formulaire contact persisté (`008_add_contact_requests`), quotas API, endpoints utilisateur réservés au propriétaire ou admin. |
 
 ---
 
 ## 7. Références
 
+- `.cursor/skills/web-search-ask-first/SKILL.md` — Recherche web : demander confirmation d’abord
+- `.cursor/skills/megasimulator-dev-stack/SKILL.md` — Lancer le stack local, rappels sécurité / quotas / Pièges paie
 - `docs/brand-guidelines.md` — Charte graphique complète
 - `docs/frontend-guidelines.md` — Guidelines techniques frontend
 - `docs/knowledge-base/payroll.md` — Règles métier paie 2026
@@ -229,3 +263,4 @@ _Dernière mise à jour : 2026-03-30_
 - `docs/knowledge-base/loans.md` — Règles prêts
 - `docs/knowledge-base/savings.md` — Règles épargne
 - `docs/knowledge-base/insurance.md` — Règles assurance
+- `docs/planning/2026-03-31-deployment-and-domain.md` — Déploiement, domaine, tests externes

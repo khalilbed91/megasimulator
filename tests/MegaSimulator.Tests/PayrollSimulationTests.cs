@@ -21,7 +21,8 @@ namespace MegaSimulator.Tests
 
             var ps = new PayrollService(mockFormula.Object, new PayrollParams(), mockRepo.Object);
 
-            var req = new PayrollRequestDto { Brut = 3000m, Statut = "non-cadre" };
+            // Parts = 0 skips PAS barème (default Parts = 1 would apply withholding on net)
+            var req = new PayrollRequestDto { Brut = 3000m, Statut = "non-cadre", Parts = 0m };
             var resp = await ps.Simulate(req);
 
             Assert.NotNull(resp);

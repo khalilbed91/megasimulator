@@ -192,5 +192,47 @@ namespace MegaSimulator.Tests
             var expected = decimal.Round((result.PensionNetteMensuelle / (48_000m / 12m)) * 100m, 1);
             Assert.Equal(expected, result.TauxRemplacement);
         }
+
+        [Fact]
+        public async Task Simulate_ScenarioAndTauxPlein_ReferenceHigherWhenQuartersMissing()
+        {
+            var svc = CreateService();
+            var req = new RetirementRequestDto
+            {
+                AnneeNaissance = 1991,
+                AgeDepart = 65,
+                SalaireAnnuelMoyen = 40_000m,
+                TrimestresValides = 20,
+                TrimestresRequis = 170,
+                PointsComplementaires = 0m
+            };
+            var result = await svc.Simulate(req);
+            Assert.Equal(2056, result.AnneeDepartRetraite);
+            Assert.Equal(65, result.AgeDepart);
+            Assert.Equal(64, result.AgeLegalPivot);
+            Assert.True(result.PensionNetteMensuelleTauxPleinTrimestres > result.PensionNetteMensuelle);
+            Assert.Equal(150, result.TrimestresManquants);
+            Assert.Equal(38, result.AnneesIndicativesPourTauxPlein);
+            Assert.True(result.PotentielMensuelVersTauxPlein > 0);
+        }
+
+        [Fact]
+        public async Task Simulate_Objectif_ReturnsZeroExtraWhenAlreadyAbove()
+        {
+            var svc = CreateService();
+            var req = new RetirementRequestDto
+            {
+                AnneeNaissance = 1963,
+                SalaireAnnuelMoyen = 40_000m,
+                TrimestresValides = 170,
+                TrimestresRequis = 170,
+                PointsComplementaires = 0m,
+                ObjectifPensionMensuelleNet = 100m
+            };
+            var result = await svc.Simulate(req);
+            Assert.True(result.ObjectifAtteignable);
+            Assert.Equal(0, result.TrimestresAdditionnelsPourObjectif);
+            Assert.Equal(0, result.AnneesIndicativesPourObjectif);
+        }
     }
 }

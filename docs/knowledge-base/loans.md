@@ -132,6 +132,37 @@ Implémentation : prendre en compte apport, frais initiaux, reste à vivre minim
 - Les frais de dossier, garanties et pratiques de calcul du TAEG peuvent varier ; stocker ces éléments en paramètre.
 - Les taux d'usure sont publiés trimestriellement — intégrer une source de mise à jour.
 
+## 11. Implémentation produit (MegaSimulator)
+
+### 11.1 API
+
+- **POST** `/api/loan/simulate` — corps JSON : `LoanRequestDto` (camelCase). Réponse : `LoanResponseDto`.
+- Persistance optionnelle pour utilisateurs connectés : `simulations.type = 'loan'`.
+
+### 11.2 Couverture fonctionnelle
+
+| Fonction | Détail |
+|----------|--------|
+| Amortissement | Mensualité constante, assurance sur capital initial, aperçu tableau (24 lignes max en réponse) |
+| Immobilier | Prix TTC et/ou prix HT + régime TVA (neuf 20 % / 10 % / 5,5 %, ancien), frais de notaire indicatifs (7,5 % / 2 %) |
+| PTZ | Contrôle revenu fiscal de réf. seuil par zone (barème indicatif 2026 dans `LoanService`), plafond montant indicatif par zone, différé puis mensualités sans intérêt sur phase amortissement |
+| Action Logement | Tranche complémentaire taux paramétrable (défaut 1 %), montant plafonné 40 k€ (cas HLM 40 k€ non différencié dans le MVP) |
+| Auto / perso | Capital direct, mêmes contrôles TAEG approximatif et HCSF si revenus renseignés |
+| HCSF | Ratio 35 %, reste à vivre indicatif 800 € (paramétrable côté doc, pas encore en JSON) |
+
+### 11.3 Sources web complémentaires (à valider officiellement)
+
+- **PTZ** : fiche ministérielle et barèmes ([économie.gouv — PTZ](https://www.economie.gouv.fr/particuliers/pret-taux-zero-ptz)), compléments ([Stop-Loyer — barèmes PTZ 2026](https://stop-loyer.fr/baremes-ptz-2026)).
+- **TVA réduite logement neuf** : conditions géographiques et sociales ([France Rénov' — TVA taux réduit](https://www.france-renov.gouv.fr/aides/tva-taux-reduit)).
+- **Prêt Action Logement** : taux et plafonds ([actionlogement.fr — prêt accession](https://www.actionlogement.fr/le-pret-accession)).
+- **Taux d'usure** : [Banque de France](https://www.banque-france.fr/statistiques/taux-et-cours/taux-d-usure).
+
+### 11.4 Fichiers code
+
+- Backend : `Application/Services/LoanService.cs`, `Application/DTOs/Loan*`, `Application/Interfaces/ILoanService.cs`, `Api/Controllers/LoanController.cs`
+- Frontend : `Frontend/src/LoanSimulator.jsx`
+- Paramètres indicatifs : `docs/knowledge-base/params/2026.json` → `loans`
+
 ---
 
 Document créé pour l'implémentation des crédits dans le simulateur 2026.

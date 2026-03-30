@@ -4,39 +4,40 @@ import Account from './Account'
 import Contact from './Contact'
 import SimulationHistory from './SimulationHistory'
 import RetirementSimulator from './RetirementSimulator'
+import LoanSimulator from './LoanSimulator'
 import './styles.css'
 import Logo from './components/Logo'
 
 const T = {
   fr: {
     appName: 'Mega Simulator', subtitle: 'Paie & Finance',
-    navPayroll: 'Simulateur paie', navRetirement: 'Retraite', navLoans: 'Prêts',
+    navPayroll: 'Simulateur paie', navRetirement: 'Retraite', navLoans: 'Prêts', navSavings: 'Épargne',
     navAccount: 'Mon compte', navContact: 'Contact', navSignIn: 'Se connecter', navSignOut: 'Se déconnecter',
     navHistory: 'Historique',
     sectionSim: 'Simulations', sectionUser: 'Espace personnel',
     comingSoon: 'Prochainement', comingSoonDesc: 'Ce module est en cours de développement.',
-    tabPayroll: 'Paie', tabRetirement: 'Retraite', tabLoans: 'Prêts',
+    tabPayroll: 'Paie', tabRetirement: 'Retraite', tabLoans: 'Prêts', tabSavings: 'Épargne',
     guest: 'Invité', topbarPayroll: 'Simulateur de paie', topbarRetirement: 'Simulation retraite',
-    topbarLoans: 'Simulation prêts', topbarAccount: 'Mon compte', topbarContact: 'Contact',
+    topbarLoans: 'Simulation prêts', topbarSavings: 'Simulation épargne', topbarAccount: 'Mon compte', topbarContact: 'Contact',
     topbarHistory: 'Historique des simulations',
   },
   en: {
     appName: 'Mega Simulator', subtitle: 'Payroll & Finance',
-    navPayroll: 'Payroll sim', navRetirement: 'Retirement', navLoans: 'Loans',
+    navPayroll: 'Payroll sim', navRetirement: 'Retirement', navLoans: 'Loans', navSavings: 'Savings',
     navAccount: 'My account', navContact: 'Contact', navSignIn: 'Sign in', navSignOut: 'Sign out',
     navHistory: 'History',
     sectionSim: 'Simulators', sectionUser: 'Account',
     comingSoon: 'Coming soon', comingSoonDesc: 'This module is under development.',
-    tabPayroll: 'Payroll', tabRetirement: 'Retirement', tabLoans: 'Loans',
+    tabPayroll: 'Payroll', tabRetirement: 'Retirement', tabLoans: 'Loans', tabSavings: 'Savings',
     guest: 'Guest', topbarPayroll: 'Payroll simulator', topbarRetirement: 'Retirement planner',
-    topbarLoans: 'Loan simulator', topbarAccount: 'My account', topbarContact: 'Contact',
+    topbarLoans: 'Loan simulator', topbarSavings: 'Savings simulator', topbarAccount: 'My account', topbarContact: 'Contact',
     topbarHistory: 'Simulation history',
   }
 }
 
 const topbarTitles = (t, tab) => ({
   payroll: t.topbarPayroll, retirement: t.topbarRetirement,
-  loans: t.topbarLoans, account: t.topbarAccount, contact: t.topbarContact,
+  loans: t.topbarLoans, savings: t.topbarSavings, account: t.topbarAccount, contact: t.topbarContact,
   history: t.topbarHistory
 })[tab] || t.topbarPayroll
 
@@ -103,6 +104,9 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
         )}
         {navItem('loans', tr.navLoans,
           <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h5l2 5 4-10 2 5h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+        )}
+        {navItem('savings', tr.navSavings,
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
           lang === 'fr' ? 'Bientôt' : 'Soon'
         )}
 
@@ -151,7 +155,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
         </div>
 
         <div className="page-body">
-          {['payroll','retirement','loans'].includes(tab) && (
+          {['payroll','retirement','loans','savings'].includes(tab) && (
             <div className="tab-bar" role="tablist">
               <button role="tab" aria-selected={tab==='payroll'} className={`tab-btn${tab==='payroll'?' active':''}`} onClick={()=>setTab('payroll')}>
                 <svg viewBox="0 0 24 24" fill="none"><path d="M9 7h6M9 11h6M9 15h4M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -165,6 +169,10 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
                 <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h5l2 5 4-10 2 5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 {tr.tabLoans}
               </button>
+              <button role="tab" aria-selected={tab==='savings'} className={`tab-btn${tab==='savings'?' active':''}`} onClick={()=>setTab('savings')}>
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                {tr.tabSavings}
+              </button>
             </div>
           )}
 
@@ -172,11 +180,13 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
 
           {tab === 'retirement' && <RetirementSimulator lang={lang} />}
 
-          {tab === 'loans' && (
-            <div className="sim-result-empty" style={{marginTop:40}}>
-              <svg viewBox="0 0 24 24" fill="none"><path d="M12 6v6m0 4h.01M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              <div style={{fontWeight:700,fontSize:18,color:'var(--text)'}}>{tr.comingSoon}</div>
-              <div style={{fontSize:14}}>{tr.comingSoonDesc}</div>
+          {tab === 'loans' && <LoanSimulator lang={lang} />}
+
+          {tab === 'savings' && (
+            <div className="sim-result-empty" style={{ marginTop: 40 }}>
+              <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h5l2 5 4-10 2 5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--text)' }}>{tr.comingSoon}</div>
+              <div style={{ fontSize: 14 }}>{tr.comingSoonDesc}</div>
             </div>
           )}
 

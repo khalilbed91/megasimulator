@@ -9,26 +9,26 @@ namespace MegaSimulator.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class RetirementController : ControllerBase
+    public class LoanController : ControllerBase
     {
-        private readonly IRetirementService _retirementService;
+        private readonly ILoanService _loanService;
 
-        public RetirementController(IRetirementService retirementService)
+        public LoanController(ILoanService loanService)
         {
-            _retirementService = retirementService;
+            _loanService = loanService;
         }
 
         [HttpPost("simulate")]
         [AllowAnonymous]
         [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("simulate")]
-        public async Task<IActionResult> Simulate([FromBody] RetirementRequestDto req)
+        public async Task<IActionResult> Simulate([FromBody] LoanRequestDto req)
         {
             Guid? userId = null;
             var idStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (!string.IsNullOrEmpty(idStr) && Guid.TryParse(idStr, out var parsed))
                 userId = parsed;
 
-            var response = await _retirementService.Simulate(req, userId);
+            var response = await _loanService.Simulate(req, userId);
             return Ok(response);
         }
     }

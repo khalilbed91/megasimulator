@@ -9,27 +9,29 @@ namespace MegaSimulator.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class RetirementController : ControllerBase
+    public class ContactController : ControllerBase
     {
-        private readonly IRetirementService _retirementService;
+        private readonly IContactService _service;
 
-        public RetirementController(IRetirementService retirementService)
+        public ContactController(IContactService service)
         {
-            _retirementService = retirementService;
+            _service = service;
         }
 
-        [HttpPost("simulate")]
+        [HttpPost]
         [AllowAnonymous]
-        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("simulate")]
-        public async Task<IActionResult> Simulate([FromBody] RetirementRequestDto req)
+        [RequestSizeLimit(32_000)]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("contact")]
+        public async Task<IActionResult> Create([FromBody] ContactRequestDto req)
         {
             Guid? userId = null;
             var idStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (!string.IsNullOrEmpty(idStr) && Guid.TryParse(idStr, out var parsed))
                 userId = parsed;
 
-            var response = await _retirementService.Simulate(req, userId);
-            return Ok(response);
+            var created = await _service.CreateAsync(req, userId);
+            return Ok(created);
         }
     }
 }
+

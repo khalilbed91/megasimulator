@@ -9,6 +9,7 @@ namespace MegaSimulator.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class UserController : ControllerBase
     {
         private readonly IUserService _service;
@@ -18,9 +19,21 @@ namespace MegaSimulator.Api.Controllers
             _service = service;
         }
 
+        private Guid? GetCallerUserId()
+        {
+            var idStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            return Guid.TryParse(idStr, out var id) ? id : null;
+        }
+
+        private bool IsAdmin() => User.IsInRole("admin");
+
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> Get(Guid id)
         {
+            var callerId = GetCallerUserId();
+            if (callerId == null) return Unauthorized();
+            if (id != callerId.Value && !IsAdmin()) return Forbid();
+
             var u = await _service.GetByIdAsync(id);
             if (u == null) return NotFound();
             return Ok(u);
@@ -29,6 +42,8 @@ namespace MegaSimulator.Api.Controllers
         [HttpGet("username/{username}")]
         public async Task<ActionResult<UserDto>> GetByUsername(string username)
         {
+            if (!IsAdmin()) return Forbid();
+
             var u = await _service.GetByUsernameAsync(username);
             if (u == null) return NotFound();
             return Ok(u);
@@ -37,6 +52,7 @@ namespace MegaSimulator.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<UserDto>> Create([FromBody] UserDto dto)
         {
+            if (!IsAdmin()) return Forbid();
             var created = await _service.CreateAsync(dto);
             return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
         }
@@ -44,6 +60,10 @@ namespace MegaSimulator.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UserDto dto)
         {
+            var callerId = GetCallerUserId();
+            if (callerId == null) return Unauthorized();
+            if (id != callerId.Value && !IsAdmin()) return Forbid();
+
             if (id != dto.Id) return BadRequest();
             await _service.UpdateAsync(dto);
             return NoContent();
@@ -61,6 +81,10 @@ namespace MegaSimulator.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
+            var callerId = GetCallerUserId();
+            if (callerId == null) return Unauthorized();
+            if (id != callerId.Value && !IsAdmin()) return Forbid();
+
             await _service.DeleteAsync(id);
             return NoContent();
         }

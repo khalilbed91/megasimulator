@@ -1,6 +1,6 @@
 # Frontend — Guidelines techniques
 
-_Dernière mise à jour : 2026-03-30_
+_Dernière mise à jour : 2026-03-30 (nav Prêts/Épargne, contact API)_
 
 ---
 
@@ -27,11 +27,12 @@ src/Frontend/
     Home.jsx                  ← Shell: sidebar + top-bar + page-body ; invités sans Historique/Compte
     PayrollSimulator.jsx      ← Simulateur de paie (composant principal)
     RetirementSimulator.jsx   ← Simulateur retraite (✅ implémenté — voir section 7)
+    LoanSimulator.jsx         ← Prêts immo (PTZ, TVA réduite, PAL) + auto + conso
     SimulationHistory.jsx     ← Historique des simulations (GET /api/simulation/mine)
     Login.jsx                 ← Page auth split-screen + bouton Google GSI
     Signup.jsx                ← Page inscription
     Account.jsx               ← Page profil utilisateur
-    Contact.jsx               ← Page contact
+    Contact.jsx               ← Page contact → POST /api/contact (JSON), rate limit côté API
     components/
       Logo.jsx                ← Composant logo centralisé
     styles.css                ← Design system global (tokens CSS + composants)
@@ -284,7 +285,7 @@ const T = {
 - Toujours inclure `Authorization: Bearer <token>` dans les appels simulate (payroll ET retraite)
 - Ne jamais exposer les erreurs techniques brutes à l'utilisateur
 - **Google OAuth GSI** : `index.html` charge `accounts.google.com/gsi/client` async ; `Login.jsx` initialise le bouton officiel Google dans un `useEffect` avec `google.accounts.id.initialize` ; l'ID token est soumis à `POST /api/auth/google/token` ; **aucun redirect**, aucun client secret needed
-- Important : ajouter `http://localhost:5174` dans **Authorized JavaScript origins** de la Google Cloud Console pour le client `874107145454-8...`
+- Important : ajouter `http://localhost:5173` (et si besoin `http://127.0.0.1:5173`) dans **Authorized JavaScript origins** de la Google Cloud Console pour le client Web.
 
 ---
 

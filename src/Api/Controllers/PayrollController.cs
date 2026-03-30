@@ -27,6 +27,7 @@ namespace MegaSimulator.Api.Controllers
         }
 
         [HttpPost("simulate")]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("simulate")]
         public async Task<IActionResult> Simulate([FromBody] PayrollRequestDto req)
         {
             Guid? userId = null;

@@ -107,9 +107,17 @@ This comes from **Google** (before our API runs). Check, in order:
 
 5. After changing `.env.local`, always restart the Vite dev server.
 
+### Loan simulator
+
+```powershell
+# POST /api/loan/simulate — JSON body (category: immo | auto | perso, rates, optional PTZ/PAL for immo)
+dotnet run --project src/Api --launch-profile LocalWithDeps
+# Frontend: onglet « Prêts » après npm run dev
+```
+
 ### Guest usage
 
-Users can open the app without signing in and run payroll and retirement simulations. History and account screens require login.
+Users can open the app without signing in and run payroll, retirement, and loan simulations. History and account screens require login.
 ## Contribution & Governance
 
 - All formula changes must include source links and test vectors.
