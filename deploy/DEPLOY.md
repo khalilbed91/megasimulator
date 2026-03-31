@@ -112,6 +112,31 @@ Workflow : **`.github/workflows/ci-cd.yml`**. Onglet **Actions** du dépôt : ex
 
 **Secrets** (Settings → Secrets and variables → Actions) : `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` (clé privée SSH). Sans eux, le job **deploy** échoue ; **test** et **docker** peuvent quand même passer.
 
+**Clé SSH dédiée au déploiement CI (recommandé)** : une paire **uniquement** pour GitHub Actions évite les erreurs de collage sur la clé personnelle et limite l’impact si un secret fuit.
+
+1. Sur ton PC (PowerShell), générer une paire **sans passphrase** (`-N '""'`) :
+
+   ```powershell
+   ssh-keygen -t ed25519 -f "$env:USERPROFILE\.ssh\megasimulator_github_actions" -C "github-actions-deploy" -N '""'
+   ```
+
+2. Sur le VPS (connecté en tant que l’utilisateur du deploy, ex. `root`), ajouter la **clé publique** dans `authorized_keys` :
+
+   ```bash
+   mkdir -p ~/.ssh && chmod 700 ~/.ssh
+   cat >> ~/.ssh/authorized_keys
+   # coller UNE ligne : le contenu de megasimulator_github_actions.pub, puis Ctrl+D
+   chmod 600 ~/.ssh/authorized_keys
+   ```
+
+   Ou depuis ton PC (PowerShell), en réutilisant ta clé habituelle pour une dernière connexion :  
+   `Get-Content "$env:USERPROFILE\.ssh\megasimulator_github_actions.pub" | ssh -i "$env:USERPROFILE\.ssh\id_ed25519_hetzner" root@VOTRE_IP "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"`
+
+3. Vérifier :  
+   `ssh -i $env:USERPROFILE\.ssh\megasimulator_github_actions root@IP` → doit ouvrir une session **sans** mot de passe.
+
+4. Dans GitHub, secret **`DEPLOY_SSH_KEY`** = contenu **complet** du fichier privé **`megasimulator_github_actions`** (pas le `.pub`). **`DEPLOY_HOST`** = IP ou hostname seul ; **`DEPLOY_USER`** = `root` (ou le compte utilisé à l’étape 2).
+
 **Variables** optionnelles (même page → **Variables**) : `VITE_PUBLIC_SITE_URL`, `VITE_GOOGLE_CLIENT_ID` — alignées sur la prod pour le build frontend dans le CI et les **build-args** de l’image Docker (sinon valeur par défaut / vide selon le workflow).
 
 **Environnement** `production` : utilisé pour le job deploy (règles de protection / reviewers possibles dans Settings → Environments).
