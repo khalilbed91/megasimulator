@@ -6,7 +6,7 @@ import './legal.css'
 const PUBLISHER =
   (typeof import.meta.env.VITE_LEGAL_PUBLISHER_NAME === 'string' && import.meta.env.VITE_LEGAL_PUBLISHER_NAME.trim()) || null
 
-const UPDATED = '2026-04-01'
+const UPDATED = '2026-04-02'
 
 function MentionsFr() {
   return (
@@ -129,14 +129,15 @@ function PrivacyFr() {
       <p>
         {PUBLISHER ? (
           <>
-            <strong>{PUBLISHER}</strong>, exploitant megasimulateur.org.
-            <br />
-            Pour toute question relative aux données personnelles : <Link to={PATH.contact}>page Contact</Link>.
+            <strong>{PUBLISHER}</strong>, exploitant megasimulateur.org. Pour toute question relative aux données personnelles,
+            contactez-nous <strong>uniquement</strong> via la <Link to={PATH.contact}>page Contact</Link> du site (aucun e-mail
+            public pour ces demandes).
           </>
         ) : (
           <>
-            Exploitant du site <strong>megasimulateur.org</strong>. Pour toute question relative aux données personnelles :{' '}
-            <Link to={PATH.contact}>page Contact</Link>.
+            Exploitant du site <strong>megasimulateur.org</strong>. Pour toute question relative aux données personnelles,
+            contactez-nous <strong>uniquement</strong> via la <Link to={PATH.contact}>page Contact</Link> du site (aucun e-mail
+            public pour ces demandes).
           </>
         )}
       </p>
@@ -215,7 +216,8 @@ function PrivacyFr() {
       <h2>7. Vos droits</h2>
       <p>
         Vous pouvez demander l’accès, la rectification, l’effacement, la limitation, la portabilité lorsque applicable, et vous
-        opposer à certains traitements. Pour exercer vos droits : <Link to={PATH.contact}>page Contact</Link>.
+        opposer à certains traitements. Pour exercer ces droits, utilisez <strong>uniquement</strong> la{' '}
+        <Link to={PATH.contact}>page Contact</Link> (aucun e-mail public dédié).
         <br />
         Vous pouvez introduire une réclamation auprès de la CNIL (
         <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">
@@ -256,7 +258,8 @@ function PrivacyEn() {
             : <strong>{PUBLISHER}</strong>
           </>
         ) : null}
-        . Questions about personal data: <Link to={PATH.contact}>Contact page</Link>.
+        . For any question about personal data, contact us <strong>only</strong> through the site’s{' '}
+        <Link to={PATH.contact}>Contact page</Link> (no public email for this purpose).
       </p>
 
       <h2>2. Data we process</h2>
@@ -300,8 +303,9 @@ function PrivacyEn() {
 
       <h2>7. Your rights</h2>
       <p>
-        Access, rectification, erasure, restriction, portability where applicable, and objection in some cases. Contact us via
-        the <Link to={PATH.contact}>Contact page</Link>. You may lodge a complaint with your supervisory authority.
+        Access, rectification, erasure, restriction, portability where applicable, and objection in some cases. To exercise
+        these rights, use <strong>only</strong> the <Link to={PATH.contact}>Contact page</Link> (no public email for this
+        purpose). You may lodge a complaint with your supervisory authority.
       </p>
 
       <p>
