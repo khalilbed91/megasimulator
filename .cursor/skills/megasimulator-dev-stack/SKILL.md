@@ -35,6 +35,8 @@ Deux processus (racine du dépôt) :
 
 Synthèse : `docker-compose.deploy.yml` sur le VPS (`/opt/megasimulator`), fichier **`.env`** pour secrets ; Nginx sur l’hôte en **HTTP :80** → **127.0.0.1:8080** (conteneur frontend) ; Postgres publié seulement en **127.0.0.1:5432** sur le VPS.
 
+**CI/CD GitHub** : `.github/workflows/ci-cd.yml` (Actions) — tests .NET + build Vite, images **GHCR** sur push, déploiement SSH si secrets `DEPLOY_*` configurés ; détail dans **`deploy/DEPLOY.md` § 7**.
+
 ### Mise à jour sur le VPS
 
 ```bash

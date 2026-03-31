@@ -1,0 +1,130 @@
+# Tests → build images (GHCR) → déploiement SSH sur le VPS
+# Secrets requis pour le deploy : DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY
+# Variables optionnelles (Settings → Secrets and variables → Actions → Variables) :
+#   VITE_PUBLIC_SITE_URL, VITE_GOOGLE_CLIENT_ID — pour le build Docker du frontend dans le CI
+
+name: CI / CD
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  NODE_VERSION: "20"
+
+jobs:
+  test:
+    name: Test (.NET + frontend build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore & test
+        run: |
+          dotnet restore tests/MegaSimulator.Tests/MegaSimulator.Tests.csproj
+          dotnet build tests/MegaSimulator.Tests/MegaSimulator.Tests.csproj -c Release --no-restore
+          dotnet test tests/MegaSimulator.Tests/MegaSimulator.Tests.csproj -c Release --no-build -v normal
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: src/Frontend/package-lock.json
+
+      - name: Frontend — npm ci & build
+        working-directory: src/Frontend
+        env:
+          VITE_PUBLIC_SITE_URL: ${{ vars.VITE_PUBLIC_SITE_URL || 'https://megasimulateur.org' }}
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+        run: |
+          npm ci
+          npm run build
+
+  docker:
+    name: Docker (API + frontend)
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Image prefix (GHCR = minuscules)
+        run: |
+          echo "IMAGE_PREFIX=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') }}
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/api:latest
+            ${{ env.IMAGE_PREFIX }}/api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./src/Frontend
+          file: ./src/Frontend/Dockerfile
+          push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') }}
+          build-args: |
+            VITE_PUBLIC_SITE_URL=${{ vars.VITE_PUBLIC_SITE_URL || 'https://megasimulateur.org' }}
+            VITE_GOOGLE_CLIENT_ID=${{ vars.VITE_GOOGLE_CLIENT_ID }}
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/frontend:latest
+            ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy (SSH VPS)
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    environment: production
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /opt/megasimulator
+            git fetch origin
+            git reset --hard origin/${{ github.ref_name }}
+            docker compose -f docker-compose.deploy.yml --env-file /opt/megasimulator/.env build api1 api2 frontend
+            docker compose -f docker-compose.deploy.yml --env-file /opt/megasimulator/.env up -d

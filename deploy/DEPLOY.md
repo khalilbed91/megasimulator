@@ -100,7 +100,27 @@ Postgres **n’est pas** exposé sur l’IP publique. Depuis votre PC :
 
 ---
 
-## 7. Fichiers utiles
+## 7. GitHub Actions (CI / CD)
+
+Workflow : **`.github/workflows/ci-cd.yml`**. Onglet **Actions** du dépôt : exécutions sur **push** / **pull request** vers `master` ou `main`, et **Run workflow** manuel.
+
+| Étape | Contenu |
+|--------|---------|
+| **test** | `dotnet restore` / `build` / `test` sur `tests/MegaSimulator.Tests/MegaSimulator.Tests.csproj` ; puis `npm ci` + `npm run build` dans `src/Frontend`. |
+| **docker** (push sur `master`/`main` uniquement) | Images poussées vers **GHCR** : `ghcr.io/<owner>/<repo en minuscules>/api` et `/frontend`, tags `latest` et SHA du commit. |
+| **deploy** (push sur `master`/`main`) | SSH vers le VPS : `git pull` dans `/opt/megasimulator`, puis `docker compose -f docker-compose.deploy.yml` **build** + **up** (comme la mise à jour manuelle). |
+
+**Secrets** (Settings → Secrets and variables → Actions) : `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` (clé privée SSH). Sans eux, le job **deploy** échoue ; **test** et **docker** peuvent quand même passer.
+
+**Variables** optionnelles (même page → **Variables**) : `VITE_PUBLIC_SITE_URL`, `VITE_GOOGLE_CLIENT_ID` — alignées sur la prod pour le build frontend dans le CI et les **build-args** de l’image Docker (sinon valeur par défaut / vide selon le workflow).
+
+**Environnement** `production` : utilisé pour le job deploy (règles de protection / reviewers possibles dans Settings → Environments).
+
+Les images GHCR servent de **traçabilité** ; le script sur le VPS reconstruit encore depuis le code cloné (comme documenté au § 3). Pour ne tirer que des images pré-buildées, il faudrait adapter le compose.
+
+---
+
+## 8. Fichiers utiles
 
 - `deploy/bootstrap-hetzner.sh` — bootstrap type Ubuntu (Docker, Nginx, premier `compose up`).
 - `deploy/megasimulateur.nginx.conf` — site Nginx à copier vers `/etc/nginx/sites-available/` (symlink `sites-enabled`), puis `nginx -t` && `systemctl reload nginx`.
