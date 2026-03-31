@@ -1,0 +1,101 @@
+/* Legal docs + cookie banner (aligned with app tokens) */
+.legal-doc {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 4px 48px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+}
+.legal-doc h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+.legal-doc .legal-updated {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.legal-doc h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 28px 0 10px;
+  color: var(--text);
+}
+.legal-doc p,
+.legal-doc li {
+  margin: 0 0 12px;
+}
+.legal-doc ul {
+  padding-left: 1.25rem;
+  margin: 0 0 16px;
+}
+.legal-doc .legal-note {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm, 8px);
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  font-size: 13px;
+  margin: 20px 0;
+}
+
+.cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9990;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0));
+  background: var(--card-bg, #fff);
+  border-top: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.12);
+}
+.app-dark .cookie-banner {
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+}
+.cookie-banner-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  justify-content: space-between;
+}
+.cookie-banner-text {
+  flex: 1 1 280px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.cookie-banner-text a {
+  color: var(--accent);
+  font-weight: 600;
+}
+.cookie-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.cookie-banner-actions button {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm, 8px);
+  border: none;
+  cursor: pointer;
+}
+.cookie-banner-accept {
+  background: var(--accent);
+  color: #fff;
+}
+.cookie-banner-more,
+a.cookie-banner-more {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm, 8px);
+}

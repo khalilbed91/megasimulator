@@ -10,6 +10,7 @@ Structure
 - `formula-schema.md` — schema for documenting formulas (JSON/Markdown).
 
 Guidelines
+- Saved **user simulations** (payroll / retirement / loans) are stored in PostgreSQL with a **maximum of 10 rows per user** (oldest removed automatically). See `SimulationRepository` and `docs/knowledge-base/payroll-simulate.md`.
 - Each formula entry must include: `id`, `name`, `domain`, `description`, `inputs`, `outputs`, `units`, `formula` (text + canonical form), `source` (link), and `testVectors`.
 - Test vectors should cover edge cases and typical use cases with expected outputs.
 - Changes require source citation and test updates.

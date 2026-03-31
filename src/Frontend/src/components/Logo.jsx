@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function Logo({ size = 84, ariaLabel = 'Mega Simulator', className='' }){
+export default function Logo({ size = 84, ariaLabel = 'Mega simulateur', className='' }){
   const w = size
   const view = 84
   return (

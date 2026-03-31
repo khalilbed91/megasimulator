@@ -19,7 +19,8 @@ namespace MegaSimulator.Api.Controllers
             _service = service;
         }
 
-        // Returns the caller's own simulations — userId comes from JWT, not URL (prevents IDOR)
+        // Returns the caller's own simulations (newest first). Storage is capped at 10 rows per user
+        // in SimulationRepository; excess older rows are deleted when saving or listing.
         [HttpGet("mine")]
         [Authorize]
         public async Task<ActionResult<IEnumerable<SimulationDto>>> ListMine()

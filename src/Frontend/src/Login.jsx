@@ -106,7 +106,7 @@ export default function Login({ onLoginSuccess, switchToSignup, onDismiss, embed
         <div className="auth-brand-logo">
           <Logo size={52} />
         </div>
-        <div className="auth-brand-title">Mega Simulator</div>
+        <div className="auth-brand-title">Mega simulateur</div>
         <div className="auth-brand-subtitle">
           Simulez votre salaire net, estimez vos charges et planifiez votre retraite en quelques secondes.
         </div>
@@ -207,12 +207,6 @@ export default function Login({ onLoginSuccess, switchToSignup, onDismiss, embed
             </div>
           )}
           <div ref={googleBtnRef} style={{ width: '100%', minHeight: 44, display: 'flex', justifyContent: 'center' }} />
-
-          <p className="auth-google-hint" style={{ fontSize: 12, color: 'rgba(226,232,240,0.55)', lineHeight: 1.5, marginTop: 12, textAlign: 'center' }}>
-            Si Google affiche <strong style={{ color: '#fca5a5' }}>401 invalid_client</strong> : dans Google Cloud Console → Identifiants → votre client de type <strong>Application Web</strong>, ajoutez exactement l’<strong>origine JavaScript</strong>{' '}
-            <code style={{ fontSize: 11 }}>{typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'}</code>
-            {' '}(et <code style={{ fontSize: 11 }}>http://127.0.0.1:5173</code> si vous ouvrez le site avec 127.0.0.1). Pas d’espace, pas de slash final. Redémarrez Vite après modification de <code style={{ fontSize: 11 }}>.env.local</code>.
-          </p>
 
           {error && <div className="auth-error" role="alert" aria-live="polite">{error}</div>}
 

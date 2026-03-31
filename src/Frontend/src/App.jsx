@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './Login'
 import Signup from './Signup'
 import Home from './Home'
+import CookieBanner from './legal/CookieBanner'
 import { PATH } from './seo/paths'
 import './styles.css'
 
@@ -136,12 +137,14 @@ function AppShell() {
       {authScreen === 'signup' && (
         <div className="auth-fullscreen-overlay">
           <Signup
+            lang={lang}
             onSignupSuccess={onLoginSuccess}
             switchToLogin={() => setAuthScreen('login')}
             onDismiss={() => setAuthScreen(null)}
           />
         </div>
       )}
+      <CookieBanner lang={lang} />
     </>
   )
 }

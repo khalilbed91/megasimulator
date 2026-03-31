@@ -15,6 +15,8 @@ const SEO_PATHS = [
   '/contact',
   '/historique',
   '/mon-compte',
+  '/mentions-legales',
+  '/politique-de-confidentialite',
 ]
 
 export default defineConfig({

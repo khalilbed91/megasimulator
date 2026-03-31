@@ -1,8 +1,20 @@
 import React from 'react'
 import { Helmet } from 'react-helmet-async'
-import { pathForTab } from './paths'
+import { PATH } from './paths'
 
 const BRAND = 'MegaSimulator'
+
+const PAGE_PATH = {
+  payroll: PATH.payroll,
+  retirement: PATH.retirement,
+  loans: PATH.loans,
+  savings: PATH.savings,
+  contact: PATH.contact,
+  history: PATH.history,
+  account: PATH.account,
+  mentions: PATH.legalMentions,
+  privacy: PATH.privacy,
+}
 
 const META = {
   fr: {
@@ -51,6 +63,17 @@ const META = {
         'Gérez votre profil MegaSimulator : coordonnées et préférences liées à votre compte.',
       keywords: 'compte megasimulator, profil utilisateur',
     },
+    mentions: {
+      title: `Mentions légales | ${BRAND}`,
+      description: 'Informations éditeur, hébergement et limitation de responsabilité — Mega simulateur.',
+      keywords: 'mentions légales, éditeur, hébergement',
+    },
+    privacy: {
+      title: `Politique de confidentialité | ${BRAND}`,
+      description:
+        'Traitement des données personnelles, cookies, droits RGPD et contact — Mega simulateur (megasimulateur.org).',
+      keywords: 'politique confidentialité, rgpd, données personnelles',
+    },
   },
   en: {
     payroll: {
@@ -91,25 +114,43 @@ const META = {
       description: 'Manage your MegaSimulator profile and preferences.',
       keywords: 'account',
     },
+    mentions: {
+      title: `Legal notices | ${BRAND}`,
+      description: 'Publisher information, hosting, disclaimer — Mega simulateur.',
+      keywords: 'legal notices, imprint',
+    },
+    privacy: {
+      title: `Privacy policy | ${BRAND}`,
+      description: 'How we process personal data, cookies, and your GDPR rights.',
+      keywords: 'privacy policy, gdpr',
+    },
   },
 }
 
-export default function SeoHead({ tab, lang }) {
+export default function SeoHead({ pageKey, lang }) {
   const L = lang === 'en' ? 'en' : 'fr'
-  const m = META[L][tab] || META[L].payroll
-  const path = pathForTab(tab)
+  const m = META[L][pageKey] || META[L].payroll
+  const path = PAGE_PATH[pageKey] || PATH.payroll
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const canonical = origin && path ? `${origin}${path}` : ''
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    name: BRAND,
-    description: m.description,
-    applicationCategory: 'FinanceApplication',
-    operatingSystem: 'Web',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
-  }
+  const isLegal = pageKey === 'mentions' || pageKey === 'privacy'
+  const jsonLd = isLegal
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: m.title,
+        description: m.description,
+      }
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: BRAND,
+        description: m.description,
+        applicationCategory: 'FinanceApplication',
+        operatingSystem: 'Web',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+      }
   if (canonical) jsonLd.url = canonical
 
   return (

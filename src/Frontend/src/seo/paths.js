@@ -8,6 +8,8 @@ export const PATH = {
   contact: '/contact',
   history: '/historique',
   account: '/mon-compte',
+  legalMentions: '/mentions-legales',
+  privacy: '/politique-de-confidentialite',
 }
 
 export const TAB_TO_PATH = {
@@ -27,6 +29,16 @@ const _pathToTab = Object.fromEntries(
 function normalizePath(p) {
   if (!p || p === '/') return '/'
   return p.replace(/\/+$/, '') || '/'
+}
+
+const _legalPaths = {
+  [normalizePath(PATH.legalMentions)]: 'mentions',
+  [normalizePath(PATH.privacy)]: 'privacy',
+}
+
+/** Pages légales (hors onglets simulateur). */
+export function pathToLegalPage(pathname) {
+  return _legalPaths[normalizePath(pathname)] ?? null
 }
 
 export function pathToTab(pathname) {

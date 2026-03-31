@@ -28,6 +28,7 @@ const T = {
     loginRequired: 'Connectez-vous pour voir votre historique.',
     loginCta: 'Se connecter',
     signupCta: 'Créer un compte',
+    limitHint: 'Les 10 simulations les plus récentes sont conservées ; au-delà, les plus anciennes sont supprimées automatiquement.',
   },
   en: {
     title: 'Simulation history',
@@ -58,6 +59,7 @@ const T = {
     loginRequired: 'Sign in to view your history.',
     loginCta: 'Sign in',
     signupCta: 'Create account',
+    limitHint: 'Only your 10 most recent simulations are kept; older ones are removed automatically when you save a new one.',
   },
 }
 
@@ -163,10 +165,11 @@ export default function SimulationHistory({ token, lang, onRequestLogin, onReque
 
   return (
     <div className="page-panel" style={{ maxWidth: 960 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: 0 }}>{tr.title}</h2>
-        <span style={{ fontSize: 13, color: 'var(--muted)' }}>{items.length} simulation{items.length > 1 ? 's' : ''}</span>
+        <span style={{ fontSize: 13, color: 'var(--muted)' }}>{items.length} / 10</span>
       </div>
+      <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 18px', lineHeight: 1.5 }}>{tr.limitHint}</p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {items.map(sim => {

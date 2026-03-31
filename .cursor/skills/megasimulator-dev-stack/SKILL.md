@@ -27,6 +27,10 @@ Deux processus en parallèle (racine du dépôt `MegaSimulator`) :
 - Ouvrir l’UI : `http://localhost:5173/` (ne pas tester l’API seule sur :5000 pour les appels XHR du front sans CORS/proxy adapté).
 - Prérequis : PostgreSQL joignable avec la connection string du profil (`launchSettings.json`).
 
+## Données & historique
+
+- **Simulations sauvegardées** : au plus **10** par compte utilisateur (les plus anciennes supprimées quand une nouvelle est enregistrée ou à l’ouverture de l’historique) — voir `SimulationRepository.MaxSimulationsPerUser`.
+
 ## Sécurité API (rappel)
 
 - **Rate limiting** (`Program.cs`) : `contact` 5 req/min, `auth` 10/min, `simulate` 15/min — endpoints marqués `EnableRateLimiting(...)`.

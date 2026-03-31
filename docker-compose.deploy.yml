@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: simu
+      POSTGRES_PASSWORD: 111aaa**
+      POSTGRES_DB: simulator
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Only reachable from the VPS itself — use SSH tunnel from your PC (see deploy docs).
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  # Optional. The API falls back to in-memory cache if REDIS__CONNECTION is empty.
+  redis:
+    image: redis:7
+
+  api1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - redis
+    environment:
+      ASPNETCORE_URLS: http://+:80
+      CONNECTION_STRINGS__DEFAULT: Host=db;Port=5432;Database=simulator;Username=simu;Password=111aaa**
+      REDIS__CONNECTION: redis:6379
+      JWT__KEY: ${JWT__KEY:-super_secret_key_12345}
+      JWT__ISSUER: ${JWT__ISSUER:-megasimulator}
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-false}
+      GOOGLE__CLIENTID: ${GOOGLE__CLIENTID:-}
+      GOOGLE__CLIENTSECRET: ${GOOGLE__CLIENTSECRET:-}
+      GOOGLE__REDIRECT: ${GOOGLE__REDIRECT:-http://localhost/api/auth/google/callback}
+      FRONTEND__URL: ${FRONTEND__URL:-http://localhost}
+
+  api2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - redis
+    environment:
+      ASPNETCORE_URLS: http://+:80
+      CONNECTION_STRINGS__DEFAULT: Host=db;Port=5432;Database=simulator;Username=simu;Password=111aaa**
+      REDIS__CONNECTION: redis:6379
+      JWT__KEY: ${JWT__KEY:-super_secret_key_12345}
+      JWT__ISSUER: ${JWT__ISSUER:-megasimulator}
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-false}
+      GOOGLE__CLIENTID: ${GOOGLE__CLIENTID:-}
+      GOOGLE__CLIENTSECRET: ${GOOGLE__CLIENTSECRET:-}
+      GOOGLE__REDIRECT: ${GOOGLE__REDIRECT:-http://localhost/api/auth/google/callback}
+      FRONTEND__URL: ${FRONTEND__URL:-http://localhost}
+
+  frontend:
+    build:
+      context: ./src/Frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_PUBLIC_SITE_URL: ${VITE_PUBLIC_SITE_URL:-http://localhost}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+    depends_on:
+      - api1
+      - api2
+    ports:
+      # Only localhost: reverse proxy (Caddy) talks to this; do not expose app port publicly.
+      - "127.0.0.1:8080:80"
+
+volumes:
+  pgdata:
+

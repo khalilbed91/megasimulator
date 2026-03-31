@@ -35,7 +35,8 @@ src/Frontend/
     PayrollSimulator.jsx      ← Simulateur de paie (composant principal)
     RetirementSimulator.jsx   ← Simulateur retraite (✅ implémenté — voir section 7)
     LoanSimulator.jsx         ← Prêts immo (PTZ, TVA réduite, PAL) + auto + conso
-    SimulationHistory.jsx     ← Historique des simulations (GET /api/simulation/mine)
+    SimulationHistory.jsx     ← Historique (GET /api/simulation/mine) — affiche **10** entrées max / texte limite
+    legal/                    ← Mentions légales, politique confidentialité, bandeau cookies
     Login.jsx                 ← Page auth split-screen + bouton Google GSI
     Signup.jsx                ← Page inscription
     Account.jsx               ← Page profil utilisateur
@@ -59,6 +60,10 @@ Chemins **canoniques** (partage et balises `canonical`) — alignés sur `src/se
 | `/contact` | Contact |
 | `/historique` | Historique (connecté) |
 | `/mon-compte` | Compte (connecté) |
+| `/mentions-legales` | Mentions légales |
+| `/politique-de-confidentialite` | Politique de confidentialité (RGPD) |
+
+**Historique** : côté API, chaque utilisateur authentifié n’a que les **10 simulations les plus récentes** en base (`SimulationRepository.MaxSimulationsPerUser`) ; l’UI affiche le compteur « n / 10 » et une phrase d’information.
 
 **Redirections 301 (client)** vers la canonique : `/` → paie ; `/portage-salarial`, `/salaire-brut-net`, `/simulation-portage-salarial`, `/simulateur-salaire` → paie ; `/pret-immobilier`, `/credit-immobilier`, `/simulateur-pret` → prêts ; `/simulation-retraite-bilan` → retraite.
 
@@ -143,8 +148,10 @@ brutAnn = caAnnuel * 0.60
 brutAnn = caAnnuel * 0.55
 
 // Portage salarial
-// Déduction frais portage + approx charges salarié
-brutAnn = (caMensuel * 12) * (1 - portagePercent/100) * 0.78
+// Enveloppe après frais = CA × (1 − frais%) ; brut tel que brut × 1,45 ≈ coût employeur (cf. PayrollService)
+// → coût employeur ne dépasse pas l’enveloppe (évite masse > CA HT)
+brutMensuel = caMensuel * (1 - portagePercent/100) / 1.45
+brutAnn = brutMensuel * 12
 ```
 
 ### 6.4 Mode fiscal (FiscalToggle)

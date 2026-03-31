@@ -238,6 +238,25 @@
   font-size: 13px;
 }
 
+.auth-privacy-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.9);
+}
+.auth-privacy-row input {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+.auth-privacy-row a {
+  color: #5eead4;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .auth-brand { display: none; }

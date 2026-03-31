@@ -1,24 +1,32 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import './login.css'
 import Logo from './components/Logo'
+import { PATH } from './seo/paths'
 
-export default function Signup({ onSignupSuccess, switchToLogin, onDismiss, embedded }){
+export default function Signup({ onSignupSuccess, switchToLogin, onDismiss, embedded, lang = 'fr' }){
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
   const [name,     setName]     = useState('')
-  const [errors,   setErrors]   = useState({ email:'', password:'', name:'' })
+  const [privacyOk, setPrivacyOk] = useState(false)
+  const [errors,   setErrors]   = useState({ email:'', password:'', name:'', privacy:'' })
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState(null)
 
   const submit = async (e) => {
     e.preventDefault()
     setLoading(true); setError(null)
-    const errs = { email:'', password:'', name:'' }
+    const errs = { email:'', password:'', name:'', privacy:'' }
     if (!name)                           errs.name     = 'Entrez votre nom complet'
     if (!email || !email.includes('@'))  errs.email    = 'Entrez une adresse email valide'
     if (!password || password.length < 6) errs.password = 'Minimum 6 caractères'
+    if (!privacyOk)
+      errs.privacy =
+        lang === 'en'
+          ? 'Please accept the privacy policy to create an account.'
+          : 'Veuillez accepter la politique de confidentialité pour créer un compte.'
     setErrors(errs)
-    if (errs.email || errs.password || errs.name) { setLoading(false); return }
+    if (errs.email || errs.password || errs.name || errs.privacy) { setLoading(false); return }
     try{
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -38,7 +46,7 @@ export default function Signup({ onSignupSuccess, switchToLogin, onDismiss, embe
       {!embedded && (
       <div className="auth-brand">
         <div className="auth-brand-logo"><Logo size={52} /></div>
-        <div className="auth-brand-title">Rejoignez Mega Simulator</div>
+        <div className="auth-brand-title">Rejoignez Mega simulateur</div>
         <div className="auth-brand-subtitle">
           Créez votre compte gratuitement et commencez à simuler votre salaire net, vos retraites et vos prêts en quelques secondes.
         </div>
@@ -106,6 +114,34 @@ export default function Signup({ onSignupSuccess, switchToLogin, onDismiss, embe
               </div>
               {errors.password && <div className="auth-field-error" role="alert">{errors.password}</div>}
             </div>
+
+            <label className="auth-privacy-row">
+              <input type="checkbox" checked={privacyOk} onChange={(e) => setPrivacyOk(e.target.checked)} />
+              <span>
+                {lang === 'en' ? (
+                  <>
+                    I have read the{' '}
+                    <Link to={PATH.privacy} target="_blank" rel="noopener noreferrer">
+                      privacy policy
+                    </Link>
+                    .
+                  </>
+                ) : (
+                  <>
+                    J’ai lu la{' '}
+                    <Link to={PATH.privacy} target="_blank" rel="noopener noreferrer">
+                      politique de confidentialité
+                    </Link>
+                    .
+                  </>
+                )}
+              </span>
+            </label>
+            {errors.privacy && (
+              <div className="auth-field-error" role="alert" style={{ marginTop: 4 }}>
+                {errors.privacy}
+              </div>
+            )}
 
             <button className="auth-btn-primary" type="submit" disabled={loading}>
               {loading ? (

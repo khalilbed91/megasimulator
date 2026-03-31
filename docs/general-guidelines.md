@@ -35,7 +35,7 @@ _Dernière mise à jour : 2026-03-30 (doc stack local, sécurité API, contact D
 | ✅ PayrollParams (2026) | `src/Application/Params/PayrollParams.cs` + `docs/knowledge-base/params/2026.json` |
 | ✅ FormulaService + Repository | Gestion des formules de calcul en base, CRUD |
 | ✅ SalaireService | Historique des salaires par utilisateur |
-| ✅ SimulationService | Persistance des simulations en base avec payload et résultats |
+| ✅ SimulationService | Persistance des simulations en base avec payload et résultats ; **plafond 10 entrées / utilisateur** (purge FIFO dans `SimulationRepository` à l’ajout et au listage) |
 | ✅ **RetirementService** | `src/Application/Services/RetirementService.cs` — calcul CNAV + Agirc-Arrco + décote/surcote + retenue sociale 9.1% ; persiste en `simulations` table avec `type='retirement'` |
 | ✅ **IRetirementService** | `src/Application/Interfaces/IRetirementService.cs` — interface avec 5 méthodes |
 | ✅ **RetirementController** | `POST /api/retirement/simulate` — extraction userId depuis JWT, même pattern que PayrollController |

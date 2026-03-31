@@ -15,6 +15,10 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app .
 
+# Include SQL migrations in the runtime image so startup migration runner can apply them.
+# Program.cs / MigrationRunner look for src/Infrastructure/Migrations (relative to working dir / app base dir).
+COPY --from=build /src/src/Infrastructure/Migrations ./src/Infrastructure/Migrations
+
 ENV ASPNETCORE_URLS=http://+:80
 EXPOSE 80
 ENTRYPOINT ["dotnet", "Api.dll"]

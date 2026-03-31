@@ -6,15 +6,16 @@ import Contact from './Contact'
 import SimulationHistory from './SimulationHistory'
 import RetirementSimulator from './RetirementSimulator'
 import LoanSimulator from './LoanSimulator'
-import { PATH, pathToTab, pathForTab } from './seo/paths'
+import { PATH, pathToTab, pathForTab, pathToLegalPage } from './seo/paths'
 import SeoHead from './seo/SeoHead'
 import SeoIntro from './seo/SeoIntro'
+import LegalPageView from './legal/LegalPages'
 import './styles.css'
 import Logo from './components/Logo'
 
 const T = {
   fr: {
-    appName: 'Mega Simulator', subtitle: 'Paie & Finance',
+    appName: 'Mega simulateur', subtitle: 'Paie & Finance',
     navPayroll: 'Simulateur paie', navRetirement: 'Retraite', navLoans: 'Prêts', navSavings: 'Épargne',
     navAccount: 'Mon compte', navContact: 'Contact', navSignIn: 'Se connecter', navSignOut: 'Se déconnecter',
     navHistory: 'Historique',
@@ -24,9 +25,14 @@ const T = {
     guest: 'Invité', topbarPayroll: 'Simulateur de paie', topbarRetirement: 'Simulation retraite',
     topbarLoans: 'Simulation prêts', topbarSavings: 'Simulation épargne', topbarAccount: 'Mon compte', topbarContact: 'Contact',
     topbarHistory: 'Historique des simulations',
+    topMentions: 'Mentions légales',
+    topPrivacy: 'Politique de confidentialité',
+    navLegalMentions: 'Mentions légales',
+    navPrivacy: 'Confidentialité',
+    sectionLegal: 'Informations légales',
   },
   en: {
-    appName: 'Mega Simulator', subtitle: 'Payroll & Finance',
+    appName: 'Mega simulateur', subtitle: 'Payroll & Finance',
     navPayroll: 'Payroll sim', navRetirement: 'Retirement', navLoans: 'Loans', navSavings: 'Savings',
     navAccount: 'My account', navContact: 'Contact', navSignIn: 'Sign in', navSignOut: 'Sign out',
     navHistory: 'History',
@@ -36,6 +42,11 @@ const T = {
     guest: 'Guest', topbarPayroll: 'Payroll simulator', topbarRetirement: 'Retirement planner',
     topbarLoans: 'Loan simulator', topbarSavings: 'Savings simulator', topbarAccount: 'My account', topbarContact: 'Contact',
     topbarHistory: 'Simulation history',
+    topMentions: 'Legal notices',
+    topPrivacy: 'Privacy policy',
+    navLegalMentions: 'Legal notices',
+    navPrivacy: 'Privacy',
+    sectionLegal: 'Legal',
   }
 }
 
@@ -48,6 +59,7 @@ const topbarTitles = (t, tab) => ({
 export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup, lang, onLangChange }){
   const navigate = useNavigate()
   const location = useLocation()
+  const legalPage = pathToLegalPage(location.pathname)
   const tab = pathToTab(location.pathname) ?? 'payroll'
 
   const [user, setUser] = useState(null)
@@ -67,16 +79,18 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
   }, [token])
 
   useEffect(() => {
+    if (pathToLegalPage(location.pathname)) return
     if (pathToTab(location.pathname) === null) {
       navigate(PATH.payroll, { replace: true })
     }
   }, [location.pathname, navigate])
 
   useEffect(() => {
+    if (pathToLegalPage(location.pathname)) return
     if (!token && (tab === 'history' || tab === 'account')) {
       navigate(PATH.payroll, { replace: true })
     }
-  }, [token, tab, navigate])
+  }, [token, tab, navigate, location.pathname])
 
   const goTab = (id) => {
     navigate(pathForTab(id))
@@ -103,7 +117,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
 
   return (
     <div className="app-shell">
-      <SeoHead tab={tab} lang={lang} />
+      <SeoHead pageKey={legalPage || tab} lang={lang} />
       {sidebarOpen && <div className="sidebar-overlay" onClick={()=>setSidebarOpen(false)} />}
 
       <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
@@ -144,6 +158,24 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
           <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         )}
 
+        <div className="nav-section-label" style={{ marginTop: 10 }}>{tr.sectionLegal}</div>
+        <Link
+          to={PATH.legalMentions}
+          className={`nav-item${location.pathname === PATH.legalMentions ? ' active' : ''}`}
+          onClick={() => setSidebarOpen(false)}
+        >
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <span>{tr.navLegalMentions}</span>
+        </Link>
+        <Link
+          to={PATH.privacy}
+          className={`nav-item${location.pathname === PATH.privacy ? ' active' : ''}`}
+          onClick={() => setSidebarOpen(false)}
+        >
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <span>{tr.navPrivacy}</span>
+        </Link>
+
         <div className="nav-spacer" />
         <div className="nav-divider" />
 
@@ -172,11 +204,15 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
           <button className="hamburger" onClick={()=>setSidebarOpen(o=>!o)} aria-label="Menu">
             <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
           </button>
-          <h1 className="top-bar-title">{topbarTitles(tr, tab)}</h1>
+          <h1 className="top-bar-title">
+            {legalPage === 'mentions' ? tr.topMentions : legalPage === 'privacy' ? tr.topPrivacy : topbarTitles(tr, tab)}
+          </h1>
         </header>
 
         <main className="page-body" id="main-content">
-          {['payroll','retirement','loans','savings'].includes(tab) && (
+          {legalPage && <LegalPageView page={legalPage} lang={lang} />}
+
+          {!legalPage && ['payroll','retirement','loans','savings'].includes(tab) && (
             <div className="tab-bar" role="tablist">
               <button role="tab" aria-selected={tab==='payroll'} className={`tab-btn${tab==='payroll'?' active':''}`} onClick={()=>goTab('payroll')}>
                 <svg viewBox="0 0 24 24" fill="none"><path d="M9 7h6M9 11h6M9 15h4M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -197,15 +233,15 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
             </div>
           )}
 
-          <SeoIntro tab={tab} lang={lang} />
+          {!legalPage && <SeoIntro tab={tab} lang={lang} />}
 
-          {tab === 'payroll' && <PayrollSimulator lang={lang} onLangChange={onLangChange} />}
+          {!legalPage && tab === 'payroll' && <PayrollSimulator lang={lang} onLangChange={onLangChange} />}
 
-          {tab === 'retirement' && <RetirementSimulator lang={lang} />}
+          {!legalPage && tab === 'retirement' && <RetirementSimulator lang={lang} />}
 
-          {tab === 'loans' && <LoanSimulator lang={lang} />}
+          {!legalPage && tab === 'loans' && <LoanSimulator lang={lang} />}
 
-          {tab === 'savings' && (
+          {!legalPage && tab === 'savings' && (
             <div className="sim-result-empty" style={{ marginTop: 40 }}>
               <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h5l2 5 4-10 2 5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--text)' }}>{tr.comingSoon}</div>
@@ -213,9 +249,9 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
             </div>
           )}
 
-          {tab === 'history' && <SimulationHistory token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}
-          {tab === 'account' && <Account token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}
-          {tab === 'contact' && <Contact lang={lang} />}
+          {!legalPage && tab === 'history' && <SimulationHistory token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}
+          {!legalPage && tab === 'account' && <Account token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}
+          {!legalPage && tab === 'contact' && <Contact lang={lang} />}
         </main>
       </div>
 

@@ -12,6 +12,9 @@ namespace MegaSimulator.Infrastructure.Repositories
 {
     public class SimulationRepository : ISimulationRepository
     {
+        /// <summary>Maximum saved simulations per user (FIFO: older rows removed when exceeded).</summary>
+        public const int MaxSimulationsPerUser = 10;
+
         private readonly IDbConnectionFactory _factory;
 
         public SimulationRepository(IDbConnectionFactory factory)
@@ -25,6 +28,7 @@ namespace MegaSimulator.Infrastructure.Repositories
             const string sql = @"INSERT INTO simulations (id, userid, name, type, payload, is_active, metadata, created_at, updated_at)
 VALUES (@Id, @UserId, @Name, @Type, @Payload::jsonb, @IsActive, @Metadata::jsonb, @CreatedAt, @UpdatedAt)";
             await conn.ExecuteAsync(sql, simulation);
+            await TrimExcessSimulationsForUserAsync(conn, simulation.UserId);
         }
 
         public async Task DeleteAsync(Guid id)
@@ -44,6 +48,7 @@ VALUES (@Id, @UserId, @Name, @Type, @Payload::jsonb, @IsActive, @Metadata::jsonb
         public async Task<IEnumerable<Simulation>> ListByUserAsync(Guid userId)
         {
             using var conn = _factory.CreateConnection();
+            await TrimExcessSimulationsForUserAsync(conn, userId);
             const string sql = "SELECT id, userid as UserId, name, type, payload, is_active as IsActive, metadata, created_at as CreatedAt, updated_at as UpdatedAt FROM simulations WHERE userid = @UserId ORDER BY created_at DESC";
             return await conn.QueryAsync<Simulation>(sql, new { UserId = userId });
         }
@@ -53,6 +58,33 @@ VALUES (@Id, @UserId, @Name, @Type, @Payload::jsonb, @IsActive, @Metadata::jsonb
             using var conn = _factory.CreateConnection();
             const string sql = @"UPDATE simulations SET name = @Name, type = @Type, payload = @Payload::jsonb, is_active = @IsActive, metadata = @Metadata::jsonb, updated_at = @UpdatedAt WHERE id = @Id";
             await conn.ExecuteAsync(sql, simulation);
+        }
+
+        /// <summary>
+        /// Keeps the <see cref="MaxSimulationsPerUser"/> most recent rows per user (by <c>created_at</c> DESC).
+        /// Deletes older rows and matching <c>simulation_results</c> (when present).
+        /// </summary>
+        private static async Task TrimExcessSimulationsForUserAsync(IDbConnection conn, Guid? userId)
+        {
+            if (userId == null || userId == Guid.Empty) return;
+
+            const string deleteResults = @"
+DELETE FROM simulation_results
+WHERE simulation_id IN (
+  SELECT id FROM (
+    SELECT id FROM simulations WHERE userid = @UserId ORDER BY created_at DESC OFFSET @Keep
+  ) excess
+);";
+            const string deleteSimulations = @"
+DELETE FROM simulations
+WHERE id IN (
+  SELECT id FROM (
+    SELECT id FROM simulations WHERE userid = @UserId ORDER BY created_at DESC OFFSET @Keep
+  ) excess
+);";
+
+            await conn.ExecuteAsync(deleteResults, new { UserId = userId, Keep = MaxSimulationsPerUser });
+            await conn.ExecuteAsync(deleteSimulations, new { UserId = userId, Keep = MaxSimulationsPerUser });
         }
     }
 }

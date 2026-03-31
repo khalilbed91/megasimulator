@@ -86,6 +86,9 @@ const fmt = (v, lang) =>
     ? v.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : '—'
 
+/** Aligné sur PayrollService.EmployerCost (fallback brut × (1 + ratio)) — masse salariale totale ≈ brut × ce facteur */
+const EMPLOYER_COST_FACTOR = 1.45
+
 /* ─────────────────────────────────────────────
    EuroInput — module-level so React never
    remounts it on re-render (fixes focus loss)
@@ -380,8 +383,11 @@ export default function PayrollSimulator({ lang = 'fr' }){
       return ca * 0.60
     }
     if (isPortage) {
-      const caAnn = +caMensuel * 12
-      return caAnn * (1 - portagePercent / 100) * 0.78 // portage fees → brut salarié approx
+      // Enveloppe après frais de portage = ce que la société peut consacrer à brut + charges patronales.
+      // brut × EMPLOYER_COST_FACTOR ≈ coût employeur API ; on borne pour éviter coût employeur > CA HT.
+      const envelopeMonthly = +caMensuel * (1 - portagePercent / 100)
+      const brutMonthly = envelopeMonthly / EMPLOYER_COST_FACTOR
+      return brutMonthly * 12
     }
     return 0
   }
@@ -561,7 +567,9 @@ export default function PayrollSimulator({ lang = 'fr' }){
                 <EuroInput value={caMensuel} onChange={setCaMensuel} placeholder={t.caMensuelPlaceholder} error={errors.cam} />
                 {caMensuel && !errors.cam && (
                   <div className="field-hint">
-                    CA annuel ≈ {fmt(+caMensuel * 12, lang)} € · Net estimé ≈ {fmt(computeEffectiveBrut() / 12, lang)} € / mois
+                    {lang === 'fr' ? 'CA annuel ≈' : 'Annual revenue ≈'} {fmt(+caMensuel * 12, lang)} € ·{' '}
+                    {lang === 'fr' ? 'Brut équivalent ≈' : 'Equivalent gross ≈'} {fmt(computeEffectiveBrut() / 12, lang)} €{' '}
+                    {lang === 'fr' ? '/ mois' : '/ month'}
                   </div>
                 )}
               </div>

@@ -25,3 +25,4 @@ Response JSON:
 Notes:
 - The endpoint uses parameterized calculations when `PayrollParams` are available.
 - Simulations are persisted to the `simulations` table when persistence is configured.
+- Per authenticated user, only the **10 most recent** saved simulations are kept; older rows are removed automatically (see `SimulationRepository.MaxSimulationsPerUser`).

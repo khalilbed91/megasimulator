@@ -8,6 +8,7 @@ Provide a trustworthy, auditable, and extensible simulator suite that helps user
 
 ## Key Features
 
+- **Simulation history**: signed-in users can review saved runs (payroll, retirement, loans); the API stores at most **10 recent simulations per user** and drops older ones automatically.
 - Loan simulations: home, car, consumer — amortization schedules, total cost, APR comparisons.
 - Insurance estimators: home, vehicle (car, moto, bicycle), mobile device — premiums, coverage comparison.
 - Salary and payroll: convert gross ⇄ net, support for CDI/CDD, cadre/non-cadre, freelance/portage calculations.
