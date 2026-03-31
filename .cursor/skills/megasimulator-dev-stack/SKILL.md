@@ -1,57 +1,85 @@
 ---
 name: megasimulator-dev-stack
 description: >-
-  MegaSimulator: run API + Vite locally, launch profile, rate-limit policies,
-  payroll PAS/default Parts gotcha, contact endpoint, and deployment checklist pointer.
-  Use when starting dev servers, debugging local setup, or preparing prod/domain work.
+  MegaSimulator: run API + Vite locally, launch profile, rate limits, payroll PAS/Parts,
+  simulation history cap (10), contact API (no mailto fallback), production deploy
+  (Docker Compose, Nginx, Cloudflare), PostgreSQL via SSH tunnel + pgAdmin, admin email domain.
+  Use for dev servers, prod deploy, DB access, OAuth, and ops debugging.
 ---
 
-# MegaSimulator — stack local & rappels ops
+# MegaSimulator — stack local & production
 
-## Démarrage rapide
+## Démarrage local
 
-Deux processus en parallèle (racine du dépôt `MegaSimulator`) :
+Deux processus (racine du dépôt) :
 
-1. **API** (port 5000, profil avec Postgres + secrets locaux) :
+1. **API** (port 5000, Postgres via profil) :
 
    ```powershell
    dotnet run --project src/Api/Api.csproj --launch-profile LocalWithDeps
    ```
 
-2. **Frontend** (port 5173, proxy `/api` → localhost:5000) :
+2. **Frontend** (5173, proxy `/api` → 5000) :
 
    ```powershell
    Set-Location src/Frontend; npm run dev
    ```
 
-- Ouvrir l’UI : `http://localhost:5173/` (ne pas tester l’API seule sur :5000 pour les appels XHR du front sans CORS/proxy adapté).
-- Prérequis : PostgreSQL joignable avec la connection string du profil (`launchSettings.json`).
+- UI : `http://localhost:5173/`. Ne pas compter sur l’API seule pour les XHR du front sans CORS/proxy.
+- Prérequis : PostgreSQL joignable (`launchSettings.json`).
 
-## Données & historique
+## Production — où lire la doc
 
-- **Simulations sauvegardées** : au plus **10** par compte utilisateur (les plus anciennes supprimées quand une nouvelle est enregistrée ou à l’ouverture de l’historique) — voir `SimulationRepository.MaxSimulationsPerUser`.
+- **Guide complet** : **`deploy/DEPLOY.md`** (architecture, `.env`, `docker compose`, Nginx, Cloudflare, pièges, admin).
+- **Checklist courte** : **`docs/planning/2026-03-31-deployment-and-domain.md`**.
 
-## Sécurité API (rappel)
+Synthèse : `docker-compose.deploy.yml` sur le VPS (`/opt/megasimulator`), fichier **`.env`** pour secrets ; Nginx sur l’hôte en **HTTP :80** → **127.0.0.1:8080** (conteneur frontend) ; Postgres publié seulement en **127.0.0.1:5432** sur le VPS.
 
-- **Rate limiting** (`Program.cs`) : `contact` 5 req/min, `auth` 10/min, `simulate` 15/min — endpoints marqués `EnableRateLimiting(...)`.
-- **UserController** : JWT requis ; un utilisateur ne modifie que son profil sauf rôle `admin`.
-- **Contact** : `POST /api/contact`, anonyme autorisé, taille requête limitée, persistance table `contact_requests`.
+### Mise à jour sur le VPS
 
-## Piège métier — paie / tests
+```bash
+cd /opt/megasimulator
+git fetch origin && git reset --hard origin/master
+docker compose -f docker-compose.deploy.yml --env-file .env build api1 api2 frontend
+docker compose -f docker-compose.deploy.yml --env-file .env up -d
+```
 
-- `PayrollRequestDto.Parts` **défaut = 1**. Dans `PayrollService.Simulate`, si `RetenuePct` est 0 et `Parts > 0`, le barème **PAS** est appliqué sur le net — le net baisse fortement vs. un simple brut×(1−cotisations).
-- Pour des tests ou scénarios « net sans PAS », utiliser **`Parts = 0`** ou une retenue explicite selon le besoin.
+Adapter les services ciblés. Toute variable **`VITE_*`** impose un **rebuild du frontend**.
+
+### PostgreSQL depuis votre PC (pgAdmin)
+
+1. Tunnel SSH (PowerShell : **ne pas** nommer une variable `$Host`) :
+
+   ```powershell
+   $key = "$env:USERPROFILE\.ssh\id_ed25519_hetzner"
+   $srv = "root@IP_DU_VPS"
+   ssh -i $key -L 5433:127.0.0.1:5432 -N $srv
+   ```
+
+2. Client SQL : **127.0.0.1**, port **5433**, DB **`simulator`**, user **`simu`**, mot de passe selon compose / `.env`.
+
+Sans tunnel, **127.0.0.1** = machine locale, pas le serveur.
+
+## Données & contact
+
+- **Historique** : **10** simulations max / utilisateur (`SimulationRepository.MaxSimulationsPerUser`).
+- **Contact** : `POST /api/contact` uniquement — **pas** de `mailto` de secours ; pas de domaine **`m-simulator.com`** dans l’app.
+- **Admin seed** : e-mail **`admin@megasimulateur.org`** (migration **009** + `Program.cs`).
+
+## Sécurité API
+
+- Rate limiting (`Program.cs`) : `contact` 5/min, `auth` 10/min, `simulate` 15/min.
+- **UserController** : JWT ; pas d’IDOR sur profil.
+
+## Piège paie / tests
+
+- `PayrollRequestDto.Parts` **défaut = 1**. Si `RetenuePct` = 0 et `Parts` > 0, le **PAS** s’applique sur le net.
+- Pour un net sans PAS : **`Parts = 0`** ou retenue explicite.
 
 ## SEO (frontend)
 
-- Routes FR canoniques : **`src/Frontend/src/seo/paths.js`** (ex. `/simulateur-paie-brut-net`). Build : **`VITE_PUBLIC_SITE_URL`** pour `dist/sitemap.xml` + `robots.txt` (`vite.config.js` plugin).
-- Hébergement SPA : **`vercel.json`** ou **`public/_redirects`** (Netlify).
-
-## Déploiement & domaine (bientôt)
-
-- Checklist et tâches « partager avec des ami·e·s testeurs » : **`docs/planning/2026-03-31-deployment-and-domain.md`**
-- Toujours aligner `FRONTEND__URL`, CORS, et origines Google OAuth sur l’URL publique.
+- Routes : **`src/Frontend/src/seo/paths.js`**. Build : **`VITE_PUBLIC_SITE_URL`** → `sitemap.xml` / `robots.txt` (`vite.config.js`).
 
 ## Recherche web
 
-- Avant recherche web ou fetch URL pour réglementation à jour : respecter la skill **`web-search-ask-first`** et § 4.4 de `docs/general-guidelines.md`.
+- Avant web search / fetch URL : skill **`web-search-ask-first`** et § 4.4 de `docs/general-guidelines.md`.

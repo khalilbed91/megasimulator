@@ -1,7 +1,7 @@
 # MegaSimulator — General Guidelines & Project Status
 
 _Document interne — usage agent/équipe uniquement_  
-_Dernière mise à jour : 2026-03-30 (doc stack local, sécurité API, contact DB, tâche déploiement)_
+_Dernière mise à jour : 2026-04-02 (déploiement : `deploy/DEPLOY.md`, tunnel Postgres, suppression e-mails fictifs)_
 
 ---
 
@@ -40,11 +40,12 @@ _Dernière mise à jour : 2026-03-30 (doc stack local, sécurité API, contact D
 | ✅ **IRetirementService** | `src/Application/Interfaces/IRetirementService.cs` — interface avec 5 méthodes |
 | ✅ **RetirementController** | `POST /api/retirement/simulate` — extraction userId depuis JWT, même pattern que PayrollController |
 | ✅ **LoanService** | `POST /api/loan/simulate` — perso / auto / immo (TVA neuf, PTZ, Action Logement), HCSF et TAEG indicatif ; `type='loan'` |
-| ✅ **ContactService** | `POST /api/contact` — persistance `contact_requests`, JWT optionnel pour lier `userid` |
+| ✅ **ContactService** | `POST /api/contact` — persistance `contact_requests`, JWT optionnel pour lier `userid` (pas de fallback `mailto` ; pas de domaine `m-simulator.com`) |
 | ✅ **Rate limiting** | `Program.cs` : politiques `contact` (5/min), `auth` (10/min), `simulate` (15/min) — attributs sur auth, contact, simulateurs |
 | ✅ Seed admin | Migration 007 : hash BCrypt correct pour `admin/111aaa**` |
 | ✅ Tests unitaires | `PayrollServiceTests`, `SalaireServiceTests`, `SimulationServiceTests`, `FormulaServiceTests`, `AuthServiceTests`, `RetirementServiceTests`, **`LoanServiceTests`** |
 | ✅ Tests d'intégration | Dossier `tests/MegaSimulator.Tests/Integration/` — base posée |
+| ✅ **Déploiement VPS** | `docker-compose.deploy.yml` + `deploy/DEPLOY.md` (Nginx, Cloudflare, tunnel SSH Postgres, `git reset --hard` sur le serveur si besoin) |
 
 ### 2.2 Sécurité & Auth
 

@@ -121,6 +121,15 @@ dotnet run --project src/Api --launch-profile LocalWithDeps
 ### Guest usage
 
 Users can open the app without signing in and run payroll, retirement, and loan simulations. History and account screens require login.
+
+### Production deployment (Docker / VPS)
+
+Operational runbook: **[`deploy/DEPLOY.md`](deploy/DEPLOY.md)** — Compose stack, host Nginx, Cloudflare, environment variables, **PostgreSQL access via SSH tunnel** (pgAdmin), Google OAuth rebuild notes, and known pitfalls.
+
+Short checklist: [`docs/planning/2026-03-31-deployment-and-domain.md`](docs/planning/2026-03-31-deployment-and-domain.md).
+
+There is **no** public `support@m-simulator.com` or `m-simulator.com` mailbox in the product; contact goes through the in-app **Contact** form (`POST /api/contact`). The seeded **admin** profile uses **`admin@megasimulateur.org`** as its stored email (not guaranteed to be a working inbox).
+
 ## Contribution & Governance
 
 - All formula changes must include source links and test vectors.

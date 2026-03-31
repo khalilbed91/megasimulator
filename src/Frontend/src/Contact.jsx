@@ -6,7 +6,8 @@ export default function Contact({ lang = 'en' }){
       title: 'Contact',
       help: "Besoin d'aide ou un problème ? Envoyez-nous un message.",
       name: 'Nom', email: 'Email', message: 'Message', send: 'Envoyer',
-      sending: 'Envoi…', sent: 'Message envoyé, merci !', fallback: 'Client mail ouvert (secours).',
+      sending: 'Envoi…', sent: 'Message envoyé, merci !',
+      errorSend: "L'envoi a échoué. Réessayez dans quelques instants. Il n'y a pas d'e-mail de secours : le formulaire doit fonctionner.",
     },
     en: {
       title: 'Contact',
@@ -29,8 +30,7 @@ export default function Contact({ lang = 'en' }){
       setStatus('sent')
       setName(''); setEmail(''); setMessage('')
     }catch{
-      window.location.href = `mailto:support@m-simulator.com?subject=${encodeURIComponent('Contact from ' + name)}&body=${encodeURIComponent(message + '\n\nFrom: ' + email)}`
-      setStatus('fallback')
+      setStatus('error')
     }
   }
 
@@ -56,7 +56,7 @@ export default function Contact({ lang = 'en' }){
             <button type="submit" className="btn-primary-custom">{t.send}</button>
             {status === 'sending' && <span className="page-panel-message">{t.sending}</span>}
             {status === 'sent' && <span className="page-panel-message page-panel-message--ok">{t.sent}</span>}
-            {status === 'fallback' && <span className="page-panel-message page-panel-message--err">{t.fallback}</span>}
+            {status === 'error' && <span className="page-panel-message page-panel-message--err">{t.errorSend}</span>}
           </div>
         </form>
       </div>

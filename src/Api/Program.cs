@@ -196,7 +196,7 @@ UPDATE users SET username = @Username, email = @Email, password_hash = @Hash, ro
   first_name = COALESCE(NULLIF(BTRIM(COALESCE(first_name, '')), ''), 'Admin'),
   last_name = COALESCE(NULLIF(BTRIM(COALESCE(last_name, '')), ''), 'User')
 WHERE id = @Id",
-                            new { Id = adminId, Username = "admin", Email = "admin@m-simulator.com", Hash = newHash });
+                            new { Id = adminId, Username = "admin", Email = "admin@megasimulateur.org", Hash = newHash });
                         logger2?.LogInformation("Repaired admin row (id present but username was not admin); password set to dev default.");
                     }
                     else
@@ -204,7 +204,7 @@ WHERE id = @Id",
                         await conn2.ExecuteAsync(@"
 INSERT INTO users (id, username, email, created_at, password_hash, roles, first_name, last_name, phone)
 VALUES (@Id, @Username, @Email, now(), @Hash, ARRAY['admin']::text[], 'Admin', 'User', @Phone)",
-                            new { Id = adminId, Username = "admin", Email = "admin@m-simulator.com", Hash = newHash, Phone = string.Empty });
+                            new { Id = adminId, Username = "admin", Email = "admin@megasimulateur.org", Hash = newHash, Phone = string.Empty });
                         logger2?.LogInformation("Created missing admin user (username admin, password dev default).");
                     }
                 }

@@ -1,6 +1,6 @@
 # Frontend — Guidelines techniques
 
-_Dernière mise à jour : 2026-03-30 (SEO, routage URL, Helmet)_
+_Dernière mise à jour : 2026-04-02 (légal, déploiement : voir `deploy/DEPLOY.md`)_
 
 ---
 
@@ -40,7 +40,7 @@ src/Frontend/
     Login.jsx                 ← Page auth split-screen + bouton Google GSI
     Signup.jsx                ← Page inscription
     Account.jsx               ← Page profil utilisateur
-    Contact.jsx               ← Page contact → POST /api/contact (JSON), rate limit côté API
+    Contact.jsx               ← Contact → POST /api/contact (pas de mailto de secours)
     components/
       Logo.jsx                ← Composant logo centralisé
     styles.css                ← Design system global (tokens CSS + composants)

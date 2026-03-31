@@ -72,3 +72,4 @@ ufw allow 443/tcp
 ufw --force enable
 
 echo "Done. Set Cloudflare SSL/TLS encryption mode to Flexible (origin is HTTP :80)."
+echo "See deploy/DEPLOY.md for updates, env vars, PostgreSQL SSH tunnel, and troubleshooting."

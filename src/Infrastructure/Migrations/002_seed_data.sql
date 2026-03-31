@@ -5,7 +5,7 @@ ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- Seed an admin user
 INSERT INTO users (id, username, email, created_at)
-VALUES ('00000000-0000-0000-0000-000000000001', 'admin', 'admin@m-simulator.com', now())
+VALUES ('00000000-0000-0000-0000-000000000001', 'admin', 'admin@megasimulateur.org', now())
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed simple formulas
