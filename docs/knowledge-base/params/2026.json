@@ -63,7 +63,16 @@
     "assurance_emprunteur_rate_example_max": 0.0025
   },
   "savings": {
-    "inflation_estimate": 0.02,
-    "livret_a_rate": 0.03
+    "inflation_estimate": 0.018,
+    "livret_a_nominal_annual": 0.015,
+    "lep_nominal_annual": 0.025,
+    "source_note": "Inflation : hypothèse pédagogique ~1,8 %/an (ordre de grandeur objectif/stabilité des prix). Livret A : 1,5 % nominal au 1er février 2026 (économie.gouv.fr / Banque de France). LEP : 2,5 % au même date — sous conditions de ressources. Valeurs non contractuelles.",
+    "switch_presets_eur_monthly": {
+      "navigo_to_bike": 130,
+      "telecom_optimize": 30,
+      "meal_prep": 200,
+      "subscriptions_bundle": 25
+    },
+    "clothing_pct_of_annual_net": 0.05
   }
 }

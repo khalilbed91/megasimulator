@@ -51,6 +51,7 @@ builder.Services.AddSingleton(sp => sp.GetRequiredService<IParamsLoader>().Load(
 builder.Services.AddScoped<PayrollService>();
 builder.Services.AddScoped<MegaSimulator.Application.Interfaces.IRetirementService, MegaSimulator.Application.Services.RetirementService>();
 builder.Services.AddScoped<MegaSimulator.Application.Interfaces.ILoanService, MegaSimulator.Application.Services.LoanService>();
+builder.Services.AddScoped<MegaSimulator.Application.Interfaces.ISavingsService, MegaSimulator.Application.Services.SavingsService>();
 // Infrastructure repositories
 builder.Services.AddScoped<ISalaireRepository, SalaireRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();

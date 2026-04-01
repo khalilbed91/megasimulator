@@ -5,6 +5,7 @@ import Account from './Account'
 import Contact from './Contact'
 import SimulationHistory from './SimulationHistory'
 import RetirementSimulator from './RetirementSimulator'
+import SavingsSimulator from './SavingsSimulator'
 import LoanSimulator from './LoanSimulator'
 import { PATH, pathToTab, pathForTab, pathToLegalPage } from './seo/paths'
 import SeoHead from './seo/SeoHead'
@@ -241,13 +242,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
 
           {!legalPage && tab === 'loans' && <LoanSimulator lang={lang} />}
 
-          {!legalPage && tab === 'savings' && (
-            <div className="sim-result-empty" style={{ marginTop: 40 }}>
-              <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h5l2 5 4-10 2 5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--text)' }}>{tr.comingSoon}</div>
-              <div style={{ fontSize: 14 }}>{tr.comingSoonDesc}</div>
-            </div>
-          )}
+          {!legalPage && tab === 'savings' && <SavingsSimulator lang={lang} />}
 
           {!legalPage && tab === 'history' && <SimulationHistory token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}
           {!legalPage && tab === 'account' && <Account token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}

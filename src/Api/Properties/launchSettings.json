@@ -15,7 +15,8 @@
         "GOOGLE__CLIENTID": "874107145454-8vao5905rvg7v56h6rustrk3dbbbul62.apps.googleusercontent.com",
         "GOOGLE__CLIENTSECRET": "",
         "GOOGLE__REDIRECT": "http://localhost:5000/api/auth/google/callback",
-        "FRONTEND__URL": "http://localhost:5173"
+        "FRONTEND__URL": "http://localhost:5173",
+        "PARAMS_FILE": "..\\..\\docs\\knowledge-base\\params\\2026.json"
       }
     }
   }

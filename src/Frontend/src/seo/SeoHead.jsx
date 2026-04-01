@@ -40,10 +40,10 @@ const META = {
         'simulation crédit, simulateur prêt immobilier, PTZ, prêt conso, mensualités prêt',
     },
     savings: {
-      title: `Simulation épargne (à venir) | ${BRAND}`,
+      title: `Objectif d’épargne & projet | ${BRAND}`,
       description:
-        'Module épargne et placements en préparation — suivez MegaSimulator pour livrets, assurance-vie et projet patrimonial.',
-      keywords: 'simulation épargne, livret, placement, patrimoine',
+        'Calculez le versement mensuel pour un objectif (inflation, Livret A), écart vs votre épargne actuelle et leviers budgétaires indicatifs — modèle pédagogique 2026.',
+      keywords: 'simulation épargne, objectif épargne, livret a, inflation, budget',
     },
     contact: {
       title: `Contact | ${BRAND}`,
@@ -95,9 +95,10 @@ const META = {
       keywords: 'loan simulator, mortgage calculator',
     },
     savings: {
-      title: `Savings module (coming soon) | ${BRAND}`,
-      description: 'Savings and investment simulation module coming soon to MegaSimulator.',
-      keywords: 'savings simulator',
+      title: `Savings goal & project planner | ${BRAND}`,
+      description:
+        'Monthly savings needed for a target (inflation, regulated yield), gap vs current savings and indicative budget levers — 2026 educational model.',
+      keywords: 'savings goal, savings calculator, inflation, budget',
     },
     contact: {
       title: `Contact | ${BRAND}`,

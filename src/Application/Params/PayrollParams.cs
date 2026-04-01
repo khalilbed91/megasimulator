@@ -18,6 +18,45 @@ namespace MegaSimulator.Application.Params
 
         [JsonPropertyName("jei")]
         public Jei? Jei { get; set; }
+
+        [JsonPropertyName("savings")]
+        public SavingsParams? Savings { get; set; }
+    }
+
+    public class SavingsParams
+    {
+        [JsonPropertyName("inflation_estimate")]
+        public double InflationEstimate { get; set; } = 0.018;
+
+        [JsonPropertyName("livret_a_nominal_annual")]
+        public double LivretANominalAnnual { get; set; } = 0.015;
+
+        [JsonPropertyName("lep_nominal_annual")]
+        public double LepNominalAnnual { get; set; } = 0.025;
+
+        [JsonPropertyName("source_note")]
+        public string? SourceNote { get; set; }
+
+        [JsonPropertyName("switch_presets_eur_monthly")]
+        public SwitchPresetsEurMonthly? SwitchPresetsEurMonthly { get; set; }
+
+        [JsonPropertyName("clothing_pct_of_annual_net")]
+        public double ClothingPctOfAnnualNet { get; set; } = 0.05;
+    }
+
+    public class SwitchPresetsEurMonthly
+    {
+        [JsonPropertyName("navigo_to_bike")]
+        public double NavigoToBike { get; set; } = 130;
+
+        [JsonPropertyName("telecom_optimize")]
+        public double TelecomOptimize { get; set; } = 30;
+
+        [JsonPropertyName("meal_prep")]
+        public double MealPrep { get; set; } = 200;
+
+        [JsonPropertyName("subscriptions_bundle")]
+        public double SubscriptionsBundle { get; set; } = 25;
     }
 
     public class Smic { public double hourly_brut { get; set; } public double monthly_brut_35h { get; set; } }

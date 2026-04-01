@@ -10,7 +10,7 @@ const INTRO = {
     loans:
       'Calculez mensualités et coût d’un projet : prêt immobilier (frais de notaire, TVA neuf, PTZ, Action Logement), crédit auto ou prêt personnel — repères HCSF inclus à titre pédagogique.',
     savings:
-      'L’épargne réglementée et les placements seront prochainement intégrés sous forme de simulateurs pédagogiques.',
+      'Définissez un montant cible et un horizon : le simulateur estime l’effort mensuel (objectif indexé inflation, rendement type livret), l’écart avec votre épargne actuelle et des leviers budgétaires indicatifs.',
     default: '',
   },
   en: {
@@ -20,7 +20,8 @@ const INTRO = {
       'Simplified retirement projection: net pension, quarters, and basic décote/surcote hints for planning.',
     loans:
       'Educational loan math for mortgages (fees, PTZ, Action Logement), auto and consumer loans.',
-    savings: 'Savings tools are coming soon.',
+    savings:
+      'Set a target amount and horizon: monthly effort (inflation-indexed goal, regulated-style yield), gap vs current savings, and indicative budget levers.',
     default: '',
   },
 }

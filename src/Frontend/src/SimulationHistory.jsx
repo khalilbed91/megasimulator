@@ -4,7 +4,7 @@ const T = {
   fr: {
     title: 'Historique des simulations',
     empty: 'Aucune simulation trouvée.',
-    emptyHint: 'Lancez une simulation de paie, retraite ou prêt pour la retrouver ici.',
+    emptyHint: 'Lancez une simulation de paie, retraite, prêt ou épargne pour la retrouver ici.',
     loading: 'Chargement…',
     error: 'Impossible de charger l\'historique.',
     colDate: 'Date',
@@ -18,9 +18,15 @@ const T = {
     colPensionNet: 'Pension nette / mois',
     colPensionGross: 'Brut annuel',
     colTaux: 'Taux rempl.',
+    colLoanCat: 'Type prêt',
+    colLoanMonthly: 'Mensualité totale',
+    colSavingsTarget: 'Objectif',
+    colSavingsMonthly: 'Épargne / mois requise',
+    colHorizonMonths: 'Mois',
     typePayroll: 'Paie',
     typeRetirement: 'Retraite',
     typeLoan: 'Prêt',
+    typeSavings: 'Épargne',
     typeOther: 'Simulation',
     deleteBtn: 'Supprimer',
     deleteConfirm: 'Supprimer cette simulation ?',
@@ -33,7 +39,7 @@ const T = {
   en: {
     title: 'Simulation history',
     empty: 'No simulations found.',
-    emptyHint: 'Run a payroll, retirement, or loan simulation to see it here.',
+    emptyHint: 'Run a payroll, retirement, loan, or savings simulation to see it here.',
     loading: 'Loading…',
     error: 'Could not load history.',
     colDate: 'Date',
@@ -49,9 +55,13 @@ const T = {
     colTaux: 'Repl. rate',
     colLoanCat: 'Loan type',
     colLoanMonthly: 'Total monthly',
+    colSavingsTarget: 'Target',
+    colSavingsMonthly: 'Required monthly',
+    colHorizonMonths: 'Months',
     typePayroll: 'Payroll',
     typeRetirement: 'Retirement',
     typeLoan: 'Loan',
+    typeSavings: 'Savings',
     typeOther: 'Simulation',
     deleteBtn: 'Delete',
     deleteConfirm: 'Delete this simulation?',
@@ -96,6 +106,7 @@ function simTypeOf(sim) {
   if (t === 'retirement') return 'retirement'
   if (t === 'payroll') return 'payroll'
   if (t === 'loan' || t === 'loans') return 'loan'
+  if (t === 'savings') return 'savings'
   return t || 'other'
 }
 
@@ -291,6 +302,55 @@ export default function SimulationHistory({ token, lang, onRequestLogin, onReque
             )
           }
 
+          if (kind === 'savings') {
+            const obj = req.ObjectiveEuros ?? req.objectiveEuros ?? null
+            const reqM = res.RequiredMonthlyEuros ?? res.requiredMonthlyEuros ?? null
+            const months = req.HorizonMonths ?? req.horizonMonths ?? null
+            return (
+              <div key={sim.id} className="history-card">
+                <div className="history-card-left">
+                  <div className="history-date">{fmtDate(sim.createdAt)}</div>
+                  <span className="history-badge history-badge--savings">{tr.typeSavings}</span>
+                </div>
+                <div className="history-card-figures">
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colSavingsTarget}</div>
+                    <div className="history-figure-value">{fmt(obj)}</div>
+                  </div>
+                  {months != null && !isNaN(Number(months)) && (
+                    <>
+                      <div className="history-figure-sep">·</div>
+                      <div className="history-figure">
+                        <div className="history-figure-label">{tr.colHorizonMonths}</div>
+                        <div className="history-figure-value">{months}</div>
+                      </div>
+                    </>
+                  )}
+                  <div className="history-figure-sep">→</div>
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colSavingsMonthly}</div>
+                    <div className="history-figure-value history-figure-value--accent">{fmt(reqM)}</div>
+                  </div>
+                </div>
+                <div className="history-card-actions">
+                  <button
+                    type="button"
+                    className="history-delete-btn"
+                    onClick={() => handleDelete(sim.id)}
+                    disabled={deletingId === sim.id}
+                    aria-label={tr.deleteBtn}
+                    title={tr.deleteBtn}
+                  >
+                    {deletingId === sim.id
+                      ? <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeDasharray="30 10"/></svg>
+                      : <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    }
+                  </button>
+                </div>
+              </div>
+            )
+          }
+
           if (kind === 'payroll') {
             const statut = req.Statut ?? req.statut ?? ''
             const brut = req.Brut ?? req.brut ?? null
@@ -358,11 +418,12 @@ export default function SimulationHistory({ token, lang, onRequestLogin, onReque
           }
 
           const label = kind === 'loan' ? tr.typeLoan : tr.typeOther
+          const badgeClass = kind === 'loan' ? 'loan' : 'other'
           return (
             <div key={sim.id} className="history-card">
               <div className="history-card-left">
                 <div className="history-date">{fmtDate(sim.createdAt)}</div>
-                <span className={`history-badge history-badge--${kind === 'loan' ? 'loan' : 'other'}`}>{label}</span>
+                <span className={`history-badge history-badge--${badgeClass}`}>{label}</span>
               </div>
               <div className="history-card-figures" style={{ fontSize: 13, color: 'var(--muted)' }}>
                 {sim.name || kind}

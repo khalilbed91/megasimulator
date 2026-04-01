@@ -62,7 +62,7 @@ Remarque : l'utilisateur avait proposé 5% du revenu annuel net ; la forme ci‑
 ## 4. Algorithme "Sacrifice nécessaire" (ordre de priorités)
 
 1. Calculer $E_{mensuel\_requi}$ via Section 1.
-2. Mesurer $E_{actuelle}$ (épargne déjà allouée / mois). Si $E_{actuelle} \ge E_{mensuel\_requi$} → OK.
+2. Mesurer $E_{actuelle}$ (épargne déjà allouée / mois). Si $E_{actuelle} \ge E_{mensuel\_requi}$ → OK.
 3. Sinon, Gap = $E_{mensuel\_requi} - E_{actuelle}$.
 4. Appliquer optimisations par niveaux (estimer gains cumulés) :
    - Niveau 1 (automatique) : regrouper abonnements (Netflix/Spotify/Gym) → gain estimé variable.
