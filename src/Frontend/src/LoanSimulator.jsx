@@ -174,6 +174,7 @@ export default function LoanSimulator({ lang = 'fr' }) {
       }
       const res = await fetch('/api/loan/simulate', {
         method: 'POST',
+        cache: 'no-store',
         headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) },
         body: JSON.stringify(payload)
       })

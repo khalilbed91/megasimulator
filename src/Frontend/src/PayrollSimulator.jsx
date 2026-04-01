@@ -13,6 +13,7 @@ const T = {
     revenusAnnexes: 'Revenus annexes', primes: 'Primes / Bonus',
     simulate: 'Calculer', reset: 'Réinitialiser',
     resultsTitle: 'Résultats', empty: 'Remplissez le formulaire et cliquez sur Calculer.',
+    fixFieldsHint: 'Corrigez les champs indiqués ci-dessus, puis cliquez à nouveau sur Calculer.',
     technical: 'Vue JSON technique',
     netMonthly: 'Net mensuel', netAnnual: 'Net annuel',
     employerCost: 'Coût employeur', socialCont: 'Cotisations sociales',
@@ -49,6 +50,7 @@ const T = {
     revenusAnnexes: 'Additional income', primes: 'Bonuses',
     simulate: 'Calculate', reset: 'Reset',
     resultsTitle: 'Results', empty: 'Fill in the form and click Calculate.',
+    fixFieldsHint: 'Fix the highlighted fields above, then click Calculate again.',
     technical: 'Technical JSON view',
     netMonthly: 'Monthly net', netAnnual: 'Annual net',
     employerCost: 'Employer cost', socialCont: 'Social contributions',
@@ -323,6 +325,7 @@ export default function PayrollSimulator({ lang = 'fr' }){
   const [result,         setResult]         = useState(null)
   const [loading,        setLoading]        = useState(false)
   const [showTech,       setShowTech]       = useState(false)
+  const [submitAttempted, setSubmitAttempted] = useState(false)
 
   /* Status */
   const [statut, setStatut] = useState('non-cadre')
@@ -393,8 +396,10 @@ export default function PayrollSimulator({ lang = 'fr' }){
   }
 
   const simulate = async () => {
+    setSubmitAttempted(true)
     if (!isValid) return
-    setLoading(true); setResult(null)
+    setLoading(true)
+    setResult(null)
     try {
       const brutAnn = computeEffectiveBrut()
       const payload = {
@@ -414,6 +419,7 @@ export default function PayrollSimulator({ lang = 'fr' }){
       const tok  = localStorage.getItem('msim_token')
       const res  = await fetch('/api/payroll/simulate', {
         method: 'POST',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
           ...(tok ? { Authorization: 'Bearer ' + tok } : {}),
@@ -421,9 +427,17 @@ export default function PayrollSimulator({ lang = 'fr' }){
         body: JSON.stringify(payload),
       })
       const json = await res.json()
+      if (!res.ok) {
+        setResult({ error: json?.message || json?.title || `HTTP ${res.status}` })
+        return
+      }
+      setSubmitAttempted(false)
       setResult(json)
-    } catch(e) { setResult({ error: e.message }) }
-    finally { setLoading(false) }
+    } catch (e) {
+      setResult({ error: e.message })
+    } finally {
+      setLoading(false)
+    }
   }
 
   const reset = () => {
@@ -431,7 +445,7 @@ export default function PayrollSimulator({ lang = 'fr' }){
     setRevenusAnnexes(''); setAvantagesActifs([]); setPrimes(''); setRetenuePct(0); setParts(1)
     setPortagePercent(10); setPortageCompany(''); setFraisPro('')
     setSituationFam('celibataire'); setEnfants(0)
-    setResult(null); setFiscalMode('parts')
+    setResult(null); setFiscalMode('parts'); setSubmitAttempted(false)
   }
 
   const isAdmin = () => {
@@ -637,26 +651,33 @@ export default function PayrollSimulator({ lang = 'fr' }){
         <div className="sim-divider" style={{ margin: '18px 0 14px' }} />
 
         {/* â”€â”€â”€ CTA buttons â”€â”€â”€ */}
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn-primary-custom" onClick={simulate} disabled={!isValid || loading}>
-            {loading ? (
-              <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ animation: 'spin 0.8s linear infinite' }}>
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" strokeDasharray="28 56" strokeLinecap="round" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M5 3l14 9-14 9V3z" fill="currentColor" /></svg>
-            )}
-            {loading ? (lang === 'fr' ? 'Calcul...' : 'Calculating...') : t.simulate}
-          </button>
-          <button className="btn-ghost" onClick={reset} type="button">
-            <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 3v5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            {t.reset}
-          </button>
-          {isAdmin() && (
-            <button className="btn-ghost" onClick={() => setShowTech(s => !s)} type="button" style={{ marginLeft: 'auto' }}>
-              <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              {t.technical}
+        <div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <button type="button" className="btn-primary-custom" onClick={simulate} disabled={loading}>
+              {loading ? (
+                <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ animation: 'spin 0.8s linear infinite' }}>
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" strokeDasharray="28 56" strokeLinecap="round" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M5 3l14 9-14 9V3z" fill="currentColor" /></svg>
+              )}
+              {loading ? (lang === 'fr' ? 'Calcul...' : 'Calculating...') : t.simulate}
             </button>
+            <button className="btn-ghost" onClick={reset} type="button">
+              <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 3v5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              {t.reset}
+            </button>
+            {isAdmin() && (
+              <button className="btn-ghost" onClick={() => setShowTech(s => !s)} type="button" style={{ marginLeft: 'auto' }}>
+                <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                {t.technical}
+              </button>
+            )}
+          </div>
+          {submitAttempted && !isValid && (
+            <div className="field-error" style={{ marginTop: 10 }}>
+              {t.fixFieldsHint}
+            </div>
           )}
         </div>
 

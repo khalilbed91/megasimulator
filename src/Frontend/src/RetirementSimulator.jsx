@@ -66,6 +66,7 @@ const T = {
     errPoints: 'Entrez un nombre de points valide (≥ 0)',
     errObjectif: 'Objectif invalide (nombre positif)',
     warningRegime: 'Seul le régime général est calculé en V1. Les régimes spéciaux (fonctionnaire, libéral) sont indicatifs.',
+    validationSummary: 'Vérifiez les champs en erreur ci-dessus, puis cliquez à nouveau sur Calculer.',
   },
   en: {
     title: 'Retirement Simulator',
@@ -131,6 +132,7 @@ const T = {
     errPoints: 'Enter a valid point count (≥ 0)',
     errObjectif: 'Invalid target (positive number)',
     warningRegime: 'Only the general regime is calculated in V1. Special regimes are indicative only.',
+    validationSummary: 'Fix the fields marked in red above, then click Calculate again.',
   }
 }
 
@@ -247,7 +249,11 @@ export default function RetirementSimulator({ lang = 'fr' }) {
 
   async function simulate() {
     const { ok, trimUsed } = validate()
-    if (!ok) return
+    if (!ok) {
+      setApiError(t.validationSummary)
+      return
+    }
+    setApiError('')
     const { trim } = resolveTrimestresForSubmit()
     if (trimUsed != null) setTrimValides(String(trimUsed))
 
@@ -271,6 +277,7 @@ export default function RetirementSimulator({ lang = 'fr' }) {
       }
       const res = await fetch('/api/retirement/simulate', {
         method: 'POST',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
           ...(tok ? { Authorization: 'Bearer ' + tok } : {})
