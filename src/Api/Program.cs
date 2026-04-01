@@ -39,7 +39,6 @@ if (!string.IsNullOrEmpty(redisConn))
 }
 
 // Application services
-builder.Services.AddScoped<ISalaireService, SalaireService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<MegaSimulator.Application.Interfaces.IContactService, MegaSimulator.Application.Services.ContactService>();
@@ -53,12 +52,10 @@ builder.Services.AddScoped<MegaSimulator.Application.Interfaces.IRetirementServi
 builder.Services.AddScoped<MegaSimulator.Application.Interfaces.ILoanService, MegaSimulator.Application.Services.LoanService>();
 builder.Services.AddScoped<MegaSimulator.Application.Interfaces.ISavingsService, MegaSimulator.Application.Services.SavingsService>();
 // Infrastructure repositories
-builder.Services.AddScoped<ISalaireRepository, SalaireRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRequestRepository>();
 builder.Services.AddScoped<ISimulationRepository, SimulationRepository>();
 builder.Services.AddScoped<IFormulaRepository, FormulaRepository>();
-builder.Services.AddScoped<ISimulationResultRepository, SimulationResultRepository>();
 // Google OAuth client (typed HttpClient for GoogleAuthClient)
 builder.Services.AddHttpClient<MegaSimulator.Application.Interfaces.IGoogleAuthClient, MegaSimulator.Infrastructure.Services.GoogleAuthClient>();
 

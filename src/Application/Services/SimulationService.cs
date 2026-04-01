@@ -14,13 +14,11 @@ namespace MegaSimulator.Application.Services
     {
         private readonly ISimulationRepository _repo;
         private readonly PayrollService _payrollService;
-        private readonly ISimulationResultRepository _resultRepo;
 
-        public SimulationService(ISimulationRepository repo, PayrollService payrollService, ISimulationResultRepository resultRepo)
+        public SimulationService(ISimulationRepository repo, PayrollService payrollService)
         {
             _repo = repo;
             _payrollService = payrollService;
-            _resultRepo = resultRepo;
         }
 
         public async Task<SimulationDto?> GetByIdAsync(Guid id)
@@ -144,26 +142,6 @@ namespace MegaSimulator.Application.Services
                 dict["results"] = results;
 
                 var mergedJson = JsonSerializer.Serialize(dict, opts);
-
-                // Persist a separate simulation_result row for analytics/audit
-                try
-                {
-                    var simResult = new MegaSimulator.Domain.Entities.SimulationResult
-                    {
-                        Id = Guid.NewGuid(),
-                        SimulationId = Guid.Empty, // will be set by caller when available
-                        Result = mergedJson,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    // Note: at creation time the simulation Id may not be the final generated Id.
-                    // The CreateAsync caller sets SimulationId after entity.Id is assigned and will update if needed.
-                    await _resultRepo.AddAsync(simResult);
-                }
-                catch
-                {
-                    // ignore persistence failures for results to avoid breaking simulation creation
-                }
 
                 return mergedJson;
             }

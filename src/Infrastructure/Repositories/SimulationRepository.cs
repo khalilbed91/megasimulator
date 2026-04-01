@@ -62,19 +62,11 @@ VALUES (@Id, @UserId, @Name, @Type, @Payload::jsonb, @IsActive, @Metadata::jsonb
 
         /// <summary>
         /// Keeps the <see cref="MaxSimulationsPerUser"/> most recent rows per user (by <c>created_at</c> DESC).
-        /// Deletes older rows and matching <c>simulation_results</c> (when present).
         /// </summary>
         private static async Task TrimExcessSimulationsForUserAsync(IDbConnection conn, Guid? userId)
         {
             if (userId == null || userId == Guid.Empty) return;
 
-            const string deleteResults = @"
-DELETE FROM simulation_results
-WHERE simulation_id IN (
-  SELECT id FROM (
-    SELECT id FROM simulations WHERE userid = @UserId ORDER BY created_at DESC OFFSET @Keep
-  ) excess
-);";
             const string deleteSimulations = @"
 DELETE FROM simulations
 WHERE id IN (
@@ -83,7 +75,6 @@ WHERE id IN (
   ) excess
 );";
 
-            await conn.ExecuteAsync(deleteResults, new { UserId = userId, Keep = MaxSimulationsPerUser });
             await conn.ExecuteAsync(deleteSimulations, new { UserId = userId, Keep = MaxSimulationsPerUser });
         }
     }
