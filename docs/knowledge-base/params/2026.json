@@ -68,7 +68,7 @@
     "lep_nominal_annual": 0.025,
     "source_note": "Inflation : hypothèse pédagogique ~1,8 %/an (ordre de grandeur objectif/stabilité des prix). Livret A : 1,5 % nominal au 1er février 2026 (économie.gouv.fr / Banque de France). LEP : 2,5 % au même date — sous conditions de ressources. Valeurs non contractuelles.",
     "switch_presets_eur_monthly": {
-      "navigo_to_bike": 130,
+      "navigo_to_bike": 60,
       "telecom_optimize": 30,
       "meal_prep": 200,
       "subscriptions_bundle": 25

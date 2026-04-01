@@ -37,7 +37,7 @@ $$G = Co\^ut_A - Co\^ut_B + Avantages\_reçus - Co\^ut\_impl\_B$$
 Exemples concrets :
 
 - Transport (Navigo vs vélo / Liberté+)
-  - $G_{transport} = Co\^ut_{Navigo} + IKV_{recu} - Co\^ut_{EntretienVelo}$ (gain mensuel ≈ 130 € dans l'exemple)
+  - $G_{transport} = Co\^ut_{Navigo} - Co\^ut_{VeloLoue}$ (ex. ~90 € − ~30 € → gain indicatif ~60 €/mois)
 - Télécom & Fibre
   - $G_{telecom} = (Mobile_{std} + Fibre_{std}) - (Mobile_{opt} + Fibre_{opt})$ (ex. 70 − 40 = 30 €/mois)
 
@@ -66,7 +66,7 @@ Remarque : l'utilisateur avait proposé 5% du revenu annuel net ; la forme ci‑
 3. Sinon, Gap = $E_{mensuel\_requi} - E_{actuelle}$.
 4. Appliquer optimisations par niveaux (estimer gains cumulés) :
    - Niveau 1 (automatique) : regrouper abonnements (Netflix/Spotify/Gym) → gain estimé variable.
-   - Niveau 2 (transport) : Navigo → vélo / Liberté+ → gain estimé (ex: 130 €/mois).
+   - Niveau 2 (transport) : Navigo → vélo loué → gain estimé (ex: ~60 €/mois).
    - Niveau 3 (alimentation) : Meal prep vs prêt-à-manger → gain estimé 150–300 €/mois.
 5. Si Gap > somme_gains_max → proposer allonger horizon ou augmenter apport initial.
 
@@ -78,7 +78,7 @@ Remarque : l'utilisateur avait proposé 5% du revenu annuel net ; la forme ci‑
 Synthèse d'optimisation proposée (exemple) :
 
 - Par an : 6 000 € (supprimer 1 voyage long-courrier)
-- Par mois : 500 € (500 = 200 Meal Prep + 130 Vélo + 170 Arbitrage loisirs)
+- Par mois : 430 € (200 Meal Prep + 60 Vélo + 170 Arbitrage loisirs)
 - Par jour : 16,40 € (~prix d'un menu UberEats)
 
 ## 6. Modèle de paramètres (exemple JSON)
@@ -91,10 +91,10 @@ Synthèse d'optimisation proposée (exemple) :
   "default_savings_rate": 0.30,
   "livret_a_rate": 0.03,
   "switch_examples": {
-    "navigo_annual": 950,
-    "nav_monthly": 86.4,
+    "navigo_monthly_example": 90,
+    "bike_rental_monthly_example": 30,
     "ikv_annual_max": 700,
-    "bike_monthly_cost": 10,
+    "bike_monthly_cost": 30,
     "telecom_standard": 70,
     "telecom_optimized": 40
   },

@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 
 /** Aligné sur defaults API / params (affichage avant 1er calcul) */
 const DEFAULT_SWITCH_PRESETS = {
-  navigo_to_bike: 130,
+  navigo_to_bike: 60,
   telecom_optimize: 30,
   meal_prep: 200,
   subscriptions_bundle: 25,
@@ -44,13 +44,26 @@ const T = {
     clothingEmpty: 'Renseignez le revenu net annuel à gauche pour estimer un plafond vêtements (5 % du net / an).',
     leverDetail: 'Détail des leviers',
     perMonth: '/ mois',
+    secTarget: 'Objectif',
+    secEachMonth: 'Versement à prévoir',
+    secVersusSavings: 'Par rapport à votre épargne actuelle',
+    secAfterLevers: 'Après vos leviers budgétaires',
+    rowIndexed: 'Cible indexée (inflation)',
+    rowRequired: 'Effort total requis',
+    rowDaily: 'Équivalent par jour',
+    rowYouSave: 'Moins : épargne déjà prévue / mois',
+    rowGapLine: '= Écart à combler',
+    rowGapSub: '(effort requis − épargne actuelle)',
+    rowLeversApplied: 'Gains des leviers cochés',
+    rowRemain: 'Écart restant',
+    rowRemainSub: 'écart − gains leviers',
     warnings: 'Remarques',
     disclaimer:
       'Simulation simplifiée (versements en fin de mois, taux constant). Pas de conseil en investissement. Taux Livret A / LEP : réglementation en vigueur — vérifier auprès de votre établissement.',
     paramsNote: 'Sources paramètres',
     lepNote: 'LEP : sous conditions de ressources ; taux indicatif au 1er fév. 2026.',
     useFileParams: 'Utiliser inflation & rendement du fichier params (recommandé)',
-    swNavigo: 'Transport : Navigo → vélo / Liberté+',
+    swNavigo: 'Transport : Navigo (~90 €) → vélo (~30 €) → ~60 €/mois gagnés',
     swTelecom: 'Télécom : forfait optimisé',
     swMeal: 'Alimentation : meal prep vs livraisons',
     swSubs: 'Abonnements : regroupement / arbitrage',
@@ -90,13 +103,26 @@ const T = {
     clothingEmpty: 'Enter annual net income on the left to estimate a clothing envelope (5% of annual net).',
     leverDetail: 'Lever breakdown',
     perMonth: '/ month',
+    secTarget: 'Target',
+    secEachMonth: 'Monthly amount',
+    secVersusSavings: 'Versus your current savings',
+    secAfterLevers: 'After budget levers',
+    rowIndexed: 'Inflation-indexed target',
+    rowRequired: 'Total required effort',
+    rowDaily: 'Per day (÷30)',
+    rowYouSave: 'Less: planned monthly savings',
+    rowGapLine: '= Gap to close',
+    rowGapSub: '(required − current savings)',
+    rowLeversApplied: 'Ticked levers total gain',
+    rowRemain: 'Remaining gap',
+    rowRemainSub: 'gap − lever gains',
     warnings: 'Notes',
     disclaimer:
       'Simplified model (end-of-month contributions, flat rate). Not investment advice. Regulated savings rates — confirm with your bank.',
     paramsNote: 'Parameter sources',
     lepNote: 'LEP: income conditions apply; indicative Feb 2026 rate.',
     useFileParams: 'Use inflation & yield from params file (recommended)',
-    swNavigo: 'Transit: pass → bike / lighter pass',
+    swNavigo: 'Transit: pass (~€90) → bike (~€30) → ~€60/mo saved',
     swTelecom: 'Phone & fiber optimized bundle',
     swMeal: 'Food: meal prep vs delivery',
     swSubs: 'Subscriptions bundle / trim',
@@ -140,13 +166,8 @@ function fmtNum(n, lang) {
   })
 }
 
-function monthlyGainForSwitch(id, result) {
-  const list = result?.switches || result?.Switches || []
-  const sw = list.find((x) => (x.id || x.Id) === id)
-  if (sw != null) {
-    const g = sw.monthlyGainEuros ?? sw.MonthlyGainEuros
-    if (g != null && !isNaN(Number(g))) return Number(g)
-  }
+/** Presets produit pour les 4 leviers connus — ne pas reprendre montants/libellés API (cache / vieille API / params désalignés). */
+function leverMonthlyGain(id) {
   return DEFAULT_SWITCH_PRESETS[id] ?? 0
 }
 
@@ -251,20 +272,15 @@ export default function SavingsSimulator({ lang = 'fr' }) {
   const selectedLeverSum = useMemo(() => {
     if (!result) return 0
     let s = 0
-    if (swNavigo) s += monthlyGainForSwitch('navigo_to_bike', result)
-    if (swTelecom) s += monthlyGainForSwitch('telecom_optimize', result)
-    if (swMeal) s += monthlyGainForSwitch('meal_prep', result)
-    if (swSubs) s += monthlyGainForSwitch('subscriptions_bundle', result)
+    if (swNavigo) s += leverMonthlyGain('navigo_to_bike')
+    if (swTelecom) s += leverMonthlyGain('telecom_optimize')
+    if (swMeal) s += leverMonthlyGain('meal_prep')
+    if (swSubs) s += leverMonthlyGain('subscriptions_bundle')
     return s
   }, [result, swNavigo, swTelecom, swMeal, swSubs])
 
   const gapBase = result ? Number(result.gapEuros ?? result.GapEuros ?? 0) : 0
   const gapAfterLive = result ? Math.round((gapBase - selectedLeverSum) * 100) / 100 : 0
-
-  const label = useCallback(
-    (sw) => (lang === 'en' ? sw.labelEn ?? sw.LabelEn : sw.labelFr ?? sw.LabelFr),
-    [lang]
-  )
 
   function applyPreset(kind) {
     setUseDefaultParams(false)
@@ -272,8 +288,11 @@ export default function SavingsSimulator({ lang = 'fr' }) {
     if (kind === 'lep') setYieldPct('2.5')
   }
 
+  const savingsRunRef = useRef(0)
+
   async function simulate() {
     setErr('')
+    const run = ++savingsRunRef.current
     setLoading(true)
     try {
       const tok = localStorage.getItem('msim_token')
@@ -286,6 +305,7 @@ export default function SavingsSimulator({ lang = 'fr' }) {
       })
       if (!res.ok) throw new Error('HTTP ' + res.status)
       const data = await res.json()
+      if (run !== savingsRunRef.current) return
       setResult(data)
       setLastCoreSig(
         JSON.stringify({
@@ -299,9 +319,9 @@ export default function SavingsSimulator({ lang = 'fr' }) {
         })
       )
     } catch (e) {
-      setErr(e.message || 'Erreur')
+      if (run === savingsRunRef.current) setErr(e.message || 'Erreur')
     } finally {
-      setLoading(false)
+      if (run === savingsRunRef.current) setLoading(false)
     }
   }
 
@@ -324,7 +344,6 @@ export default function SavingsSimulator({ lang = 'fr' }) {
   }
 
   const r = result || {}
-  const switches = r.switches || r.Switches || []
   const warnings = r.warnings || r.Warnings || []
 
   const leverRows = [
@@ -400,9 +419,8 @@ export default function SavingsSimulator({ lang = 'fr' }) {
           <p style={{ fontSize: 12, color: 'var(--muted)', margin: '6px 0 10px', lineHeight: 1.5 }}>{t.switchesExpl}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
             {leverRows.map(([id, checked, setC]) => {
-              const gain = result ? monthlyGainForSwitch(id, result) : DEFAULT_SWITCH_PRESETS[id] ?? 0
-              const sw = switches.find((x) => (x.id || x.Id) === id)
-              const lab = sw ? label(sw) : switchStaticLabel(id, lang)
+              const gain = leverMonthlyGain(id)
+              const lab = switchStaticLabel(id, lang)
               return (
                 <label key={id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 14 }}>
                   <input type="checkbox" checked={checked} onChange={(e) => setC(e.target.checked)} style={{ marginTop: 3 }} />
@@ -440,55 +458,89 @@ export default function SavingsSimulator({ lang = 'fr' }) {
         {result && (
           <>
             {inputsStale && (
-              <div
-                style={{
-                  marginBottom: 14,
-                  padding: '12px 14px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(245,158,11,0.12)',
-                  border: '1px solid rgba(245,158,11,0.35)',
-                  color: 'var(--text)',
-                  fontSize: 13,
-                  lineHeight: 1.45,
-                }}
-              >
-                {t.staleBanner}
-              </div>
+              <div className="savings-stale-banner">{t.staleBanner}</div>
             )}
 
-            <div className="result-block">
-              <div className="result-kpi">
-                <span className="result-kpi-label">{t.indexed}</span>
-                <span className="result-kpi-value">{fmtEur(r.indexedObjectiveEuros ?? r.IndexedObjectiveEuros, lang)}</span>
+            <div className="savings-result-section">
+              <div className="savings-result-section-title">{t.secTarget}</div>
+              <div className="savings-result-card savings-result-card--muted">
+                <div className="savings-result-row">
+                  <span className="savings-result-row-label">{t.rowIndexed}</span>
+                  <span className="savings-result-row-value">{fmtEur(r.indexedObjectiveEuros ?? r.IndexedObjectiveEuros, lang)}</span>
+                </div>
               </div>
-              <div className="result-kpi result-kpi--accent">
-                <span className="result-kpi-label">{t.required}</span>
-                <span className="result-kpi-value">{fmtEur(r.requiredMonthlyEuros ?? r.RequiredMonthlyEuros, lang)}</span>
+            </div>
+
+            <div className="savings-result-section">
+              <div className="savings-result-section-title">{t.secEachMonth}</div>
+              <div className="savings-result-card savings-result-card--hero">
+                <div className="savings-result-hero-value">{fmtEur(r.requiredMonthlyEuros ?? r.RequiredMonthlyEuros, lang)}</div>
+                <div className="savings-result-hero-caption">{lang === 'fr' ? 'par mois pour atteindre la cible' : 'per month to hit the target'}</div>
+                <div className="savings-result-row savings-result-row--tight savings-result-row--hero-footer">
+                  <span className="savings-result-row-label">{t.rowDaily}</span>
+                  <span className="savings-result-row-value savings-result-row-value--sm">{fmtEur(r.dailyEquivalentEuros ?? r.DailyEquivalentEuros, lang)}</span>
+                </div>
               </div>
-              <div className="result-kpi">
-                <span className="result-kpi-label">{t.gap}</span>
-                <span className="result-kpi-value">{fmtEur(r.gapEuros ?? r.GapEuros, lang)}</span>
+            </div>
+
+            <div className="savings-result-section">
+              <div className="savings-result-section-title">{t.secVersusSavings}</div>
+              <div className="savings-result-card">
+                <div className="savings-result-row">
+                  <span className="savings-result-row-label">{t.rowRequired}</span>
+                  <span className="savings-result-row-value">{fmtEur(r.requiredMonthlyEuros ?? r.RequiredMonthlyEuros, lang)}</span>
+                </div>
+                <div className="savings-result-row">
+                  <span className="savings-result-row-label">{t.rowYouSave}</span>
+                  <span className="savings-result-row-value savings-result-row-value--deduct">
+                    {fmtEur(r.currentMonthlySavingsEuros ?? r.CurrentMonthlySavingsEuros, lang)}
+                  </span>
+                </div>
+                <div className="savings-result-divider" />
+                <div className="savings-result-row savings-result-row--emphasis">
+                  <span className="savings-result-row-label">
+                    {t.rowGapLine}
+                    <span className="savings-result-row-hint">{t.rowGapSub}</span>
+                  </span>
+                  <span className="savings-result-row-value">{fmtEur(r.gapEuros ?? r.GapEuros, lang)}</span>
+                </div>
               </div>
-              <div className="result-kpi">
-                <span className="result-kpi-label">{t.gapAfter}</span>
-                <span className="result-kpi-value" style={{ color: gapAfterLive > 0 ? 'var(--warning)' : 'var(--success)' }}>
-                  {fmtEur(gapAfterLive, lang)}
-                </span>
-                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>{t.gapFormula}</div>
+            </div>
+
+            <div className="savings-result-section">
+              <div className="savings-result-section-title">{t.secAfterLevers}</div>
+              <div className="savings-result-card">
+                <div className="savings-result-row">
+                  <span className="savings-result-row-label">{t.rowLeversApplied}</span>
+                  <span className="savings-result-row-value savings-result-row-value--deduct">−{fmtEur(selectedLeverSum, lang)}</span>
+                </div>
+                <div className="savings-result-divider" />
+                <div className="savings-result-row savings-result-row--emphasis">
+                  <span className="savings-result-row-label">
+                    {t.rowRemain}
+                    <span className="savings-result-row-hint">{t.rowRemainSub}</span>
+                  </span>
+                  <span
+                    className={`savings-result-row-value${gapAfterLive > 0 ? ' savings-result-row-value--warn' : ' savings-result-row-value--ok'}`}
+                  >
+                    {fmtEur(gapAfterLive, lang)}
+                  </span>
+                </div>
               </div>
-              <div className="result-kpi">
-                <span className="result-kpi-label">{t.daily}</span>
-                <span className="result-kpi-value">{fmtEur(r.dailyEquivalentEuros ?? r.DailyEquivalentEuros, lang)}</span>
-              </div>
-              <div className="result-kpi">
-                <span className="result-kpi-label">{t.clothing}</span>
-                <span className="result-kpi-value">
-                  {r.clothingBudgetMonthlyEuros != null || r.ClothingBudgetMonthlyEuros != null
-                    ? fmtEur(r.clothingBudgetMonthlyEuros ?? r.ClothingBudgetMonthlyEuros, lang)
-                    : '—'}
-                </span>
+            </div>
+
+            <div className="savings-result-section">
+              <div className="savings-result-section-title">{t.clothing}</div>
+              <div className="savings-result-card savings-result-card--muted">
+                <div className="savings-result-row savings-result-row--tight">
+                  <span className="savings-result-row-label" style={{ flex: 1 }}>
+                    {r.clothingBudgetMonthlyEuros != null || r.ClothingBudgetMonthlyEuros != null
+                      ? fmtEur(r.clothingBudgetMonthlyEuros ?? r.ClothingBudgetMonthlyEuros, lang)
+                      : '—'}
+                  </span>
+                </div>
                 {!(r.clothingBudgetMonthlyEuros != null || r.ClothingBudgetMonthlyEuros != null) && (
-                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>{t.clothingEmpty}</div>
+                  <p className="savings-result-footnote">{t.clothingEmpty}</p>
                 )}
               </div>
             </div>
@@ -499,9 +551,8 @@ export default function SavingsSimulator({ lang = 'fr' }) {
               </div>
               <div style={{ fontSize: 13, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
                 {leverRows.map(([id, checked]) => {
-                  const gain = monthlyGainForSwitch(id, r)
-                  const sw = switches.find((x) => (x.id || x.Id) === id)
-                  const lab = sw ? label(sw) : switchStaticLabel(id, lang)
+                  const gain = leverMonthlyGain(id)
+                  const lab = switchStaticLabel(id, lang)
                   return (
                     <div
                       key={id}

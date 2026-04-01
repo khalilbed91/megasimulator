@@ -2,7 +2,8 @@
 name: megasimulator-dev-stack
 description: >-
   MegaSimulator: run API + Vite locally, launch profile, rate limits, payroll PAS/Parts,
-  simulation history cap (10), contact API (no mailto fallback), production deploy
+  simulation history cap (10), savings API, DB without salaires/simulation_results (migration 010),
+  contact API (no mailto fallback), production deploy
   (Docker Compose, Nginx, Cloudflare), PostgreSQL via SSH tunnel + pgAdmin, admin email domain.
   Use for dev servers, prod deploy, DB access, OAuth, and ops debugging.
 ---
@@ -64,7 +65,8 @@ Sans tunnel, **127.0.0.1** = machine locale, pas le serveur.
 
 ## Données & contact
 
-- **Historique** : **10** simulations max / utilisateur (`SimulationRepository.MaxSimulationsPerUser`).
+- **Historique** : **10** simulations max / utilisateur (`SimulationRepository.MaxSimulationsPerUser`). Stockage = table **`simulations`** (payload JSON). Les tables **`salaires`** et **`simulation_results`** ont été **supprimées** (migration **010**) — pas d’API salaires historiques ; résultats paie enrichis restent dans `payload`.
+- **Épargne** : `POST /api/savings/simulate` — params section `savings` dans `docs/knowledge-base/params/2026.json` et `PayrollParams.Savings`.
 - **Contact** : `POST /api/contact` uniquement — **pas** de `mailto` de secours ; pas de domaine **`m-simulator.com`** dans l’app.
 - **Admin seed** : e-mail **`admin@megasimulateur.org`** (migration **009** + `Program.cs`).
 

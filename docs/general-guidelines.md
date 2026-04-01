@@ -1,7 +1,7 @@
 # MegaSimulator — General Guidelines & Project Status
 
 _Document interne — usage agent/équipe uniquement_  
-_Dernière mise à jour : 2026-04-02 (déploiement : `deploy/DEPLOY.md`, tunnel Postgres, suppression e-mails fictifs)_
+_Dernière mise à jour : 2026-04-01 (épargne UI/API, retrait tables `salaires` / `simulation_results`, docs & skills alignés)_
 
 ---
 
@@ -26,7 +26,7 @@ _Dernière mise à jour : 2026-04-02 (déploiement : `deploy/DEPLOY.md`, tunnel 
 |---|---|
 | ✅ Solution .NET multi-projets | Api / Application / Domain / Infrastructure — architecture clean |
 | ✅ PostgreSQL via Docker Compose | DB `simulator`, user `simu`, migrations versionnées dans `src/Infrastructure/Migrations/` |
-| ✅ Migrations 001–008 | Création tables `users`, `salaires`, `simulations`, `formulas` ; ajout credentials admin ; nullable userId sur simulations ; **007** hash BCrypt admin ; **008** `contact_requests` (formulaire contact) |
+| ✅ Migrations 001–010 | Schéma : `users`, `simulations`, `formulas`, `system_info`, … ; **007** hash BCrypt admin ; **008** `contact_requests` ; **009** e-mail admin `@megasimulateur.org` ; **010** suppression tables legacy **`salaires`** et **`simulation_results`** (inutilisées par le produit — résultats paie dans `simulations.payload`) |
 | ✅ Tool `ApplyMigrations` | `tools/ApplyMigrations/Program.cs` — applique les migrations SQL au démarrage |
 | ✅ Authentification JWT | `AuthController`, `AuthService`, `UserRepository` — login, register, change password |
 | ✅ Google OAuth (GSI) | `POST /api/auth/google/token` — ID token vérifié via `tokeninfo` (**pas de secret** pour ce flux). **Secret client** (`GOOGLE:ClientSecret` / `GOOGLE__CLIENTSECRET`) uniquement pour le flux code → `/api/auth/google/callback` |
@@ -34,8 +34,8 @@ _Dernière mise à jour : 2026-04-02 (déploiement : `deploy/DEPLOY.md`, tunnel 
 | ✅ PayrollService | Calcul complet : cotisations salariales/patronales, CSG/CRDS, Agirc-Arrco, APEC cadre, JEI, retenue à la source (PAS), net imposable |
 | ✅ PayrollParams (2026) | `src/Application/Params/PayrollParams.cs` + `docs/knowledge-base/params/2026.json` |
 | ✅ FormulaService + Repository | Gestion des formules de calcul en base, CRUD |
-| ✅ SalaireService | Historique des salaires par utilisateur |
-| ✅ SimulationService | Persistance des simulations en base avec payload et résultats ; **plafond 10 entrées / utilisateur** (purge FIFO dans `SimulationRepository` à l’ajout et au listage) |
+| ✅ SimulationService | Simulations en `simulations` (payload JSON) ; paie : fusion `results` dans le payload ; **plafond 10 / utilisateur** (purge FIFO dans `SimulationRepository`) — plus de table `simulation_results` |
+| ✅ **SavingsService** + **SavingsController** | `POST /api/savings/simulate` ; params `savings` dans `2026.json` / `PayrollParams` ; persistance `type='savings'` si utilisateur connecté |
 | ✅ **RetirementService** | `src/Application/Services/RetirementService.cs` — calcul CNAV + Agirc-Arrco + décote/surcote + retenue sociale 9.1% ; persiste en `simulations` table avec `type='retirement'` |
 | ✅ **IRetirementService** | `src/Application/Interfaces/IRetirementService.cs` — interface avec 5 méthodes |
 | ✅ **RetirementController** | `POST /api/retirement/simulate` — extraction userId depuis JWT, même pattern que PayrollController |
@@ -43,7 +43,7 @@ _Dernière mise à jour : 2026-04-02 (déploiement : `deploy/DEPLOY.md`, tunnel 
 | ✅ **ContactService** | `POST /api/contact` — persistance `contact_requests`, JWT optionnel pour lier `userid` (pas de fallback `mailto` ; pas de domaine `m-simulator.com`) |
 | ✅ **Rate limiting** | `Program.cs` : politiques `contact` (5/min), `auth` (10/min), `simulate` (15/min) — attributs sur auth, contact, simulateurs |
 | ✅ Seed admin | Migration 007 : hash BCrypt correct pour `admin/111aaa**` |
-| ✅ Tests unitaires | `PayrollServiceTests`, `SalaireServiceTests`, `SimulationServiceTests`, `FormulaServiceTests`, `AuthServiceTests`, `RetirementServiceTests`, **`LoanServiceTests`** |
+| ✅ Tests unitaires | `PayrollServiceTests`, `SimulationServiceTests`, `FormulaServiceTests`, `AuthServiceTests`, `RetirementServiceTests`, `LoanServiceTests` |
 | ✅ Tests d'intégration | Dossier `tests/MegaSimulator.Tests/Integration/` — base posée |
 | ✅ **Déploiement VPS** | `docker-compose.deploy.yml` + `deploy/DEPLOY.md` (Nginx, Cloudflare, tunnel SSH Postgres, `git reset --hard` sur le serveur si besoin) |
 
@@ -100,7 +100,7 @@ _Dernière mise à jour : 2026-04-02 (déploiement : `deploy/DEPLOY.md`, tunnel 
 | ✅ `SimulationHistory.jsx` | Page Historique dans la sidebar, appelle `GET /api/simulation/mine` |
 | ✅ `GET /api/simulation/mine` | Endpoint sécurisé `[Authorize]`, userId depuis JWT (pas URL) — empêche IDOR |
 | ✅ Suppression simulation | `DELETE /api/simulation/{id}` avec vérification owner avant suppression |
-| ✅ Cartes historique | **Paie** : brut→net, retenue, parts ; **Retraite** : année naissance, SAM, pension nette mensuelle, etc. ; autres `type` → ligne générique |
+| ✅ Cartes historique | **Paie** : brut→net, retenue, parts ; **Retraite** : année naissance, SAM, pension nette mensuelle, etc. ; **Épargne** : objectif, effort mensuel ; autres `type` → ligne générique |
 | ✅ Header Authorization | `PayrollSimulator.jsx` envoie désormais le token à chaque simulation |
 | ✅ `UseAuthentication()` ajouté | **Bug critique corrigé** : le middleware JWT n'était pas dans le pipeline → userId toujours null |
 | ✅ Simulations liées à l'user | Toutes nouvelles simulations sauvegardées avec `userid` (plus de NULL) |
@@ -132,6 +132,16 @@ _Dernière mise à jour : 2026-04-02 (déploiement : `deploy/DEPLOY.md`, tunnel 
 | ✅ Warning V1 | Message d'avertissement régimes spéciaux non couverts |
 | ✅ Home.jsx wired | Tab `retirement` renderise `<RetirementSimulator>` — plus de "coming soon" |
 | ✅ 23 xUnit tests | `GetTrimestresRequis` (8 théories), `GetAgeLegal` (4), décote (3), surcote (2), simulate (6) — tous verts |
+| ✅ Anti-race Calculer | `RetirementSimulator` : compteur de requête + `normalizeRetirementResponse` (camelCase / PascalCase) pour éviter qu’une réponse lente écrase la dernière saisie |
+
+### 2.8 SavingsSimulator — MVP ✅
+
+| Fait | Description |
+|---|---|
+| ✅ Tab **Épargne** | `Home.jsx` — pas de badge « Bientôt » ; route / SEO alignés avec les autres simulateurs |
+| ✅ Leviers indicatifs | Montants affichés depuis presets front (`DEFAULT_SWITCH_PRESETS`) pour cohérence avec la copie produit (ex. Navigo→vélo **~60 €/mois**) même si l’API a des params en retard |
+| ✅ Résultats | Sections lisibles : objectif indexé, effort mensuel, écart vs épargne actuelle, écart après leviers |
+| ✅ `SavingsService` | Formules objectif indexé, versement requis, écart ; labels leviers côté API + fichier params |
 
 ---
 
@@ -159,7 +169,7 @@ _Dernière mise à jour : 2026-04-02 (déploiement : `deploy/DEPLOY.md`, tunnel 
 
 | # | Tâche | Contexte |
 |---|---|---|
-| L1 | **Simulateur épargne** | Règles dans `docs/knowledge-base/savings.md` |
+| L1 | **Simulateur épargne** | ✅ MVP livré (`SavingsSimulator.jsx`, API) — règles / paramètres : `docs/knowledge-base/savings.md` + `params/2026.json` → affinages UX ou formules si besoin |
 | L2 | **Simulateur assurance** | Règles dans `docs/knowledge-base/insurance.md` |
 | L3 | **Dashboard analytics admin** | Vue admin : simulations, utilisateurs, distributions |
 | L4 | **Google Cloud — origines JS** | `http://localhost:5173` et si besoin `http://127.0.0.1:5173` ; client type **Application Web** ; voir README section dépannage `401 invalid_client` |
@@ -174,7 +184,7 @@ _Dernière mise à jour : 2026-04-02 (déploiement : `deploy/DEPLOY.md`, tunnel 
 - Interfaces dans `Application/Interfaces/` et `Domain/Interfaces/`
 - DTOs dans `Application/DTOs/`
 - Pas de logique métier dans les contrôleurs : déléguer aux services
-- Migrations SQL numérotées (`001_...sql`) appliquées par `tools/ApplyMigrations`
+- Migrations SQL numérotées (`001_...sql`, …) dans `src/Infrastructure/Migrations/` — rejouées au **démarrage API** (`Program.cs` boucle SQL + `MigrationRunner`) et via `tools/ApplyMigrations` si utilisé
 
 ### 4.2 Frontend (React)
 
@@ -192,12 +202,13 @@ _Dernière mise à jour : 2026-04-02 (déploiement : `deploy/DEPLOY.md`, tunnel 
 - Messages de commit : format `[domaine]: description courte` (ex: `Frontend: améliore PayrollSimulator`)
 - Toujours tester le build avant de pousser
 
-### 4.4 Agent / IA (recherche web)
+### 4.4 Agent / IA — conduite sur ce dépôt
 
-- L’agent **peut** utiliser la recherche web ou la consultation d’URLs pour des informations à jour (réglementation, versions d’API, correctifs de sécurité, etc.).
-- **Avant** de lancer une recherche web ou un fetch réseau à cette fin, l’agent doit **demander l’accord explicite** à l’utilisateur (courte question du type : « Puis-je chercher sur le web pour … ? »).
-- Si l’utilisateur refuse ou ne répond pas, s’en tenir au dépôt, à la doc du projet et aux connaissances déjà disponibles.
-- Voir aussi la skill projet : `.cursor/skills/web-search-ask-first/SKILL.md`.
+- **Lire les skills Cursor pertinentes** avant ops / déploiement / DB : `.cursor/skills/megasimulator-dev-stack/SKILL.md` (ports 5000/5173, proxy, deploy, tunnel Postgres, quotas, PAS/Parts).
+- **Recherche web / fetch URL** : l’agent **peut** les utiliser pour infos à jour (réglementation, paquets, etc.) mais **doit demander l’accord explicite** à l’utilisateur **avant** (voir `.cursor/skills/web-search-ask-first/SKILL.md`).
+- Si l’utilisateur refuse ou ne répond pas : s’en tenir au dépôt, à `docs/general-guidelines.md`, `deploy/DEPLOY.md` et au code.
+- **Périmètre des changements** : modifier uniquement ce qui est demandé ; pas de refactor « bonus » ni fichiers markdown non sollicités.
+- **Qualité** : `dotnet build` / `dotnet test` (projet tests) et `npm run build` (frontend) avant push quand le changement touche le code ; migration SQL nouvelle = fichier `0NN_*.sql` dans `Migrations/`.
 
 ---
 
@@ -250,6 +261,7 @@ Prérequis : PostgreSQL accessible avec la chaîne de connexion du profil `Local
 | 2026-03-29 | Google OAuth — passage en GSI | L'ancien flow OAuth redirect nécessitait un client secret. Passage au flow Google Identity Services (GSI) : le frontend charge `accounts.google.com/gsi/client`, obtient un ID token signé par Google, et le soumet à `POST /api/auth/google/token`. Le backend valide via `tokeninfo` (pas de secret). Nouveau : `VerifyIdTokenAsync` dans `GoogleAuthClient`, endpoint `POST /api/auth/google/token` dans `AuthController`. |
 | 2026-03-30 | Payroll test vs PAS | `Simulate_PersistsSimulationAndReturnsResponse` attendait 2349 € sans retenue ; défaut `Parts = 1` déclenchait le barème PAS sur le net → ~2172 €. Correction test : `Parts = 0` pour isoler le chemin brut→net simple. |
 | 2026-03-30 | Contact + rate limit + UserController | Formulaire contact persisté (`008_add_contact_requests`), quotas API, endpoints utilisateur réservés au propriétaire ou admin. |
+| 2026-04-01 | DB legacy + épargne UI | Migration **010** : drop `salaires`, `simulation_results` ; retrait API Salaire* et persistance redondante ; simulateur épargne (leviers ~60 € Navigo→vélo, mise en page résultats) ; retraite : garde anti-course requêtes + normalisation JSON. |
 
 ---
 

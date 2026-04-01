@@ -87,8 +87,8 @@ namespace MegaSimulator.Application.Services
                 new()
                 {
                     Id = "navigo_to_bike",
-                    LabelFr = "Transport : forfait Navigo → vélo / Liberté+ (gain indicatif)",
-                    LabelEn = "Transit pass → bike / lighter pass (indicative gain)",
+                    LabelFr = "Transport : Navigo (~90 €) → vélo loué (~30 €) → gain indicatif ~60 €/mois",
+                    LabelEn = "Transit: pass (~€90) → bike rental (~€30) → indicative gain ~€60/mo",
                     MonthlyGainEuros = (decimal)presets.NavigoToBike,
                     Selected = req.SwitchNavigoToBike
                 },

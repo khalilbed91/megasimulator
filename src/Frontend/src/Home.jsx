@@ -142,8 +142,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
           <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h5l2 5 4-10 2 5h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
         )}
         {navItem('savings', tr.navSavings,
-          <svg viewBox="0 0 24 24" fill="none"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-          lang === 'fr' ? 'Bientôt' : 'Soon'
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         )}
 
         <div className="nav-divider" />

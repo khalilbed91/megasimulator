@@ -31,4 +31,4 @@ You **may** use internet search (`web_search`) or fetch public URLs (`web_fetch`
 
 ## Alignment
 
-This skill mirrors **§ 4.4** in `docs/general-guidelines.md`.
+Même règle que **§ 4.4** (agent / recherche web) dans `docs/general-guidelines.md` — à lire avec **§ 4.4** entier (skills `megasimulator-dev-stack`, périmètre commits, builds).

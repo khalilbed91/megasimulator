@@ -617,6 +617,135 @@ body.app-dark .bg-dark            { background: #0f172a !important; }
 .history-badge--savings    { background: rgba(16,185,129,0.14); color: #34d399; }
 .history-badge--other      { background: rgba(148,163,184,0.12); color: var(--muted); }
 
+/* Savings simulator — résultats lisibles (labels / valeurs séparés) */
+.savings-stale-banner {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.savings-result-section {
+  margin-bottom: 18px;
+}
+.savings-result-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+.savings-result-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--sh-sm);
+}
+.savings-result-card--muted {
+  background: var(--card-el);
+}
+.savings-result-card--hero {
+  padding: 18px 18px 14px;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(14, 165, 164, 0.15);
+}
+.savings-result-hero-value {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+.savings-result-hero-caption {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.savings-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.savings-result-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.savings-result-row:first-child {
+  padding-top: 0;
+}
+.savings-result-row--tight {
+  padding: 8px 0 0;
+  border-bottom: none;
+}
+.savings-result-row--hero-footer {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.savings-result-row--emphasis {
+  padding-top: 12px;
+  margin-top: 2px;
+  border-bottom: none;
+  border-top: 1px dashed var(--border);
+}
+.savings-result-row-label {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.35;
+  max-width: 62%;
+}
+.savings-result-row-hint {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 3px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.savings-result-row-value {
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--text);
+}
+.savings-result-row-value--sm {
+  font-size: 15px;
+  font-weight: 700;
+}
+.savings-result-row-value--deduct {
+  color: var(--muted);
+  font-weight: 700;
+}
+.savings-result-row-value--warn {
+  color: var(--warning);
+}
+.savings-result-row-value--ok {
+  color: var(--success);
+}
+.savings-result-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+.savings-result-footnote {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 /* Account / Contact panels (same look as simulators) */
 .page-panel {
   max-width: 720px;

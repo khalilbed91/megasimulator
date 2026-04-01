@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 
 /* ─── Translations ─────────────────────────────────────────── */
 const T = {
@@ -167,6 +167,48 @@ function parseNum(s) {
   return parseFloat(String(s).replace(/\s/g, '').replace(',', '.'))
 }
 
+/** Fusionne champs camelCase et PascalCase (vieux clients / proxies) pour un seul objet stable. */
+function normalizeRetirementResponse(raw) {
+  if (!raw || typeof raw !== 'object') return raw
+  const p = (camel, pascal) => {
+    const v = raw[camel]
+    if (v !== undefined && v !== null) return v
+    return raw[pascal]
+  }
+  return {
+    ...raw,
+    pensionBaseAnnuelle: p('pensionBaseAnnuelle', 'PensionBaseAnnuelle'),
+    pensionComplementaireAnnuelle: p('pensionComplementaireAnnuelle', 'PensionComplementaireAnnuelle'),
+    pensionBruteTotaleAnnuelle: p('pensionBruteTotaleAnnuelle', 'PensionBruteTotaleAnnuelle'),
+    pensionNetteAnnuelle: p('pensionNetteAnnuelle', 'PensionNetteAnnuelle'),
+    pensionNetteMensuelle: p('pensionNetteMensuelle', 'PensionNetteMensuelle'),
+    tauxRemplacement: p('tauxRemplacement', 'TauxRemplacement'),
+    trimestresValides: p('trimestresValides', 'TrimestresValides'),
+    trimestresRequis: p('trimestresRequis', 'TrimestresRequis'),
+    trimestresManquants: p('trimestresManquants', 'TrimestresManquants'),
+    decotePct: p('decotePct', 'DecotePct'),
+    surcotePct: p('surcotePct', 'SurcotePct'),
+    sam: p('sam', 'Sam'),
+    valeurPoint: p('valeurPoint', 'ValeurPoint'),
+    ageDepart: p('ageDepart', 'AgeDepart'),
+    anneeDepartRetraite: p('anneeDepartRetraite', 'AnneeDepartRetraite'),
+    ageLegalPivot: p('ageLegalPivot', 'AgeLegalPivot'),
+    pensionNetteMensuelleTauxPleinTrimestres: p(
+      'pensionNetteMensuelleTauxPleinTrimestres',
+      'PensionNetteMensuelleTauxPleinTrimestres'
+    ),
+    pensionNetteAnnuelleTauxPleinTrimestres: p(
+      'pensionNetteAnnuelleTauxPleinTrimestres',
+      'PensionNetteAnnuelleTauxPleinTrimestres'
+    ),
+    potentielMensuelVersTauxPlein: p('potentielMensuelVersTauxPlein', 'PotentielMensuelVersTauxPlein'),
+    anneesIndicativesPourTauxPlein: p('anneesIndicativesPourTauxPlein', 'AnneesIndicativesPourTauxPlein'),
+    trimestresAdditionnelsPourObjectif: p('trimestresAdditionnelsPourObjectif', 'TrimestresAdditionnelsPourObjectif'),
+    anneesIndicativesPourObjectif: p('anneesIndicativesPourObjectif', 'AnneesIndicativesPourObjectif'),
+    objectifAtteignable: p('objectifAtteignable', 'ObjectifAtteignable'),
+  }
+}
+
 /* ─── KPI Card ─────────────────────────────────────────────── */
 function KpiCard({ label, value, unit, color, accent }) {
   return (
@@ -212,6 +254,7 @@ export default function RetirementSimulator({ lang = 'fr' }) {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [apiError, setApiError] = useState('')
+  const retirementRunRef = useRef(0)
 
   function handleAnneeChange(val) {
     setAnneeNaissance(val)
@@ -257,6 +300,7 @@ export default function RetirementSimulator({ lang = 'fr' }) {
     const { trim } = resolveTrimestresForSubmit()
     if (trimUsed != null) setTrimValides(String(trimUsed))
 
+    const run = ++retirementRunRef.current
     setLoading(true)
     setApiError('')
     try {
@@ -286,11 +330,12 @@ export default function RetirementSimulator({ lang = 'fr' }) {
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      setResult(data)
+      if (run !== retirementRunRef.current) return
+      setResult(normalizeRetirementResponse(data))
     } catch (e) {
-      setApiError(e.message || 'Erreur inattendue')
+      if (run === retirementRunRef.current) setApiError(e.message || 'Erreur inattendue')
     } finally {
-      setLoading(false)
+      if (run === retirementRunRef.current) setLoading(false)
     }
   }
 

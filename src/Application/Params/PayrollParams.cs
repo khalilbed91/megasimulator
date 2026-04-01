@@ -47,7 +47,7 @@ namespace MegaSimulator.Application.Params
     public class SwitchPresetsEurMonthly
     {
         [JsonPropertyName("navigo_to_bike")]
-        public double NavigoToBike { get; set; } = 130;
+        public double NavigoToBike { get; set; } = 60;
 
         [JsonPropertyName("telecom_optimize")]
         public double TelecomOptimize { get; set; } = 30;
