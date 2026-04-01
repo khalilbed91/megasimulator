@@ -1,4 +1,4 @@
-/** French SEO-oriented paths (primary). Sync with App.jsx redirects and public/sitemap.xml. */
+/** French SEO-oriented paths (primary). Sync with App.jsx redirects and vite sitemap generation. */
 
 export const PATH = {
   payroll: '/simulateur-paie-brut-net',
@@ -11,6 +11,20 @@ export const PATH = {
   legalMentions: '/mentions-legales',
   privacy: '/politique-de-confidentialite',
 }
+
+/**
+ * Public URLs for sitemap.xml / sitemap.txt (indexable). Omit login-only pages (historique, mon-compte).
+ */
+export const SITEMAP_PATHS = [
+  '/',
+  PATH.payroll,
+  PATH.retirement,
+  PATH.loans,
+  PATH.savings,
+  PATH.contact,
+  PATH.legalMentions,
+  PATH.privacy,
+]
 
 export const TAB_TO_PATH = {
   payroll: PATH.payroll,
