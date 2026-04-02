@@ -10,7 +10,8 @@ _Dernière mise à jour : 2026-04-02_
 
 - **Fichier** : `src/Frontend/public/brand-mark.png` (PNG **transparent**, monogramme **m** + **$**, dégradé violet → magenta).
 - **Composant React** : `src/Frontend/src/components/Logo.jsx` — prop `size` = **hauteur** en px, largeur **auto** (logo horizontal).
-- **Favicon / Apple touch / OG** : `index.html` et `SeoHead.jsx` pointent vers `/brand-mark.png` (query `?v=` pour cache-bust au besoin).
+- **Favicon (résultats Google)** : fichiers **carrés** dans `public/` — `favicon-48.png` (48×48), `favicon.ico`, `apple-touch-icon.png` (192×192), générés à partir du logo pour respecter les [consignes Google](https://developers.google.com/search/docs/appearance/favicon-in-search) (multiples de 48 px, **carré**). Référencés dans `index.html` (`?v=` pour cache-bust).
+- **OG / Twitter / partage** : `SeoHead.jsx` peut continuer d’utiliser `brand-mark.png` (format large acceptable pour les aperçus sociaux).
 - **Ne pas** forcer un fond blanc derrière le mark ; **ne pas** appliquer de `border-radius` qui rogne le PNG (`styles.css` : `.logo-mark` sans arrondi).
 - **Tailles d’usage** : barre latérale simulateurs ~46px de haut ; panneau auth (login/signup) ~112px de haut, logo **centré au-dessus** du titre (voir `login.css` `.auth-brand-intro`).
 
