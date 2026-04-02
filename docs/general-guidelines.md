@@ -1,7 +1,7 @@
 # MegaSimulator — General Guidelines & Project Status
 
 _Document interne — usage agent/équipe uniquement_  
-_Dernière mise à jour : 2026-04-01 (épargne UI/API, retrait tables `salaires` / `simulation_results`, docs & skills alignés)_
+_Dernière mise à jour : 2026-04-02 (marque violet/magenta, thème clair, Historique/Compte invité, docs & skill alignés)_
 
 ---
 
@@ -63,15 +63,15 @@ _Dernière mise à jour : 2026-04-01 (épargne UI/API, retrait tables `salaires`
 
 | Fait | Description |
 |---|---|
-| ✅ Design system complet | CSS variables, dark mode, sidebar 230px, top-bar, KPI cards, breakdown bar, tab bar |
-| ✅ Dark mode | Toggle lune/soleil, persisté en `localStorage`, toutes les variables surchargées |
-| ✅ Internationalisation FR/EN | Objet `T` dans chaque composant, prop `lang` depuis App.jsx |
-| ✅ Sidebar navigation | Sections « Simulations » et « Utilisateur », indicateur actif, info utilisateur + déconnexion |
-| ✅ Login split-screen | Panneau marque gauche + panneau formulaire droit, responsive (masqué < 860px) |
-| ✅ Signup | Même pattern que Login |
-| ✅ Account / Contact | `.page-panel` + `btn-primary-custom` / `btn-ghost` ; invité → CTA connexion / inscription ; contact → **`POST /api/contact`** (DB) |
-| ✅ Mode invité | Accueil direct sur simulateurs ; pas d’Historique / Compte dans la sidebar sans JWT |
-| ✅ Logo centralisé | `Logo.jsx` — composant partagé |
+| ✅ Design system | Tokens CSS **clair uniquement** (lavande / violet / magenta), sidebar 230px, top-bar, KPI, breakdown, tab bar — **plus** de thème sombre (`msim_dark` retiré) |
+| ✅ Internationalisation FR/EN | Objet `T` dans chaque composant, prop `lang` depuis `App.jsx` ; barre de contrôle **langue uniquement** |
+| ✅ Sidebar navigation | **Historique**, **Mon compte**, **Contact** visibles pour **tous** ; invité → **Se connecter** ; connecté → bloc profil + déconnexion |
+| ✅ Login / Signup | Split-screen **clair** ; `Logo` **brand-mark.png** (transparent), centré au-dessus du titre sur le panneau marque |
+| ✅ Account / Contact / Historique invité | `.page-panel-card` ; message **« Vous n’êtes pas connecté. »** + **Se connecter** / **Créer un compte** — **même UX** pour **Mon compte** et **Historique** |
+| ✅ JWT stocké | `localStorage` `msim_token` avec **trim** et rejet des chaînes vides (`readStoredToken` dans `App.jsx`) |
+| ✅ Mode invité | Simulateurs + contact + vues Historique/Compte en **gate** (pas de redirection forcée vers la paie) |
+| ✅ Logo & favicon | `public/brand-mark.png`, `Logo.jsx`, `SeoHead` / `index.html` |
+| ✅ Footer site | Une ligne © + liens légaux ; layout sticky en bas sur pages courtes |
 
 ### 2.4 PayrollSimulator — composant avancé
 
@@ -87,7 +87,7 @@ _Dernière mise à jour : 2026-04-01 (épargne UI/API, retrait tables `salaires`
 | ✅ Avantages en nature | Presets chips : ticket resto, télétravail, téléphone, transports, prime |
 | ✅ Résultats KPI | Net mensuel/annuel, cotisations, coût employeur, retenue, frais portage |
 | ✅ Breakdown bar | 3 segments animés : Net / Cotisations / Charges patronales |
-| ✅ Vue technique JSON | Visible uniquement pour les admins (décode le rôle du JWT) |
+| ✅ Pas de bloc JSON « technique » admin | Ancienne vue debug retirée du simulateur paie |
 | ✅ Parts fiscales (int→decimal) | Bug crash corrigé : `Parts` était `int`, valeurs 1.5/2.5 causaient 400 |
 | ✅ PAS quotient familial | `ComputePasTaux()` barème 2026 basé sur `netAnnuel / parts` |
 | ✅ Revenus annexes calcul | `brut = req.Brut + req.RevenusAnnexes + req.Primes` dans `PayrollService` |
@@ -262,6 +262,7 @@ Prérequis : PostgreSQL accessible avec la chaîne de connexion du profil `Local
 | 2026-03-30 | Payroll test vs PAS | `Simulate_PersistsSimulationAndReturnsResponse` attendait 2349 € sans retenue ; défaut `Parts = 1` déclenchait le barème PAS sur le net → ~2172 €. Correction test : `Parts = 0` pour isoler le chemin brut→net simple. |
 | 2026-03-30 | Contact + rate limit + UserController | Formulaire contact persisté (`008_add_contact_requests`), quotas API, endpoints utilisateur réservés au propriétaire ou admin. |
 | 2026-04-01 | DB legacy + épargne UI | Migration **010** : drop `salaires`, `simulation_results` ; retrait API Salaire* et persistance redondante ; simulateur épargne (leviers ~60 € Navigo→vélo, mise en page résultats) ; retraite : garde anti-course requêtes + normalisation JSON. |
+| 2026-04-02 | Marque & UX | Monogramme PNG transparent ; palette violet→magenta ; thème clair unique ; formulaires (focus, 44px) ; Historique invité = gate identique à Mon compte ; docs `brand-guidelines` / `frontend-guidelines` mises à jour. |
 
 ---
 

@@ -103,12 +103,14 @@ export default function Login({ onLoginSuccess, switchToSignup, onDismiss, embed
     <div className={embedded ? 'auth-page auth-page--embedded' : 'auth-page'}>
       {!embedded && (
       <div className="auth-brand">
-        <div className="auth-brand-logo">
-          <Logo size={52} />
-        </div>
-        <div className="auth-brand-title">Mega simulateur</div>
-        <div className="auth-brand-subtitle">
-          Simulez votre salaire net, estimez vos charges et planifiez votre retraite en quelques secondes.
+        <div className="auth-brand-intro">
+          <div className="auth-brand-logo">
+            <Logo size={112} />
+          </div>
+          <div className="auth-brand-title">Mega simulateur</div>
+          <div className="auth-brand-subtitle">
+            Simulez votre salaire net, estimez vos charges et planifiez votre retraite en quelques secondes.
+          </div>
         </div>
 
         <div className="auth-brand-stats">
@@ -152,7 +154,6 @@ export default function Login({ onLoginSuccess, switchToSignup, onDismiss, embed
       <div className="auth-form-panel">
         <div className="auth-form-card">
           <div className="auth-form-header">
-            <Logo size={44} />
             <div className="auth-form-title">Connexion</div>
             <div className="auth-form-desc">Connectez-vous pour accéder à vos simulations</div>
           </div>

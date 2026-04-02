@@ -3,7 +3,8 @@ name: megasimulator-dev-stack
 description: >-
   MegaSimulator: run API + Vite locally, launch profile, rate limits, payroll PAS/Parts,
   simulation history cap (10), savings API, DB without salaires/simulation_results (migration 010),
-  contact API (no mailto fallback), production deploy
+  contact API (no mailto fallback), UI/UX brand (light-only purple–magenta, brand-mark.png, Logo sizing,
+  Historique/Mon compte guest gate same as Account, JWT trim readStoredToken), production deploy
   (Docker Compose, Nginx, Cloudflare), PostgreSQL via SSH tunnel + pgAdmin, admin email domain.
   Use for dev servers, prod deploy, DB access, OAuth, and ops debugging.
 ---
@@ -79,6 +80,13 @@ Sans tunnel, **127.0.0.1** = machine locale, pas le serveur.
 
 - `PayrollRequestDto.Parts` **défaut = 1**. Si `RetenuePct` = 0 et `Parts` > 0, le **PAS** s’applique sur le net.
 - Pour un net sans PAS : **`Parts = 0`** ou retenue explicite.
+
+## UI / marque (frontend)
+
+- **Thème** : **clair uniquement** — pas de dark mode (`styles.css` `:root`, `login.css`).
+- **Logo** : `src/Frontend/public/brand-mark.png` (PNG transparent), composant **`Logo.jsx`** (`size` = hauteur px). Favicon / OG : même fichier (`?v=` cache-bust si besoin).
+- **Invité** : liens **Historique** et **Mon compte** toujours dans la sidebar ; écran **« Vous n’êtes pas connecté. »** + Se connecter / Créer un compte (comme Mon compte).
+- **JWT** : trim + pas de token vide (`App.jsx` `readStoredToken` / `onLoginSuccess`).
 
 ## SEO (frontend)
 

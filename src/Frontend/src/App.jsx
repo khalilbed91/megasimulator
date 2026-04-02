@@ -7,19 +7,44 @@ import CookieBanner from './legal/CookieBanner'
 import { PATH } from './seo/paths'
 import './styles.css'
 
+/** Non-empty trimmed token, or null (clears junk whitespace in storage). */
+function readStoredToken() {
+  try {
+    const raw = localStorage.getItem('msim_token')
+    if (raw == null) return null
+    const s = String(raw).trim()
+    if (!s) {
+      localStorage.removeItem('msim_token')
+      return null
+    }
+    return s
+  } catch {
+    return null
+  }
+}
+
 function AppShell() {
-  const [token, setToken] = useState(() => localStorage.getItem('msim_token'))
+  const [token, setToken] = useState(() => readStoredToken())
   const [authScreen, setAuthScreen] = useState(null)
-  const [dark, setDark] = useState(localStorage.getItem('msim_dark') === '1')
   const [lang, setLang] = useState(localStorage.getItem('msim_lang') || 'fr')
+
+  useEffect(() => {
+    document.body.classList.remove('app-dark')
+    try {
+      localStorage.removeItem('msim_dark')
+    } catch { /* ignore */ }
+  }, [])
 
   useEffect(() => {
     try {
       const qp = new URLSearchParams(window.location.search)
       const t = qp.get('token')
       if (t) {
-        localStorage.setItem('msim_token', t)
-        setToken(t)
+        const clean = String(t).trim()
+        if (clean) {
+          localStorage.setItem('msim_token', clean)
+          setToken(clean)
+        }
         setAuthScreen(null)
         const url = new URL(window.location.href)
         url.searchParams.delete('token')
@@ -29,17 +54,13 @@ function AppShell() {
   }, [])
 
   useEffect(() => {
-    document.body.classList.toggle('app-dark', dark)
-    localStorage.setItem('msim_dark', dark ? '1' : '0')
-  }, [dark])
-
-  useEffect(() => {
     localStorage.setItem('msim_lang', lang)
   }, [lang])
 
   const onLoginSuccess = (t) => {
-    if (t) localStorage.setItem('msim_token', t)
-    setToken(t || localStorage.getItem('msim_token'))
+    const fromArg = t != null && String(t).trim() !== '' ? String(t).trim() : null
+    if (fromArg) localStorage.setItem('msim_token', fromArg)
+    setToken(fromArg ?? readStoredToken())
     setAuthScreen(null)
   }
 
@@ -50,35 +71,6 @@ function AppShell() {
 
   const Controls = (
     <div className="controls-bar">
-      <button
-        className="icon-ctrl"
-        onClick={() => setDark((d) => !d)}
-        title={dark ? 'Light mode' : 'Dark mode'}
-        aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-      >
-        {dark ? (
-          <svg viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
-            <path
-              d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        ) : (
-          <svg viewBox="0 0 24 24" fill="none">
-            <path
-              d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-      </button>
-
       <button
         className="icon-ctrl"
         title="Français"

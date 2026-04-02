@@ -52,9 +52,6 @@
   border-top: 1px solid var(--border, rgba(0, 0, 0, 0.08));
   box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.12);
 }
-.app-dark .cookie-banner {
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
-}
 .cookie-banner-inner {
   max-width: 960px;
   margin: 0 auto;

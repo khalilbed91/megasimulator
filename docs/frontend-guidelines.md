@@ -1,6 +1,6 @@
 # Frontend — Guidelines techniques
 
-_Dernière mise à jour : 2026-04-02 (légal, déploiement : voir `deploy/DEPLOY.md`)_
+_Dernière mise à jour : 2026-04-02 — marque violet/magenta, thème clair, Historique invité, footer_
 
 ---
 
@@ -12,7 +12,7 @@ _Dernière mise à jour : 2026-04-02 (légal, déploiement : voir `deploy/DEPLOY
 | Vite | 5.4 | Dev server port 5173, proxy `/api` → `http://localhost:5000` |
 | Bootstrap CSS | 5.3.2 (CDN) | CSS uniquement — pas de JS Bootstrap |
 | Bootstrap Icons | 1.10.5 (CDN) | Utilisé pour quelques icônes statiques |
-| Inter | Google Fonts | Police principale UI |
+| Plus Jakarta Sans | `index.html` (Google Fonts) | Police principale UI ; repli Inter / system-ui |
 
 ---
 
@@ -27,7 +27,7 @@ src/Frontend/
   src/
     main.jsx                  ← HelmetProvider + BrowserRouter
     App.jsx                   ← Routes (redirections SEO alias) + AppShell (auth overlay)
-    Home.jsx                  ← Shell synchronisé sur useLocation ; lien logo → /simulateur-paie-brut-net
+    Home.jsx                  ← Shell synchronisé sur useLocation ; lien logo → paie (`PATH.payroll`)
     seo/
       paths.js                ← Chemins canoniques FR
       SeoHead.jsx             ← Helmet par onglet
@@ -58,8 +58,8 @@ Chemins **canoniques** (partage et balises `canonical`) — alignés sur `src/se
 | `/simulation-credit-pret` | Prêts |
 | `/simulation-epargne` | Épargne (placeholder) |
 | `/contact` | Contact |
-| `/historique` | Historique (connecté) |
-| `/mon-compte` | Compte (connecté) |
+| `/historique` | Historique (**invité** : carte « non connecté » ; **connecté** : liste) |
+| `/mon-compte` | Compte (**même gate** invité que Historique) |
 | `/mentions-legales` | Mentions légales |
 | `/politique-de-confidentialite` | Politique de confidentialité (RGPD) |
 
@@ -70,6 +70,21 @@ Chemins **canoniques** (partage et balises `canonical`) — alignés sur `src/se
 **Build prod** : définir `VITE_PUBLIC_SITE_URL` (origine publique, sans `/` final) pour générer `dist/sitemap.xml` et `dist/robots.txt`. Défaut : `http://localhost:5173`.
 
 **Limite** : application React CSR — l’indexation s’appuie sur l’exécution JS par Google et sur titres/métas/canonical ; pour du HTML pré-rendu serveur (SSR), il faudrait une évolution d’infra (hors scope actuel).
+
+### 2.2 Schéma — routage & API (dev / prod)
+
+```mermaid
+flowchart TB
+  subgraph browser [Navigateur]
+    SPA[React SPA / Vite ou Nginx :8080]
+  end
+  SPA -->|"/api/*"| Proxy[Proxy Nginx conteneur frontend]
+  Proxy --> API1[api1:80]
+  Proxy --> API2[api2:80]
+  SPA -->|fichiers statiques| Dist[dist/]
+```
+
+En **local**, Vite (`5173`) proxy `/api` → `localhost:5000` (`vite.config.js`). En **prod**, le **Nginx du conteneur frontend** (`src/Frontend/nginx.conf`) fait `proxy_pass` vers `api1` / `api2` ; le Nginx **hôte** (`deploy/megasimulateur.nginx.conf`) envoie tout le trafic vers `:8080`.
 
 ---
 
@@ -83,12 +98,12 @@ Se référer à `docs/brand-guidelines.md` pour la palette, tokens et règles vi
 
 ## 4. App.jsx — État global et auth
 
-- **Pas d’écran login obligatoire** : `Home` est toujours rendu ; les invités utilisent paie / retraite / contact.
-- États : `token` (JWT ou null), `authScreen` (`null` \| `'login'` \| `'signup'`), `dark`, `lang`.
-- Persistance : `localStorage` — `msim_token`, `msim_dark`, `msim_lang`.
-- Clic « Se connecter » → `setAuthScreen('login')` : overlay plein écran (`.auth-fullscreen-overlay`) avec `Login` / lien « Retour aux simulations » (`onDismiss`).
-- Query `?token=` (redirect OAuth Google) : stockage JWT + fermeture overlay (inchangé).
-- `controls-bar` (fixed top-right) : dark mode + drapeaux FR/EN.
+- **Pas d’écran login obligatoire** : `Home` est toujours rendu ; les invités utilisent simulateurs, **Contact**, **Historique** et **Mon compte** (derniers = cartes « non connecté »).
+- États : `token` (JWT **normalisé** : trim + chaîne vide → `null`, via `readStoredToken()` / `onLoginSuccess`), `authScreen` (`null` \| `'login'` \| `'signup'`), `lang`.
+- Persistance : `localStorage` — `msim_token`, `msim_lang` (**pas** de thème sombre ; clé `msim_dark` retirée).
+- Clic « Se connecter » → overlay plein écran (`.auth-fullscreen-overlay`) avec `Login` ou `Signup` ; « Retour aux simulations » (`onDismiss`) ferme l’overlay.
+- Query `?token=` : JWT trim + stockage + fermeture overlay.
+- `controls-bar` (coin fixe haut-droite) : **sélecteur de langue FR/EN uniquement**.
 
 ### 4.1 Google Sign-In (GSI) — `Login.jsx`
 
@@ -106,11 +121,12 @@ Se référer à `docs/brand-guidelines.md` pour la palette, tokens et règles vi
 
 ## 5. Home.jsx — Shell principal
 
-- Sidebar : section *Simulations* (Paie, Retraite sans badge « Bientôt », Prêts avec badge Bientôt / Soon).
-- Section *Espace personnel* : **Historique** et **Mon compte** uniquement si `token` ; **Contact** toujours visible ; invité → bouton **Se connecter**.
-- Si déconnexion ou perte de token alors que l’onglet actif est `history` / `account` → retour automatique sur **payroll** (`useEffect`).
-- `onRequestLogin` / `onRequestSignup` passés depuis `App.jsx` pour ouvrir l’overlay auth.
-- Hamburger ≤768px, `tab-bar` pour Paie / Retraite / Prêts, **Prêts** = coming soon seul.
+- Sidebar : **Simulations** (Paie, Retraite, Prêts, Épargne — **sans** badge « Bientôt » sur ces onglets).
+- **Espace personnel** : **Historique**, **Mon compte**, **Contact** — **toujours visibles** ; en bas, bloc utilisateur ou bouton **Se connecter**.
+- **Invité sur Historique / Mon compte** : même UX — carte `.page-panel` / `.page-panel-card`, texte **« Vous n’êtes pas connecté. »**, boutons **Se connecter** / **Créer un compte** (pas de redirection forcée vers la paie).
+- `onRequestLogin` / `onRequestSignup` depuis `App.jsx` pour ouvrir l’overlay auth.
+- **Footer** : une ligne (©, Mentions légales, Confidentialité, Contact) ; layout `main-content` / `page-body` pour pied de page en bas sur pages courtes.
+- Hamburger & drawer sidebar ; `tab-bar` visible pour les onglets Paie / Retraite / Prêts / Épargne uniquement.
 
 ---
 
@@ -193,20 +209,14 @@ POST /api/payroll/simulate
 
 ### 6.6 Résultats affichés (KPI cards)
 
-- Net mensuel (vert) / Net annuel (teal) / Cotisations sociales (orange) / Coût employeur (indigo)
+- Net mensuel (vert) / Net annuel (accent marque) / Cotisations sociales (orange) / Coût employeur (indigo/violet)
 - Carte retenue à la source (rouge) si mode retenue et taux > 0
 - Carte frais portage (orange) si statut portage
 - Barre de répartition : Net / Cotisations / Charges patronales
 
 ---
 
-Appelle `GET /api/simulation/mine` (endpoint sécurisé `[Authorize]`). Affiche les simulations payroll et retraite de l'utilisateur connecté sous forme de cartes avec suppression.
-
-**Classes CSS clés** : `.history-card`, `.history-badge--{statut}`, `.history-figure`, `.history-delete-btn`
-
----
-
-## 9. RetirementSimulator.jsx — implémenté ✅
+## 7. RetirementSimulator.jsx — implémenté ✅
 
 > **Statut : IMPLÉMENTÉ** (`src/Frontend/src/RetirementSimulator.jsx`). Même pattern que `PayrollSimulator.jsx`.
 
@@ -253,7 +263,7 @@ Content-Type: application/json
 | KPI | Couleur | Valeur |
 |---|---|---|
 | Pension nette mensuelle | vert `--success` | Principal |
-| Pension brute annuelle | teal `--accent` | |
+| Pension brute annuelle | accent `--accent` | |
 | Taux de remplacement | indigo `--indigo` | pension / revenu actuel |
 | Pension base CNAV | muted | Détail |
 | Pension complémentaire | muted | Détail |
@@ -304,10 +314,18 @@ const T = {
 
 ## 8. SimulationHistory.jsx
 
-- Panneau gauche (420px) : fond dégradé sombre, orbes lumineux, 3 cartes stat
-- Panneau droit : formulaire centré, inputs décorés icônes, bouton OAuth Google
-- Responsive : panneau gauche masqué sous 860px
-- Styles dans `login.css`
+- **`GET /api/simulation/mine`** — `[Authorize]` ; liste **10** entrées max par utilisateur (voir backend `SimulationRepository`).
+- **Sans JWT valide** (ou 401/403 après chargement) : **même écran que Mon compte invité** — titre page, **« Vous n’êtes pas connecté. »**, **Se connecter** / **Créer un compte** (`onRequestLogin` / `onRequestSignup`).
+- **Connecté** : cartes par type (paie, retraite, prêt, épargne, …), suppression `DELETE /api/simulation/{id}`.
+- **Classes CSS** : `.history-card`, `.history-badge--*`, `.history-figure`, `.history-delete-btn`.
+
+---
+
+## 9. Login.jsx / Signup.jsx — auth
+
+- Layout **clair** split-screen : panneau marque (gauche) + formulaire (droite) ; styles **`login.css`** (tokens alignés `styles.css`).
+- Logo : composant **`Logo.jsx`** (`brand-mark.png`), **grand** et **centré** au-dessus du titre sur le panneau marque ; pas de doublon logo dans l’en-tête du formulaire.
+- Google GSI : inchangé (voir § 4.1).
 
 ---
 
@@ -315,8 +333,7 @@ const T = {
 
 - Token JWT stocké dans `localStorage` (clé `msim_token`) — **temporaire, acceptable pour MVP**
 - **À migrer** vers cookie `HttpOnly; Secure; SameSite=Strict` côté serveur (voir `AuthController.cs`)
-- Décodage JWT côté client pour vérifier le rôle admin (composant `isAdmin()` dans `PayrollSimulator.jsx`)
-- Toujours inclure `Authorization: Bearer <token>` dans les appels simulate (payroll ET retraite)
+- Toujours inclure `Authorization: Bearer <token>` dans les appels simulate (payroll, retraite, …) lorsque l’utilisateur est connecté
 - Ne jamais exposer les erreurs techniques brutes à l'utilisateur
 - **Google OAuth GSI** : `index.html` charge `accounts.google.com/gsi/client` async ; `Login.jsx` initialise le bouton officiel Google dans un `useEffect` avec `google.accounts.id.initialize` ; l'ID token est soumis à `POST /api/auth/google/token` ; **aucun redirect**, aucun client secret needed
 - Important : ajouter `http://localhost:5173` (et si besoin `http://127.0.0.1:5173`) dans **Authorized JavaScript origins** de la Google Cloud Console pour le client Web.
@@ -343,62 +360,10 @@ const T = {
 
 ## 13. Checklist avant commit
 
-- [ ] Build Vite propre : `npm run build` → `✔ 40 modules transformed`
+- [ ] `npm run build` dans `src/Frontend/` sans erreur
 - [ ] Pas de caractères corrompus (`Ã`, `â€`) dans les fichiers JSX/CSS
-- [ ] `Authorization: Bearer` envoyé dans tous les appels API authentifiés
+- [ ] `Authorization: Bearer` sur les appels API authentifiés
 - [ ] Responsive testé (mobile ≤ 768px, tablette ≤ 1024px)
-- [ ] Dark mode fonctionnel
-- [ ] API proxy vérifié (`/api` → port 5000)
-- [ ] `EuroInput` et composants locaux définis au niveau MODULE (pas dans la fonction composant)
-
-But: résumer les décisions récentes et fournir des consignes exploitables pour les développeurs frontend.
-
-1. Objectif
-- Fournir une expérience de connexion claire, accessible et sécurisée.
-- Prioriser la lisibilité, l'alignement visuel et la sécurité du token.
-
-2. Structure visuelle
-- Layout centré sur desktop: logo + titre + description au-dessus d'une carte contenant le formulaire.
-- Carte (`.login-card .card`) : largeur large (≈840px desktop), réduit sur mobile (<=1024px).
-- Champs de saisie: labels visibles au-dessus (alignement gauche dans la zone du formulaire), inputs full-width à l'intérieur de la carte.
-- Boutons alignés horizontalement (primary + OAuth). Utiliser des états `:disabled` et indicateurs de chargement.
-
-3. Icône / Logo
-- Utiliser un pictogramme clair représentant un wallet avec un billet sortant. SVG inline dans `Login.jsx` pour contrôle style et couleurs.
-- Règles de style: coin/agrafe dorée (#f59e0b), corps sombre (#0b1220), fond en dégradé rappelant la marque.
-- `role="img"` et `aria-label` sur SVG.
-
-4. Accessibilité
-- Labels visibles et utilisables par les lecteurs d'écran.
-- Inputs: `name`, `aria-label`, `autoComplete` correct (`username`, `current-password`).
-- Erreurs: utiliser `role="alert"` et `aria-live="polite"` pour les messages d'erreur.
-- Eviter les commentaires HTML dans JSX; utiliser commentaires JS (`{/* ... */}`).
-
-5. Validation & messages
-- Validation client-side: email regex minimal si l'entrée contient `@`, password min 8 caractères.
-- N'afficher que des messages utilisateurs lisibles — ne pas exposer d'erreurs techniques brutes.
-- Backend doit renvoyer des codes HTTP explicites (400 / 401) et un payload { error: "user-friendly message" }.
-
-6. Sécurité / Auth
-- Éviter `localStorage` pour tokens sensibles (vulnérable XSS). Préférer cookie `Set-Cookie; HttpOnly; Secure; SameSite=Strict` émis par le serveur.
-- Si token stocké côté client temporairement pour implémentation rapide, utiliser `sessionStorage` et documenter le risque en README.
-- Si cookies cross-site nécessaires, configurer `credentials: 'include'` côté fetch et CORS côté serveur.
-
-7. Responsive & mobile
-- Sur mobile, réduire padding et largeur, inputs en 100% de la carte.
-- Prévoir comportement vertical pour boutons et éléments accessibles au toucher.
-
-8. Consignes d'implémentation
-- Fichier principal: `src/Frontend/src/Login.jsx` — conserver logique d'état (username/password/loading/error) et séparations claires.
-- Styles centrés dans `src/Frontend/src/login.css` ; utiliser variables CSS pour couleurs (`--accent`, `--card`).
-- Tests: ajouter unit tests pour validation (email/password) et tests d'intégration pour le flux login (si possible dans `tests/Integration`).
-
-9. Checklist avant merge
-- Linting OK, pas d'erreurs JSX, tests unitaires passés.
-- Comportement OAuth testé (redirection / popup selon implémentation back).
-- Vérifier absence d'erreurs de build (`vite`) et vérifier rendu mobile.
-
----
-Notes rapides:
-- Si vous souhaitez migrer vers cookie HttpOnly, je peux proposer le patch backend minimal (.NET Api `AuthController`) pour renvoyer le cookie après authentification.
-- Pour modifications visuelles supplémentaires, documenter les couleurs et espacement dans `docs/brand-guidelines.md`.
+- [ ] Thème **clair** cohérent (tokens `styles.css` / `login.css`)
+- [ ] Proxy `/api` (dev) ou Nginx conteneur (prod) vérifié si l’historique ou l’auth échouent
+- [ ] `EuroInput` et composants stables définis au **niveau module** (pas dans le corps du composant)

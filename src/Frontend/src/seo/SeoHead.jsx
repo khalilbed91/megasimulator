@@ -164,7 +164,9 @@ export default function SeoHead({ pageKey, lang }) {
       <meta property="og:title" content={m.title} />
       <meta property="og:description" content={m.description} />
       {canonical ? <meta property="og:url" content={canonical} /> : null}
+      {origin ? <meta property="og:image" content={`${origin}/brand-mark.png?v=3`} /> : null}
       <meta name="twitter:card" content="summary_large_image" />
+      {origin ? <meta name="twitter:image" content={`${origin}/brand-mark.png?v=3`} /> : null}
       <meta name="twitter:title" content={m.title} />
       <meta name="twitter:description" content={m.description} />
       <meta name="robots" content="index, follow" />

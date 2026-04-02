@@ -30,7 +30,7 @@ const T = {
     topPrivacy: 'Politique de confidentialité',
     navLegalMentions: 'Mentions légales',
     navPrivacy: 'Confidentialité',
-    sectionLegal: 'Informations légales',
+    footerNavAria: 'Liens du pied de page',
   },
   en: {
     appName: 'Mega simulateur', subtitle: 'Payroll & Finance',
@@ -47,7 +47,7 @@ const T = {
     topPrivacy: 'Privacy policy',
     navLegalMentions: 'Legal notices',
     navPrivacy: 'Privacy',
-    sectionLegal: 'Legal',
+    footerNavAria: 'Footer links',
   }
 }
 
@@ -62,6 +62,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
   const location = useLocation()
   const legalPage = pathToLegalPage(location.pathname)
   const tab = pathToTab(location.pathname) ?? 'payroll'
+  const year = new Date().getFullYear()
 
   const [user, setUser] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -85,13 +86,6 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
       navigate(PATH.payroll, { replace: true })
     }
   }, [location.pathname, navigate])
-
-  useEffect(() => {
-    if (pathToLegalPage(location.pathname)) return
-    if (!token && (tab === 'history' || tab === 'account')) {
-      navigate(PATH.payroll, { replace: true })
-    }
-  }, [token, tab, navigate, location.pathname])
 
   const goTab = (id) => {
     navigate(pathForTab(id))
@@ -123,7 +117,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
 
       <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
         <Link to={PATH.payroll} className="sidebar-brand" onClick={() => setSidebarOpen(false)}>
-          <Logo size={34} />
+          <Logo size={46} />
           <div>
             <div className="sidebar-brand-name">{tr.appName}</div>
             <div className="sidebar-brand-sub">{tr.subtitle}</div>
@@ -148,33 +142,15 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
         <div className="nav-divider" />
         <div className="nav-section-label">{tr.sectionUser}</div>
 
-        {token && navItem('history', tr.navHistory,
+        {navItem('history', tr.navHistory,
           <svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         )}
-        {token && navItem('account', tr.navAccount,
+        {navItem('account', tr.navAccount,
           <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
         )}
         {navItem('contact', tr.navContact,
           <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         )}
-
-        <div className="nav-section-label" style={{ marginTop: 10 }}>{tr.sectionLegal}</div>
-        <Link
-          to={PATH.legalMentions}
-          className={`nav-item${location.pathname === PATH.legalMentions ? ' active' : ''}`}
-          onClick={() => setSidebarOpen(false)}
-        >
-          <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <span>{tr.navLegalMentions}</span>
-        </Link>
-        <Link
-          to={PATH.privacy}
-          className={`nav-item${location.pathname === PATH.privacy ? ' active' : ''}`}
-          onClick={() => setSidebarOpen(false)}
-        >
-          <svg viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <span>{tr.navPrivacy}</span>
-        </Link>
 
         <div className="nav-spacer" />
         <div className="nav-divider" />
@@ -243,10 +219,26 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
 
           {!legalPage && tab === 'savings' && <SavingsSimulator lang={lang} />}
 
-          {!legalPage && tab === 'history' && <SimulationHistory token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}
+          {!legalPage && tab === 'history' && (
+            <SimulationHistory token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />
+          )}
           {!legalPage && tab === 'account' && <Account token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />}
           {!legalPage && tab === 'contact' && <Contact lang={lang} />}
         </main>
+
+        <footer className="app-site-footer" role="contentinfo">
+          <div className="app-site-footer-row">
+            <span className="app-site-footer-copy">© {year} {tr.appName}</span>
+            <span className="app-site-footer-sep" aria-hidden="true">·</span>
+            <nav className="app-site-footer-nav" aria-label={tr.footerNavAria}>
+              <Link to={PATH.legalMentions} onClick={() => setSidebarOpen(false)}>{tr.navLegalMentions}</Link>
+              <span className="app-site-footer-sep" aria-hidden="true">·</span>
+              <Link to={PATH.privacy} onClick={() => setSidebarOpen(false)}>{tr.navPrivacy}</Link>
+              <span className="app-site-footer-sep" aria-hidden="true">·</span>
+              <Link to={PATH.contact} onClick={() => setSidebarOpen(false)}>{tr.navContact}</Link>
+            </nav>
+          </div>
+        </footer>
       </div>
 
     </div>

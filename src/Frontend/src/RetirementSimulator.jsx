@@ -368,8 +368,8 @@ export default function RetirementSimulator({ lang = 'fr' }) {
 
   return (
     <div className="sim-shell">
-      <div className="sim-col sim-inputs">
-        <div className="sim-section-title">{lang === 'fr' ? 'Paramètres' : 'Parameters'}</div>
+      <div className="sim-form-card">
+        <div className="section-header">{lang === 'fr' ? 'Paramètres' : 'Parameters'}</div>
         <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>{t.subtitle}</p>
 
         <div className="field-group">
@@ -520,10 +520,18 @@ export default function RetirementSimulator({ lang = 'fr' }) {
         {apiError && <div className="field-error" style={{ marginTop: 10 }}>{apiError}</div>}
       </div>
 
-      <div className="sim-col sim-results">
-        <div className="sim-section-title">{t.resultsTitle}</div>
+      <div className="sim-result-card">
+        <div className="section-header">{t.resultsTitle}</div>
 
-        {!result && !loading && <div className="sim-empty">{t.empty}</div>}
+        {!result && !loading && (
+          <div className="sim-result-empty">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M9 17H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3M9 11l2 2 4-4M15 19l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--text)' }}>{t.resultsTitle}</div>
+            <div style={{ fontSize: 13 }}>{t.empty}</div>
+          </div>
+        )}
 
         {result && (
           <>

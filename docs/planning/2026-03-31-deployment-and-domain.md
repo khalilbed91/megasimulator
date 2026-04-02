@@ -17,8 +17,18 @@
 ## Rappels produit / légal
 
 - Historique utilisateur : **10** simulations max par compte.
+- **UX** : app **clair** ; identité **violet → magenta** ; `brand-mark.png` transparent ; invité sur **Historique** / **Mon compte** = même gate « non connecté ».
 - Mentions / confidentialité : **`/mentions-legales`**, **`/politique-de-confidentialite`** — contact **uniquement** via la page Contact (pas d’e-mail public `m-simulator.com`).
 - Compte technique **admin** : e-mail en base **`admin@megasimulateur.org`** (pas une boîte opérationnelle imposée).
+
+### Schéma prod (trafic)
+
+```mermaid
+flowchart LR
+  CF[Cloudflare / DNS] --> NX[Nginx hôte :80]
+  NX --> FE[Frontend Docker :8080]
+  FE -->|"/api/*"| API[API api1 + api2]
+```
 
 ---
 

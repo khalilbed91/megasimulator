@@ -120,7 +120,7 @@ dotnet run --project src/Api --launch-profile LocalWithDeps
 
 ### Guest usage
 
-Users can open the app without signing in and run payroll, retirement, and loan simulations. History and account screens require login.
+Users can open the app without signing in and run payroll, retirement, loan, and savings simulations. **History** and **My account** are always reachable from the sidebar: guests see the same short “not signed in” card with **Sign in** / **Create account** (no forced redirect to payroll). Contact works for everyone.
 
 ### Production deployment (Docker / VPS)
 

@@ -14,7 +14,6 @@ const T = {
     simulate: 'Calculer', reset: 'Réinitialiser',
     resultsTitle: 'Résultats', empty: 'Remplissez le formulaire et cliquez sur Calculer.',
     fixFieldsHint: 'Corrigez les champs indiqués ci-dessus, puis cliquez à nouveau sur Calculer.',
-    technical: 'Vue JSON technique',
     netMonthly: 'Net mensuel', netAnnual: 'Net annuel',
     employerCost: 'Coût employeur', socialCont: 'Cotisations sociales',
     withholding: 'Retenue à la source', breakdown: 'Répartition salariale',
@@ -51,7 +50,6 @@ const T = {
     simulate: 'Calculate', reset: 'Reset',
     resultsTitle: 'Results', empty: 'Fill in the form and click Calculate.',
     fixFieldsHint: 'Fix the highlighted fields above, then click Calculate again.',
-    technical: 'Technical JSON view',
     netMonthly: 'Monthly net', netAnnual: 'Annual net',
     employerCost: 'Employer cost', socialCont: 'Social contributions',
     withholding: 'Withholding tax', breakdown: 'Pay breakdown',
@@ -201,7 +199,7 @@ const STATUS_OPTIONS = [
     icon: <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" stroke="currentColor" strokeWidth="1.8"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" stroke="currentColor" strokeWidth="1.8"/></svg>,
     labelFr: 'Non-cadre', labelEn: 'Non-exec',
     hintFr: 'Salarié régime général', hintEn: 'Standard employee',
-    color: '#0ea5a4'
+    color: '#c026d3'
   },
   {
     value: 'cadre',
@@ -324,7 +322,6 @@ export default function PayrollSimulator({ lang = 'fr' }){
   const [primes,         setPrimes]         = useState('')
   const [result,         setResult]         = useState(null)
   const [loading,        setLoading]        = useState(false)
-  const [showTech,       setShowTech]       = useState(false)
   const [submitAttempted, setSubmitAttempted] = useState(false)
 
   /* Status */
@@ -446,17 +443,6 @@ export default function PayrollSimulator({ lang = 'fr' }){
     setPortagePercent(10); setPortageCompany(''); setFraisPro('')
     setSituationFam('celibataire'); setEnfants(0)
     setResult(null); setFiscalMode('parts'); setSubmitAttempted(false)
-  }
-
-  const isAdmin = () => {
-    try {
-      const tok = localStorage.getItem('msim_token')
-      if (!tok) return false
-      const p = JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
-      const r = p['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || p['role'] || p['roles']
-      if (!r) return false
-      return Array.isArray(r) ? r.includes('admin') : r === 'admin'
-    } catch { return false }
   }
 
   const netMonthly   = result?.netMonthly   ?? result?.net ?? null
@@ -667,12 +653,6 @@ export default function PayrollSimulator({ lang = 'fr' }){
               <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 3v5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
               {t.reset}
             </button>
-            {isAdmin() && (
-              <button className="btn-ghost" onClick={() => setShowTech(s => !s)} type="button" style={{ marginLeft: 'auto' }}>
-                <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                {t.technical}
-              </button>
-            )}
           </div>
           {submitAttempted && !isValid && (
             <div className="field-error" style={{ marginTop: 10 }}>
@@ -749,12 +729,6 @@ export default function PayrollSimulator({ lang = 'fr' }){
                 employer={Math.max(0, (employerCost || 0) - (netMonthly || 0) - (socialCont || 0))}
               />
             </div>
-
-            {showTech && (
-              <div style={{ background: '#0f172a', color: '#e2e8f0', padding: '14px 16px', borderRadius: 'var(--radius-sm)', overflow: 'auto', marginTop: 4 }}>
-                <pre style={{ margin: 0, fontSize: 12, lineHeight: 1.6 }}>{JSON.stringify(result, null, 2)}</pre>
-              </div>
-            )}
           </div>
         )}
       </div>

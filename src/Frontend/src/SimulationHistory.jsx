@@ -31,7 +31,7 @@ const T = {
     deleteBtn: 'Supprimer',
     deleteConfirm: 'Supprimer cette simulation ?',
     statuts: { 'non-cadre': 'Non-cadre', 'cadre': 'Cadre', 'freelance': 'Freelance', 'portage': 'Portage', '': '—' },
-    loginRequired: 'Connectez-vous pour voir votre historique.',
+    notSigned: 'Vous n’êtes pas connecté.',
     loginCta: 'Se connecter',
     signupCta: 'Créer un compte',
     limitHint: 'Les 10 simulations les plus récentes sont conservées ; au-delà, les plus anciennes sont supprimées automatiquement.',
@@ -66,11 +66,17 @@ const T = {
     deleteBtn: 'Delete',
     deleteConfirm: 'Delete this simulation?',
     statuts: { 'non-cadre': 'Non-exec', 'cadre': 'Exec', 'freelance': 'Freelance', 'portage': 'Portage', '': '—' },
-    loginRequired: 'Sign in to view your history.',
+    notSigned: 'You are not signed in.',
     loginCta: 'Sign in',
     signupCta: 'Create account',
     limitHint: 'Only your 10 most recent simulations are kept; older ones are removed automatically when you save a new one.',
   },
+}
+
+function normalizeToken(t) {
+  if (t == null) return null
+  const s = String(t).trim()
+  return s || null
 }
 
 function fmt(n) {
@@ -112,19 +118,50 @@ function simTypeOf(sim) {
 
 export default function SimulationHistory({ token, lang, onRequestLogin, onRequestSignup }) {
   const tr = T[lang] || T.fr
+  const effectiveToken = normalizeToken(token)
   const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!!effectiveToken)
   const [error, setError] = useState(null)
+  const [authRequired, setAuthRequired] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
 
-  const load = useCallback(() => {
-    if (!token) { setLoading(false); return }
+  useEffect(() => {
+    if (!effectiveToken) setAuthRequired(false)
+  }, [effectiveToken])
+
+  const load = useCallback(async () => {
+    if (!effectiveToken) {
+      setItems([])
+      setLoading(false)
+      setError(null)
+      return
+    }
+    setAuthRequired(false)
     setLoading(true)
-    fetch('/api/simulation/mine', { headers: { Authorization: 'Bearer ' + token } })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => { setItems(Array.isArray(data) ? data : []); setLoading(false); setError(null) })
-      .catch(() => { setError(tr.error); setLoading(false) })
-  }, [token, tr.error])
+    setError(null)
+    try {
+      const res = await fetch('/api/simulation/mine', {
+        headers: { Authorization: 'Bearer ' + effectiveToken },
+      })
+      if (res.status === 401 || res.status === 403) {
+        setItems([])
+        setAuthRequired(true)
+        return
+      }
+      if (!res.ok) {
+        setError(tr.error)
+        setItems([])
+        return
+      }
+      const data = await res.json()
+      setItems(Array.isArray(data) ? data : [])
+    } catch {
+      setError(tr.error)
+      setItems([])
+    } finally {
+      setLoading(false)
+    }
+  }, [effectiveToken, tr.error])
 
   useEffect(() => { load() }, [load])
 
@@ -133,21 +170,26 @@ export default function SimulationHistory({ token, lang, onRequestLogin, onReque
     setDeletingId(id)
     await fetch(`/api/simulation/${id}`, {
       method: 'DELETE',
-      headers: { Authorization: 'Bearer ' + token },
+      headers: { Authorization: 'Bearer ' + effectiveToken },
     })
     setDeletingId(null)
     setItems(prev => prev.filter(s => s.id !== id))
   }
 
-  if (!token) {
+  /* Même principe que Mon compte : pas connecté → carte + 2 boutons */
+  if (!effectiveToken || authRequired) {
     return (
       <div className="page-panel">
-        <div className="sim-result-empty" style={{ marginTop: 40 }}>
-          <svg viewBox="0 0 24 24" fill="none"><path d="M12 6v6m0 4h.01M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <div style={{ fontWeight: 700, fontSize: 17 }}>{tr.loginRequired}</div>
-          <div className="page-panel-actions" style={{ justifyContent: 'center', marginTop: 16 }}>
-            <button type="button" className="btn-primary-custom" onClick={() => onRequestLogin?.()}>{tr.loginCta}</button>
-            <button type="button" className="btn-ghost" onClick={() => onRequestSignup?.()}>{tr.signupCta}</button>
+        <div className="page-panel-card">
+          <h1 className="page-panel-title">{tr.title}</h1>
+          <p className="page-panel-desc">{tr.notSigned}</p>
+          <div className="page-panel-actions">
+            <button type="button" className="btn-primary-custom" onClick={() => onRequestLogin?.()}>
+              {tr.loginCta}
+            </button>
+            <button type="button" className="btn-ghost" onClick={() => onRequestSignup?.()}>
+              {tr.signupCta}
+            </button>
           </div>
         </div>
       </div>
@@ -155,11 +197,19 @@ export default function SimulationHistory({ token, lang, onRequestLogin, onReque
   }
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 15 }}>{tr.loading}</div>
+    return (
+      <div className="page-panel">
+        <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>{tr.loading}</div>
+      </div>
+    )
   }
 
   if (error) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--danger)', fontSize: 15 }}>{error}</div>
+    return (
+      <div className="page-panel">
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--danger)', fontSize: 15 }}>{error}</div>
+      </div>
+    )
   }
 
   if (items.length === 0) {
