@@ -6,6 +6,56 @@ import { GUIDE_PAGES } from '../guides/guideContent.jsx'
 
 const BRAND = 'MegaSimulator'
 
+function financeWebAppNode(toolPath, toolUrl, L) {
+  const id = `${toolUrl || toolPath}#tool`
+  const common = {
+    '@type': ['WebApplication', 'SoftwareApplication'],
+    '@id': id,
+    url: toolUrl || toolPath,
+    applicationCategory: 'https://schema.org/FinanceApplication',
+    operatingSystem: 'Web browser',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+  }
+  if (toolPath === PATH.retirement) {
+    return {
+      ...common,
+      name: L === 'en' ? 'MegaSimulator retirement simulator' : 'Simulateur retraite MegaSimulator',
+      applicationSubCategory: 'Retirement and pension calculator',
+    }
+  }
+  if (toolPath === PATH.loans) {
+    return {
+      ...common,
+      name: L === 'en' ? 'MegaSimulator loan simulator' : 'Simulateur prêt MegaSimulator',
+      applicationSubCategory: 'Mortgage and loan calculator',
+    }
+  }
+  return {
+    ...common,
+    name: L === 'en' ? 'MegaSimulator payroll simulator' : 'Simulateur de paie MegaSimulator',
+    applicationSubCategory: 'Payroll and financial calculator',
+  }
+}
+
+function articleAboutThing(toolPath, L) {
+  if (toolPath === PATH.retirement) {
+    return {
+      '@type': 'Thing',
+      name: L === 'en' ? 'French public retirement pension (simplified)' : 'Retraite et pension en France (modèle simplifié)',
+    }
+  }
+  if (toolPath === PATH.loans) {
+    return {
+      '@type': 'Thing',
+      name: L === 'en' ? 'French mortgage, PTZ and loan costs' : 'Crédit immobilier, PTZ et coût des prêts en France',
+    }
+  }
+  return {
+    '@type': 'Thing',
+    name: L === 'en' ? 'French payroll and freelance net pay' : 'Salaire net et statuts en France',
+  }
+}
+
 export default function SeoHeadGuide({ guideId, lang }) {
   const L = lang === 'en' ? 'en' : 'fr'
   const page = GUIDE_PAGES[guideId]
@@ -14,21 +64,14 @@ export default function SeoHeadGuide({ guideId, lang }) {
 
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const canonical = origin && page.path ? `${origin}${page.path}` : ''
-  const payrollCanonical = origin ? `${origin}${PATH.payroll}` : ''
+  const toolPath = guideId !== 'index' && page.simulatorPath ? page.simulatorPath : PATH.payroll
+  const toolUrl = origin ? `${origin}${toolPath}` : ''
   const homeCanonical = origin ? `${origin}/` : ''
   const guidesIndexUrl = origin ? `${origin}${PATH_GUIDES.index}` : PATH_GUIDES.index
 
   const jsonLd = useMemo(() => {
-    const payrollApp = {
-      '@type': ['WebApplication', 'SoftwareApplication'],
-      '@id': `${payrollCanonical || PATH.payroll}#tool`,
-      name: L === 'en' ? 'MegaSimulator payroll simulator' : 'Simulateur de paie MegaSimulator',
-      url: payrollCanonical || PATH.payroll,
-      applicationCategory: 'https://schema.org/FinanceApplication',
-      applicationSubCategory: 'Payroll and financial calculator',
-      operatingSystem: 'Web browser',
-      offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
-    }
+    const payrollCanonical = origin ? `${origin}${PATH.payroll}` : ''
+    const payrollApp = financeWebAppNode(PATH.payroll, payrollCanonical || PATH.payroll, L)
 
     if (guideId === 'index') {
       return {
@@ -42,6 +85,8 @@ export default function SeoHeadGuide({ guideId, lang }) {
         about: payrollApp,
       }
     }
+
+    const relatedApp = financeWebAppNode(toolPath, toolUrl || toolPath, L)
 
     const article = {
       '@context': 'https://schema.org',
@@ -63,11 +108,8 @@ export default function SeoHeadGuide({ guideId, lang }) {
         url: homeCanonical || undefined,
       },
       mainEntityOfPage: canonical ? { '@type': 'WebPage', '@id': canonical } : undefined,
-      isRelatedTo: { '@id': payrollApp['@id'] },
-      about: {
-        '@type': 'Thing',
-        name: L === 'en' ? 'French payroll and freelance net pay' : 'Salaire net et statuts en France',
-      },
+      isRelatedTo: { '@id': relatedApp['@id'] },
+      about: articleAboutThing(toolPath, L),
     }
     if (origin) article.image = `${origin}/brand-mark.png?v=3`
 
@@ -80,8 +122,8 @@ export default function SeoHeadGuide({ guideId, lang }) {
       ],
     }
 
-    return { '@context': 'https://schema.org', '@graph': [article, payrollApp, crumbs] }
-  }, [L, canonical, guideId, meta, origin, page, payrollCanonical, homeCanonical, guidesIndexUrl])
+    return { '@context': 'https://schema.org', '@graph': [article, relatedApp, crumbs] }
+  }, [L, canonical, guideId, meta, origin, page, homeCanonical, guidesIndexUrl, toolPath, toolUrl])
 
   return (
     <Helmet prioritizeSeoTags htmlAttributes={{ lang: L }}>

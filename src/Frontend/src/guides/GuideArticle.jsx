@@ -30,7 +30,8 @@ export default function GuideArticle({ guideId, lang }) {
 
         <div className="guide-actions page-panel-actions">
           <Link to={page.simulatorPath || PATH.payroll} className="btn-primary">
-            {L === 'en' ? 'Run the payroll simulator' : 'Lancer le simulateur de paie'}
+            {meta.ctaSimulator ||
+              (L === 'en' ? 'Run the payroll simulator' : 'Lancer le simulateur de paie')}
           </Link>
           <Link to={PATH_GUIDES.index} className="btn-ghost">
             {L === 'en' ? 'All guides' : 'Tous les guides'}
