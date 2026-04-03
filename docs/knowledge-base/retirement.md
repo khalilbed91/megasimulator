@@ -1,6 +1,6 @@
 # Retraite — Règles, formules et spécifications (France, 2026)
 
-_Dernière mise à jour : 2026-03-29 — Prêt pour implémentation_
+_Dernière mise à jour : 2026-04-03 — Code aligné trimestres 1964+ ; limites d’implémentation documentées §10_
 
 ## But du document
 
@@ -196,4 +196,20 @@ Exemple avec décote (150 trimestres validés au lieu de 170) :
 
 ---
 
-_Document consolidé le 2026-03-29 — prêt pour implémentation `RetirementService.cs`_
+## 10. Implémentation produit (`RetirementService`) — état et écarts
+
+| Élément | Spécification doc | Code (`RetirementService.cs`) |
+|--------|-------------------|-------------------------------|
+| Formule base + décote/surcote | §2, §6 | Conforme (taux plein 50 %, 1,25 %/trim., décote plafonnée 25 %) |
+| Complémentaire | §3 | `Points × 1,45 €` (constante ; pas encore lue depuis `params/2026.json`) |
+| Retenue nette | 9,1 % | `RetenueSocialePct = 0,091m` |
+| Trimestres requis par génération | §2 tableau | **Aligné** : 1963→170, 1964→171, 1965+→172 (idem pré-remplissage `RetirementSimulator.jsx`) |
+| Âge légal | §1 ; 1961 → 63 ans 6 mois dans le droit réel | **Simplifié** : ≤1960→63 ans, ≥1961→64 ans (pas de demi-année) |
+| SAM | Plafonné au PASS par année (25 meilleures années) | **Saisie libre** : l’utilisateur entre déjà une moyenne ; pas de reconstitution PASS |
+| Régimes spéciaux | §9 | Non couverts — avertissement UI |
+
+**Actualité / conformité** : les montants (valeur du point Agirc-Arrco, taux de retenue, barèmes) évoluent chaque année. Vérifier les publications officielles (CNAV, Agirc-Arrco, Légifrance) avant communication grand public. Le simulateur reste **pédagogique**, pas un engagement de pension.
+
+---
+
+_Document consolidé le 2026-03-29 — revue implémentation 2026-04-03_

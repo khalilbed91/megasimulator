@@ -18,7 +18,9 @@ namespace MegaSimulator.Tests
         [InlineData(1959, 168)]
         [InlineData(1961, 169)]
         [InlineData(1963, 170)]
-        [InlineData(1980, 170)]
+        [InlineData(1964, 171)]
+        [InlineData(1965, 172)]
+        [InlineData(1980, 172)]
         public void GetTrimestresRequis_ReturnsCorrectValue(int annee, int expected)
         {
             var svc = CreateService();

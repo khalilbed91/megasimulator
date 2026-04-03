@@ -16,6 +16,9 @@ const PAGE_PATH = {
   privacy: PATH.privacy,
 }
 
+/** Tabs that expose interactive financial simulators — JSON-LD WebApplication + FinanceApplication. */
+const SIMULATOR_PAGE_KEYS = new Set(['payroll', 'retirement', 'loans', 'savings'])
+
 const META = {
   fr: {
     payroll: {
@@ -24,6 +27,12 @@ const META = {
         'Convertissez salaire brut en net, estimez cotisations, prélèvement à la source et coût employeur. Simulation portage salarial et statuts non-cadre / cadre — modèle pédagogique France.',
       keywords:
         'salaire brut net, simulateur paie, simulation portage salarial, brut vers net, prélèvement à la source, coût employeur',
+      schemaFeatures: [
+        'Calcul salaire brut vers net et coût employeur',
+        'Statuts non-cadre, cadre, freelance et portage salarial',
+        'Prélèvement à la source et quotient familial (parts)',
+        'Avantages en nature (tickets restaurant, transports, télétravail)',
+      ],
     },
     retirement: {
       title: `Simulation retraite & pension nette | ${BRAND}`,
@@ -31,6 +40,11 @@ const META = {
         'Estimez votre pension retraite nette (base + complémentaire), trimestres, décote et surcôte. Outil pédagogique pour projeter votre départ et votre niveau de vie.',
       keywords:
         'simulation retraite, pension retraite, simulateur retraite france, taux plein, trimestres retraite',
+      schemaFeatures: [
+        'Estimation pension nette (régime de base et complémentaire)',
+        'Trimestres, décote et surcôte (modèle pédagogique)',
+        'Projection indicative du niveau de vie à la retraite',
+      ],
     },
     loans: {
       title: `Simulateur crédit immobilier & prêt consommation | ${BRAND}`,
@@ -38,12 +52,22 @@ const META = {
         'Simulation de prêt immo (mensualités, notaire, PTZ, TVA réduite, Action Logement), auto et crédit conso. Indicateurs HCSF et coût total — usage pédagogique 2026.',
       keywords:
         'simulation crédit, simulateur prêt immobilier, PTZ, prêt conso, mensualités prêt',
+      schemaFeatures: [
+        'Prêt immobilier : mensualités, frais de notaire, PTZ, TVA réduite',
+        'Prêts auto et consommation',
+        'Coût total du crédit et indicateurs HCSF (pédagogique)',
+      ],
     },
     savings: {
       title: `Objectif d’épargne & projet | ${BRAND}`,
       description:
         'Calculez le versement mensuel pour un objectif (inflation, Livret A), écart vs votre épargne actuelle et leviers budgétaires indicatifs — modèle pédagogique 2026.',
       keywords: 'simulation épargne, objectif épargne, livret a, inflation, budget',
+      schemaFeatures: [
+        'Versement mensuel pour atteindre un objectif d’épargne',
+        'Hypothèses inflation et rendement type Livret A',
+        'Écart par rapport à l’épargne actuelle et leviers budgétaires indicatifs',
+      ],
     },
     contact: {
       title: `Contact | ${BRAND}`,
@@ -81,24 +105,45 @@ const META = {
       description:
         'Estimate net salary from gross, social contributions, withholding and employer cost. Includes umbrella / portage-style scenarios — educational model.',
       keywords: 'gross to net, payroll simulator, france salary calculator',
+      schemaFeatures: [
+        'Gross-to-net salary and employer cost',
+        'Non-executive, executive, freelance and umbrella (portage) scenarios',
+        'Withholding tax and household parts (quotient familial)',
+        'Benefits in kind (meal vouchers, commuting, remote work)',
+      ],
     },
     retirement: {
       title: `Retirement & pension estimator | ${BRAND}`,
       description:
         'Project net pension, quarters, and replacement rate with a simplified educational model.',
       keywords: 'retirement simulator, pension estimate',
+      schemaFeatures: [
+        'Net pension estimate (base + complementary)',
+        'Quarters, discount and premium (simplified model)',
+        'Indicative retirement income projection',
+      ],
     },
     loans: {
       title: `Mortgage & consumer loan simulator | ${BRAND}`,
       description:
         'Mortgage (fees, PTZ, Action Logement hints), car and personal loans — educational tool.',
       keywords: 'loan simulator, mortgage calculator',
+      schemaFeatures: [
+        'Mortgage: payments, notary fees, PTZ, reduced VAT where applicable',
+        'Car and personal loans',
+        'Total borrowing cost and HCSF-style indicators (educational)',
+      ],
     },
     savings: {
       title: `Savings goal & project planner | ${BRAND}`,
       description:
         'Monthly savings needed for a target (inflation, regulated yield), gap vs current savings and indicative budget levers — 2026 educational model.',
       keywords: 'savings goal, savings calculator, inflation, budget',
+      schemaFeatures: [
+        'Monthly savings needed to reach a goal',
+        'Inflation and regulated-savings yield assumptions',
+        'Gap vs current savings and indicative budget levers',
+      ],
     },
     contact: {
       title: `Contact | ${BRAND}`,
@@ -128,6 +173,11 @@ const META = {
   },
 }
 
+function schemaAppName(title) {
+  const suffix = ` | ${BRAND}`
+  return title.endsWith(suffix) ? title.slice(0, -suffix.length) : title
+}
+
 export default function SeoHead({ pageKey, lang }) {
   const L = lang === 'en' ? 'en' : 'fr'
   const m = META[L][pageKey] || META[L].payroll
@@ -136,22 +186,37 @@ export default function SeoHead({ pageKey, lang }) {
   const canonical = origin && path ? `${origin}${path}` : ''
 
   const isLegal = pageKey === 'mentions' || pageKey === 'privacy'
-  const jsonLd = isLegal
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'WebPage',
-        name: m.title,
-        description: m.description,
-      }
-    : {
-        '@context': 'https://schema.org',
-        '@type': 'WebApplication',
-        name: BRAND,
-        description: m.description,
-        applicationCategory: 'FinanceApplication',
-        operatingSystem: 'Web',
-        offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
-      }
+  const isFinanceSimulator = SIMULATOR_PAGE_KEYS.has(pageKey)
+
+  let jsonLd
+  if (isLegal) {
+    jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: m.title,
+      description: m.description,
+    }
+  } else if (isFinanceSimulator) {
+    jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: schemaAppName(m.title),
+      description: m.description,
+      inLanguage: L === 'en' ? 'en' : 'fr',
+      applicationCategory: 'https://schema.org/FinanceApplication',
+      operatingSystem: 'Web browser',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+      featureList: m.schemaFeatures || [],
+    }
+    if (origin) jsonLd.image = `${origin}/brand-mark.png?v=3`
+  } else {
+    jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: m.title,
+      description: m.description,
+    }
+  }
   if (canonical) jsonLd.url = canonical
 
   return (

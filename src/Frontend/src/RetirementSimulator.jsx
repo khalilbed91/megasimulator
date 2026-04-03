@@ -152,6 +152,7 @@ const fmtInt = (v, lang) =>
     ? v.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US', { maximumFractionDigits: 0 })
     : '—'
 
+/** Aligné sur `RetirementService.GetTrimestresRequis` et `docs/knowledge-base/retirement.md` §2. */
 function getTrimestresRequis(annee) {
   if (annee <= 1952) return 164
   if (annee <= 1954) return 165
@@ -159,7 +160,9 @@ function getTrimestresRequis(annee) {
   if (annee <= 1958) return 167
   if (annee <= 1960) return 168
   if (annee <= 1962) return 169
-  return 170
+  if (annee === 1963) return 170
+  if (annee === 1964) return 171
+  return 172
 }
 
 function parseNum(s) {

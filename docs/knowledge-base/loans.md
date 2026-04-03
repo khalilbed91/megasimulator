@@ -165,37 +165,17 @@ Implémentation : prendre en compte apport, frais initiaux, reste à vivre minim
 
 ---
 
-Document créé pour l'implémentation des crédits dans le simulateur 2026.
-# Loans — Business Rules & Formulas
+## 12. Revue implémentation & actualité (2026-04-03)
 
-## Overview
+| Zone | Implémenté (`LoanService.cs`) | À surveiller |
+|------|------------------------------|--------------|
+| Amortissement | Mensualité constante, assurance sur capital initial, aperçu tableau (24 lignes) | Assurance sur CRD non proposée en UI |
+| TAEG | **Indicatif** : nominal + assurance + frais étalés (approximation) | Le TAEG réglementaire peut différer ; ne pas l’assimiler à une offre bancaire |
+| Taux d’usure | Seuil **indicatif** (défaut 5,13 % long ; +0,5 pt si durée &lt; 20 ans ou hors immo) | Publié **trimestriellement** par la Banque de France — mettre à jour la constante ou `params/2026.json` |
+| HCSF | Ratio 35 %, reste à vivre 800 € | Seuils réels peuvent intégrer d’autres critères bancaires |
+| PTZ / PAL | Barèmes indicatifs zones / plafonds revenus | Revalider sur [economie.gouv.fr](https://www.economie.gouv.fr/) et sources officielles à chaque mise à jour produit |
+| Frais notaire | Ancien 7,5 % / neuf 2 % indicatifs | Ordres de grandeur seulement |
 
-This document describes loan product rules and formulas. Conventions (interest day count, fees, amortization type) must be stated per product.
+**Conclusion** : le module prêts est cohérent avec une **simulation pédagogique** 2026. Pour une « conformité » temps réel : externaliser taux d’usure et barèmes PTZ dans des paramètres versionnés et les réviser après chaque publication officielle.
 
-## Key Concepts
-- Principal: amount borrowed (EUR).
-- Annual nominal rate: APR (in percent).
-- Periods: number of payments (months for monthly repayment).
-- Amortization types: equal payment (annuity), equal principal, interest-only.
-
-## Canonical Formula — Equal Payment (Annuity)
-
-Description: monthly payment for fixed-rate loan with equal installments.
-
-Formula:
-
-payment = P * r / (1 - (1+r)^-n)
-
-Where:
-- P = principal
-- r = periodic rate (annualRate / 12 / 100)
-- n = number of periods (months)
-
-Implementation notes:
-- Round monetary outputs to cents (2 decimal places) for presentation; internal calculations use higher precision.
-- Validate inputs: principal > 0, n >= 1, annualRate >= 0.
-
-Test vector:
-- Inputs: P=100000 EUR, annualRate=5 (%), n=240 (20 years) → payment ≈ 659.96 EUR/month
-
-Source: standard financial math (for reference: https://en.wikipedia.org/wiki/Amortization_calculator)
+Tests automatisés : `tests/MegaSimulator.Tests/LoanServiceTests.cs`.

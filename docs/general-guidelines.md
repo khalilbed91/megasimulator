@@ -1,7 +1,7 @@
 # MegaSimulator — General Guidelines & Project Status
 
 _Document interne — usage agent/équipe uniquement_  
-_Dernière mise à jour : 2026-04-02 (marque violet/magenta, thème clair, Historique/Compte invité, docs & skill alignés)_
+_Dernière mise à jour : 2026-04-03 (retraite trimestres 1964+, audit retraite/prêts, docs knowledge-base)_
 
 ---
 
@@ -131,7 +131,7 @@ _Dernière mise à jour : 2026-04-02 (marque violet/magenta, thème clair, Histo
 | ✅ Breakdown panel | Base CNAV + complémentaire + brute totale ; panel trimestres (décote/surcote/manquants en couleur) |
 | ✅ Warning V1 | Message d'avertissement régimes spéciaux non couverts |
 | ✅ Home.jsx wired | Tab `retirement` renderise `<RetirementSimulator>` — plus de "coming soon" |
-| ✅ 23 xUnit tests | `GetTrimestresRequis` (8 théories), `GetAgeLegal` (4), décote (3), surcote (2), simulate (6) — tous verts |
+| ✅ xUnit `RetirementServiceTests` | `GetTrimestresRequis` (générations dont 1964→171, 1965+→172, aligné `retirement.md`), âge légal, décote/surcote, simulate, objectif — tous verts |
 | ✅ Anti-race Calculer | `RetirementSimulator` : compteur de requête + `normalizeRetirementResponse` (camelCase / PascalCase) pour éviter qu’une réponse lente écrase la dernière saisie |
 
 ### 2.8 SavingsSimulator — MVP ✅
@@ -152,8 +152,13 @@ _Dernière mise à jour : 2026-04-02 (marque violet/magenta, thème clair, Histo
 | # | Tâche | Contexte |
 |---|---|---|
 | P1 | **Migration vers cookie HttpOnly** | Sécuriser le token JWT (actuellement `localStorage`, vulnérable XSS). Patch `AuthController` : `Response.Cookies.Append(...)` + CORS `credentials: 'include'` |
-| P2 | **Simulateur Prêts** | ✅ MVP : `POST /api/loan/simulate`, `LoanSimulator.jsx` (immo + PTZ/TVA/PAL, auto, perso). Affinage TAEG / usure par échéance : à poursuivre |
-| P3 | **Tests E2E** | Tests `LoanServiceTests.cs`, tests Postman pour les endpoints auth/payroll/retirement |
+| P2 | **Simulateur Prêts** | ✅ MVP livré. Suite : TAEG réglementaire fin vs approx, usure Banque de France trimestrielle externalisée (`params` ou config) |
+| P3 | **Tests E2E** | `LoanServiceTests.cs` + `RetirementServiceTests.cs` côté unitaires ; tests Postman / E2E auth & parcours encore optionnels |
+
+### 3.1 bis Audit simulateurs retraite & prêts (2026-04-03)
+
+- **Retraite** : logique métier alignée sur `docs/knowledge-base/retirement.md` pour les trimestres requis (dont 1964→171, 1965+→172). Écarts documentés : âge légal sans 63 ans 6 mois, SAM saisi tel quel (pas de plafonnement PASS automatique), valeur du point et taux en dur dans le service. Voir `retirement.md` §10.
+- **Prêts** : `LoanService` couvre amortissement, HCSF indicatif, PTZ/PAL pédagogiques, TAEG **approximatif**, usure **indicative**. Voir `docs/knowledge-base/loans.md` §12. Aucune revérification législative externe dans cette passe (sources officielles à consulter pour toute communication « à jour »).
 
 ### 3.2 Priorité moyenne
 

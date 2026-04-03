@@ -1,6 +1,6 @@
 # Frontend — Guidelines techniques
 
-_Dernière mise à jour : 2026-04-02 — marque violet/magenta, thème clair, Historique invité, footer_
+_Dernière mise à jour : 2026-04-03 — payload paie (avantages structurés), retraite trimestres 1964+_
 
 ---
 
@@ -199,6 +199,11 @@ POST /api/payroll/simulate
   "Parts": <number>,
   "RevenusAnnexes": <number>,
   "Primes": <number>,
+  "TransportMensuel": <number>,
+  "TeletravailMensuel": <number>,
+  "TicketRestoMensuel": <number>,
+  "TicketRestoEmployeurPct": <0-100>,
+  "MutuelleNetDeduction": <number>,
   "RetenuePct": <0-55>,
   "FreelanceType": "me|eurl|sasu|null",
   "PortagePercent": <number|null>,
@@ -206,6 +211,8 @@ POST /api/payroll/simulate
   "CaMensuel": <number|null>
 }
 ```
+
+Salarié : le front envoie `RevenusAnnexes` et `Primes` à **0** et renseigne les champs transports / titres-restaurant / télétravail / mutuelle. Freelance : `TransportMensuel`… à **0**, annexes/primes utilisés comme avant.
 
 ### 6.6 Résultats affichés (KPI cards)
 
@@ -235,7 +242,7 @@ Layout `sim-shell` (grille `1fr 400px`) identique au simulateur de paie :
 | Âge de départ souhaité | slider 60–70 | 64 | Affiche alerte si < âge légal |
 | Salaire annuel moyen brut (SAM) | EuroInput | — | Moyenne 25 meilleures années |
 | Trimestres validés | slider 0–200 | — | Nombre de trimestres acquis |
-| Trimestres requis | number input | 170 | Pré-rempli selon génération, modifiable |
+| Trimestres requis | number input | selon année | Pré-rempli (ex. 1963→170, 1964→171, 1965+→172), aligné backend — modifiable |
 | Points Agirc-Arrco | number input | — | Points complémentaires accumulés |
 | Régime | selector chips | général | général / fonctionnaire / libéral / artisan |
 | Revenus annuels actuels | EuroInput | — | Pour calcul taux de remplacement |

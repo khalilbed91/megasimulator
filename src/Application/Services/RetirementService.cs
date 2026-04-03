@@ -21,11 +21,12 @@ namespace MegaSimulator.Application.Services
             _simulationRepository = simulationRepository;
         }
 
+        /// <summary>Âge légal simplifié (année entière). Ne modélise pas le cas 63 ans et 6 mois (certaines générations autour de 1961).</summary>
         public int GetAgeLegal(int anneeNaissance)
         {
             if (anneeNaissance <= 1954) return 62;
             if (anneeNaissance <= 1960) return 63;
-            // Réforme 2023 : génération 1961+ → 64 ans
+            // Réforme 2023 : à partir de 1961, âge légal affiché 64 ans (approximation — voir retirement.md)
             return 64;
         }
 
@@ -38,8 +39,10 @@ namespace MegaSimulator.Application.Services
             if (anneeNaissance == 1957 || anneeNaissance == 1958) return 167;
             if (anneeNaissance == 1959 || anneeNaissance == 1960) return 168;
             if (anneeNaissance == 1961 || anneeNaissance == 1962) return 169;
-            // 1963 et après
-            return 170;
+            if (anneeNaissance == 1963) return 170;
+            if (anneeNaissance == 1964) return 171;
+            // 1965 et après (barème 2026 — voir docs/knowledge-base/retirement.md)
+            return 172;
         }
 
         public decimal ComputeDecote(int trimestresValides, int trimestresRequis)
