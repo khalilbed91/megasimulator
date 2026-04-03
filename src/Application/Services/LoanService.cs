@@ -108,6 +108,40 @@ namespace MegaSimulator.Application.Services
             return rows;
         }
 
+        /// <summary>Fusionne deux amortissements (ex. principal taux nominal + tranche 0 %) avec une assurance mensuelle fixe sur le capital banque total.</summary>
+        private static List<LoanScheduleRowDto> MergeLoanSchedules(
+            List<LoanScheduleRowDto> scheduleMain,
+            List<LoanScheduleRowDto> scheduleBooster,
+            decimal insuranceBasePrincipal,
+            decimal insuranceAnnualPercent)
+        {
+            var insMo = insuranceBasePrincipal <= 0
+                ? 0m
+                : decimal.Round(insuranceBasePrincipal * (insuranceAnnualPercent / 100m) / 12m, 2);
+            var n = Math.Max(scheduleMain.Count, scheduleBooster.Count);
+            var result = new List<LoanScheduleRowDto>(n);
+            for (var i = 0; i < n; i++)
+            {
+                var princ = (i < scheduleMain.Count ? scheduleMain[i].PrincipalPart : 0m)
+                    + (i < scheduleBooster.Count ? scheduleBooster[i].PrincipalPart : 0m);
+                var intr = (i < scheduleMain.Count ? scheduleMain[i].InterestPart : 0m)
+                    + (i < scheduleBooster.Count ? scheduleBooster[i].InterestPart : 0m);
+                var rem = (i < scheduleMain.Count ? scheduleMain[i].RemainingPrincipal : 0m)
+                    + (i < scheduleBooster.Count ? scheduleBooster[i].RemainingPrincipal : 0m);
+                result.Add(new LoanScheduleRowDto
+                {
+                    Month = i + 1,
+                    PrincipalPart = princ,
+                    InterestPart = intr,
+                    InsurancePart = insMo,
+                    Payment = decimal.Round(princ + intr + insMo, 2),
+                    RemainingPrincipal = rem
+                });
+            }
+
+            return result;
+        }
+
         private static int ZoneColumn(string? zone)
         {
             var z = (zone ?? "B2").Trim();
@@ -210,8 +244,25 @@ namespace MegaSimulator.Application.Services
             }
 
             var n = Math.Max(1, req.DurationMonths);
-            var monthlyBank = MonthlyAnnuity(bankK, req.NominalRateAnnualPercent, n);
+
+            var boosterK = 0m;
+            if (cat == "immo" && req.BoosterAmount > 0 && bankK > 0)
+            {
+                boosterK = Math.Min(req.BoosterAmount, bankK);
+                if (req.BoosterAmount > bankK)
+                    warnings.Add($"Tranche booster 0 % : montant demandé ramené au capital banque ({bankK:N0} €).");
+            }
+
+            var mainK = bankK - boosterK;
+
+            var monthlyBankMain = mainK > 0 ? MonthlyAnnuity(mainK, req.NominalRateAnnualPercent, n) : 0m;
+            var monthlyBankBooster = boosterK > 0 ? MonthlyAnnuity(boosterK, 0m, n) : 0m;
+            var monthlyBank = decimal.Round(monthlyBankMain + monthlyBankBooster, 2);
             if (bankK <= 0) monthlyBank = 0m;
+
+            if (boosterK > 0)
+                warnings.Add(
+                    "Tranche « booster » 0 % : modèle pédagogique (même durée que le prêt principal). Les offres réelles varient selon les banques et les conditions d’éligibilité.");
 
             var monthlyIns = bankK <= 0
                 ? 0m
@@ -258,7 +309,9 @@ namespace MegaSimulator.Application.Services
             if (!usuryOk)
                 warnings.Add($"TAEG approximatif ({taegApprox:N2} %) au-dessus du seuil d'usure indicatif ({usury:N2} %) — à vérifier par durée et trimestre Banque de France.");
 
-            var schedule = BuildSchedule(bankK, req.NominalRateAnnualPercent, Math.Min(n, 360), req.InsuranceAnnualPercent);
+            var scheduleMain = BuildSchedule(mainK, req.NominalRateAnnualPercent, n, 0m);
+            var scheduleBooster = BuildSchedule(boosterK, 0m, n, 0m);
+            var schedule = MergeLoanSchedules(scheduleMain, scheduleBooster, bankK, req.InsuranceAnnualPercent);
             decimal totalInterest = 0m, totalIns = 0m;
             foreach (var row in schedule)
             {
@@ -282,6 +335,8 @@ namespace MegaSimulator.Application.Services
                 NotaryFeesPercent = notaryPct,
                 TotalProjectBeforeBank = totalProject,
                 BankPrincipal = bankK,
+                MainBankPrincipal = mainK,
+                BoosterAmountApplied = boosterK,
                 PtzAmountApplied = ptzApplied,
                 ActionLogementAmountApplied = palApplied,
                 MonthlyBankPrincipalInterest = monthlyBank,

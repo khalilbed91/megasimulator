@@ -33,6 +33,11 @@ const T = {
     palOn: 'Prêt Action Logement',
     palAmount: 'Montant PAL (€, max 40 000)',
     palRate: 'Taux PAL annuel (%)',
+    boosterOn: 'Tranche « booster » à 0 % (banque)',
+    boosterAmount: 'Montant booster 0 % (€)',
+    boosterHint: 'Ex. offre type Crédit Agricole : partie du prêt au taux 0 %, même durée que l’emprunt principal (modèle pédagogique).',
+    mainBankK: 'Capital au taux nominal',
+    boosterApplied: 'Booster 0 % appliqué',
     calc: 'Calculer',
     reset: 'Réinitialiser',
     results: 'Résultats',
@@ -84,6 +89,11 @@ const T = {
     palOn: 'Action Logement loan',
     palAmount: 'PAL amount (€, max 40k)',
     palRate: 'PAL annual rate (%)',
+    boosterOn: '0% “booster” tranche (bank)',
+    boosterAmount: 'Booster amount at 0% (€)',
+    boosterHint: 'e.g. bank promo: part of the loan at 0%, same term as the main mortgage (educational model).',
+    mainBankK: 'Principal at nominal rate',
+    boosterApplied: '0% booster applied',
     calc: 'Calculate',
     reset: 'Reset',
     results: 'Results',
@@ -139,6 +149,8 @@ export default function LoanSimulator({ lang = 'fr' }) {
   const [palOn, setPalOn] = useState(false)
   const [palAmount, setPalAmount] = useState('30000')
   const [palRate, setPalRate] = useState('1')
+  const [boosterOn, setBoosterOn] = useState(false)
+  const [boosterAmount, setBoosterAmount] = useState('30000')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
@@ -170,7 +182,8 @@ export default function LoanSimulator({ lang = 'fr' }) {
         ptzDefermentMonths: parseInt(ptzDefer, 10) || 0,
         includeActionLogement: category === 'immo' && palOn,
         actionLogementAmount: category === 'immo' && palOn ? parseDec(palAmount) : 0,
-        actionLogementRateAnnualPercent: parseDec(palRate) || 1
+        actionLogementRateAnnualPercent: parseDec(palRate) || 1,
+        boosterAmount: category === 'immo' && boosterOn ? parseDec(boosterAmount) : 0
       }
       const res = await fetch('/api/loan/simulate', {
         method: 'POST',
@@ -195,6 +208,7 @@ export default function LoanSimulator({ lang = 'fr' }) {
     setFileFees('0'); setGuarantee('0'); setIncome(''); setOtherLoans('0')
     setPtzOn(false); setPtzZone('B2'); setPtzHousehold('2'); setPtzIncome(''); setPtzAmount(''); setPtzDefer('120')
     setPalOn(false); setPalAmount('30000'); setPalRate('1')
+    setBoosterOn(false); setBoosterAmount('30000')
     setResult(null); setErr('')
   }
 
@@ -336,6 +350,19 @@ export default function LoanSimulator({ lang = 'fr' }) {
                 </div>
               </>
             )}
+            <div className="field-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <input type="checkbox" id="booster" checked={boosterOn} onChange={e => setBoosterOn(e.target.checked)} />
+              <label htmlFor="booster" className="field-label" style={{ margin: 0 }}>{t.boosterOn}</label>
+            </div>
+            {boosterOn && (
+              <>
+                <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--muted)', lineHeight: 1.45 }}>{t.boosterHint}</p>
+                <div className="field-group">
+                  <label className="field-label">{t.boosterAmount}</label>
+                  <input className="field-input" inputMode="decimal" value={boosterAmount} onChange={e => setBoosterAmount(e.target.value)} />
+                </div>
+              </>
+            )}
           </>
         )}
 
@@ -380,6 +407,12 @@ export default function LoanSimulator({ lang = 'fr' }) {
                 <>
                   <div className="results-row"><span className="results-row-label">{t.notary}</span><span>{fmt(r.notaryFees ?? r.NotaryFees, lang)} € ({fmt(r.notaryFeesPercent ?? r.NotaryFeesPercent, lang)} %)</span></div>
                   <div className="results-row"><span className="results-row-label">{t.bankK}</span><span>{fmt(r.bankPrincipal ?? r.BankPrincipal, lang)} €</span></div>
+                  {(r.boosterAmountApplied > 0 || r.BoosterAmountApplied > 0) && (
+                    <>
+                      <div className="results-row"><span className="results-row-label">{t.boosterApplied}</span><span>{fmt(r.boosterAmountApplied ?? r.BoosterAmountApplied, lang)} €</span></div>
+                      <div className="results-row"><span className="results-row-label">{t.mainBankK}</span><span>{fmt(r.mainBankPrincipal ?? r.MainBankPrincipal, lang)} €</span></div>
+                    </>
+                  )}
                 </>
               )}
               <div className="results-row"><span className="results-row-label">{t.hcsf}</span><span>{fmt(r.debtRatio ?? r.DebtRatio, lang)} % {((r.hcsfDebtRatioOk ?? r.HcsfDebtRatioOk) ? '✓' : '⚠')}</span></div>

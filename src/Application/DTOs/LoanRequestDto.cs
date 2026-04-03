@@ -49,5 +49,11 @@ namespace MegaSimulator.Application.DTOs
         public bool IncludeActionLogement { get; set; }
         public decimal ActionLogementAmount { get; set; }
         public decimal ActionLogementRateAnnualPercent { get; set; } = 1.0m;
+
+        /// <summary>
+        /// Immobilier : tranche « booster » à 0 % (ex. offre bancaire type Crédit Agricole), en €, plafonnée au capital banque.
+        /// Amortie linéairement sur la même durée que le prêt au taux nominal — modèle pédagogique.
+        /// </summary>
+        public decimal BoosterAmount { get; set; }
     }
 }

@@ -148,6 +148,7 @@ Implémentation : prendre en compte apport, frais initiaux, reste à vivre minim
 | Immobilier | Prix TTC et/ou prix HT + régime TVA (neuf 20 % / 10 % / 5,5 %, ancien), frais de notaire indicatifs (7,5 % / 2 %) |
 | PTZ | Contrôle revenu fiscal de réf. seuil par zone (barème indicatif 2026 dans `LoanService`), plafond montant indicatif par zone, différé puis mensualités sans intérêt sur phase amortissement |
 | Action Logement | Tranche complémentaire taux paramétrable (défaut 1 %), montant plafonné 40 k€ (cas HLM 40 k€ non différencié dans le MVP) |
+| Booster 0 % (immo) | Champ `boosterAmount` : tranche du **capital banque** amortie à 0 % sur la **même durée** que le prêt au taux nominal (modèle pédagogique type offres bancaires ; conditions réelles variables). Réponse : `mainBankPrincipal`, `boosterAmountApplied`. |
 | Auto / perso | Capital direct, mêmes contrôles TAEG approximatif et HCSF si revenus renseignés |
 | HCSF | Ratio 35 %, reste à vivre indicatif 800 € (paramétrable côté doc, pas encore en JSON) |
 

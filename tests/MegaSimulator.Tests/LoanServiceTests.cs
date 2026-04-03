@@ -129,5 +129,38 @@ namespace MegaSimulator.Tests
             });
             Assert.Equal(8.61m, perso.UsuryThresholdPercent);
         }
+
+        [Fact]
+        public async Task Simulate_Immo_BoosterZeroPercent_SplitsPrincipalAndLowersInterest()
+        {
+            var plain = await Svc().Simulate(new LoanRequestDto
+            {
+                Category = "immo",
+                TvaRegime = "ancien",
+                PurchasePriceTtc = 200_000m,
+                DownPayment = 40_000m,
+                NominalRateAnnualPercent = 3.5m,
+                DurationMonths = 240,
+                InsuranceAnnualPercent = 0m,
+                BoosterAmount = 0m
+            });
+            var withBooster = await Svc().Simulate(new LoanRequestDto
+            {
+                Category = "immo",
+                TvaRegime = "ancien",
+                PurchasePriceTtc = 200_000m,
+                DownPayment = 40_000m,
+                NominalRateAnnualPercent = 3.5m,
+                DurationMonths = 240,
+                InsuranceAnnualPercent = 0m,
+                BoosterAmount = 30_000m
+            });
+            Assert.Equal(175_000m, plain.BankPrincipal);
+            Assert.Equal(175_000m, withBooster.BankPrincipal);
+            Assert.Equal(30_000m, withBooster.BoosterAmountApplied);
+            Assert.Equal(145_000m, withBooster.MainBankPrincipal);
+            Assert.True(withBooster.MonthlyBankPrincipalInterest < plain.MonthlyBankPrincipalInterest);
+            Assert.True(withBooster.TotalInterestBank < plain.TotalInterestBank);
+        }
     }
 }

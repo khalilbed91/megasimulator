@@ -22,6 +22,13 @@ namespace MegaSimulator.Application.DTOs
         public decimal NotaryFeesPercent { get; set; }
         public decimal TotalProjectBeforeBank { get; set; }
         public decimal BankPrincipal { get; set; }
+
+        /// <summary>Part du capital banque au taux nominal (hors tranche booster 0 %).</summary>
+        public decimal MainBankPrincipal { get; set; }
+
+        /// <summary>Montant de la tranche à 0 % effectivement appliqué (≤ BankPrincipal).</summary>
+        public decimal BoosterAmountApplied { get; set; }
+
         public decimal PtzAmountApplied { get; set; }
         public decimal ActionLogementAmountApplied { get; set; }
 

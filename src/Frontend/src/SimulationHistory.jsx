@@ -19,7 +19,10 @@ const T = {
     colPensionGross: 'Brut annuel',
     colTaux: 'Taux rempl.',
     colLoanCat: 'Type prêt',
+    colLoanRate: 'Taux nominal',
     colLoanMonthly: 'Mensualité totale',
+    colLoanTotalRepaid: 'Total remb. banque (estim.)',
+    colLoanTotalRepaidHint: 'Capital + intérêts + assurance sur la durée',
     colSavingsTarget: 'Objectif',
     colSavingsMonthly: 'Épargne / mois requise',
     colHorizonMonths: 'Mois',
@@ -54,7 +57,10 @@ const T = {
     colPensionGross: 'Gross annual',
     colTaux: 'Repl. rate',
     colLoanCat: 'Loan type',
+    colLoanRate: 'Nominal rate',
     colLoanMonthly: 'Total monthly',
+    colLoanTotalRepaid: 'Total repaid, bank (est.)',
+    colLoanTotalRepaidHint: 'Principal + interest + insurance over term',
     colSavingsTarget: 'Target',
     colSavingsMonthly: 'Required monthly',
     colHorizonMonths: 'Months',
@@ -306,7 +312,14 @@ export default function SimulationHistory({ token, lang, onRequestLogin, onReque
           if (kind === 'loan') {
             const cat = (req.Category ?? req.category ?? '').toString()
             const monthly = res.MonthlyTotalSteadyState ?? res.monthlyTotalSteadyState ?? null
+            const nominal = req.NominalRateAnnualPercent ?? req.nominalRateAnnualPercent ?? null
             const bankK = res.BankPrincipal ?? res.bankPrincipal ?? null
+            const ti = res.TotalInterestBank ?? res.totalInterestBank ?? null
+            const tins = res.TotalInsurance ?? res.totalInsurance ?? null
+            let totalRepaid = null
+            if (bankK != null && ti != null && tins != null && !isNaN(Number(bankK)) && !isNaN(Number(ti)) && !isNaN(Number(tins))) {
+              totalRepaid = Number(bankK) + Number(ti) + Number(tins)
+            }
             return (
               <div key={sim.id} className="history-card">
                 <div className="history-card-left">
@@ -318,12 +331,12 @@ export default function SimulationHistory({ token, lang, onRequestLogin, onReque
                     <div className="history-figure-label">{tr.colLoanCat}</div>
                     <div className="history-figure-value">{cat || '—'}</div>
                   </div>
-                  {bankK != null && !isNaN(Number(bankK)) && (
+                  {nominal != null && nominal !== '' && !isNaN(Number(nominal)) && (
                     <>
                       <div className="history-figure-sep">·</div>
                       <div className="history-figure">
-                        <div className="history-figure-label">Capital</div>
-                        <div className="history-figure-value">{fmt(bankK)}</div>
+                        <div className="history-figure-label">{tr.colLoanRate}</div>
+                        <div className="history-figure-value">{fmtPct(Number(nominal))}</div>
                       </div>
                     </>
                   )}
@@ -332,6 +345,15 @@ export default function SimulationHistory({ token, lang, onRequestLogin, onReque
                     <div className="history-figure-label">{tr.colLoanMonthly}</div>
                     <div className="history-figure-value history-figure-value--accent">{fmt(monthly)}</div>
                   </div>
+                  {totalRepaid != null && (
+                    <>
+                      <div className="history-figure-sep">·</div>
+                      <div className="history-figure" title={tr.colLoanTotalRepaidHint}>
+                        <div className="history-figure-label">{tr.colLoanTotalRepaid}</div>
+                        <div className="history-figure-value">{fmt(totalRepaid)}</div>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="history-card-actions">
                   <button
