@@ -9,6 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 function sitemapPriority(p) {
   if (p === '/' || p.includes('paie')) return '1.0'
+  if (p.startsWith('/guides')) return '0.9'
   return '0.8'
 }
 

@@ -8,8 +8,13 @@ import RetirementSimulator from './RetirementSimulator'
 import SavingsSimulator from './SavingsSimulator'
 import LoanSimulator from './LoanSimulator'
 import { PATH, pathToTab, pathForTab, pathToLegalPage } from './seo/paths'
+import { pathToGuideId, PATH_GUIDES } from './seo/guidePaths'
 import SeoHead from './seo/SeoHead'
+import SeoHeadGuide from './seo/SeoHeadGuide'
 import SeoIntro from './seo/SeoIntro'
+import { GUIDE_PAGES } from './guides/guideContent.jsx'
+import GuideHub from './guides/GuideHub'
+import GuideArticle from './guides/GuideArticle'
 import LegalPageView from './legal/LegalPages'
 import './styles.css'
 import Logo from './components/Logo'
@@ -30,6 +35,8 @@ const T = {
     topPrivacy: 'Politique de confidentialité',
     navLegalMentions: 'Mentions légales',
     navPrivacy: 'Confidentialité',
+    navGuides: 'Guides',
+    footerGuides: 'Guides',
     footerNavAria: 'Liens du pied de page',
   },
   en: {
@@ -47,6 +54,8 @@ const T = {
     topPrivacy: 'Privacy policy',
     navLegalMentions: 'Legal notices',
     navPrivacy: 'Privacy',
+    navGuides: 'Guides',
+    footerGuides: 'Guides',
     footerNavAria: 'Footer links',
   }
 }
@@ -61,7 +70,8 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
   const navigate = useNavigate()
   const location = useLocation()
   const legalPage = pathToLegalPage(location.pathname)
-  const tab = pathToTab(location.pathname) ?? 'payroll'
+  const guideId = pathToGuideId(location.pathname)
+  const tab = legalPage ? null : guideId ? 'guide' : pathToTab(location.pathname) ?? 'payroll'
   const year = new Date().getFullYear()
 
   const [user, setUser] = useState(null)
@@ -82,6 +92,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
 
   useEffect(() => {
     if (pathToLegalPage(location.pathname)) return
+    if (pathToGuideId(location.pathname)) return
     if (pathToTab(location.pathname) === null) {
       navigate(PATH.payroll, { replace: true })
     }
@@ -112,7 +123,11 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
 
   return (
     <div className="app-shell">
-      <SeoHead pageKey={legalPage || tab} lang={lang} />
+      {guideId ? (
+        <SeoHeadGuide guideId={guideId} lang={lang} />
+      ) : (
+        <SeoHead pageKey={legalPage || tab} lang={lang} />
+      )}
       {sidebarOpen && <div className="sidebar-overlay" onClick={()=>setSidebarOpen(false)} />}
 
       <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
@@ -138,6 +153,22 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
         {navItem('savings', tr.navSavings,
           <svg viewBox="0 0 24 24" fill="none"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         )}
+
+        <div className="nav-divider" />
+        <div className="nav-section-label">{tr.navGuides}</div>
+        <Link
+          to={PATH_GUIDES.index}
+          className={`nav-item guide-nav-link${guideId ? ' active' : ''}`}
+          onClick={() => setSidebarOpen(false)}
+          aria-current={guideId ? 'page' : undefined}
+        >
+          <svg viewBox="0 0 24 24" fill="none" width="20" height="20" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M8 7h8M8 11h8M8 15h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+          <span>{tr.navGuides}</span>
+        </Link>
 
         <div className="nav-divider" />
         <div className="nav-section-label">{tr.sectionUser}</div>
@@ -181,14 +212,20 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
             <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
           </button>
           <h1 className="top-bar-title">
-            {legalPage === 'mentions' ? tr.topMentions : legalPage === 'privacy' ? tr.topPrivacy : topbarTitles(tr, tab)}
+            {legalPage === 'mentions'
+              ? tr.topMentions
+              : legalPage === 'privacy'
+                ? tr.topPrivacy
+                : guideId && GUIDE_PAGES[guideId]
+                  ? GUIDE_PAGES[guideId][lang === 'en' ? 'en' : 'fr'].topbarTitle
+                  : topbarTitles(tr, tab)}
           </h1>
         </header>
 
         <main className="page-body" id="main-content">
           {legalPage && <LegalPageView page={legalPage} lang={lang} />}
 
-          {!legalPage && ['payroll','retirement','loans','savings'].includes(tab) && (
+          {!legalPage && tab && ['payroll', 'retirement', 'loans', 'savings'].includes(tab) && (
             <div className="tab-bar" role="tablist">
               <button role="tab" aria-selected={tab==='payroll'} className={`tab-btn${tab==='payroll'?' active':''}`} onClick={()=>goTab('payroll')}>
                 <svg viewBox="0 0 24 24" fill="none"><path d="M9 7h6M9 11h6M9 15h4M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -209,7 +246,10 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
             </div>
           )}
 
-          {!legalPage && <SeoIntro tab={tab} lang={lang} />}
+          {!legalPage && tab && <SeoIntro tab={tab} lang={lang} />}
+
+          {!legalPage && guideId === 'index' && <GuideHub lang={lang} />}
+          {!legalPage && guideId && guideId !== 'index' && <GuideArticle guideId={guideId} lang={lang} />}
 
           {!legalPage && tab === 'payroll' && <PayrollSimulator lang={lang} onLangChange={onLangChange} />}
 
@@ -234,6 +274,8 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
               <Link to={PATH.legalMentions} onClick={() => setSidebarOpen(false)}>{tr.navLegalMentions}</Link>
               <span className="app-site-footer-sep" aria-hidden="true">·</span>
               <Link to={PATH.privacy} onClick={() => setSidebarOpen(false)}>{tr.navPrivacy}</Link>
+              <span className="app-site-footer-sep" aria-hidden="true">·</span>
+              <Link to={PATH_GUIDES.index} onClick={() => setSidebarOpen(false)}>{tr.footerGuides}</Link>
               <span className="app-site-footer-sep" aria-hidden="true">·</span>
               <Link to={PATH.contact} onClick={() => setSidebarOpen(false)}>{tr.navContact}</Link>
             </nav>

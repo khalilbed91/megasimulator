@@ -199,11 +199,12 @@ export default function SeoHead({ pageKey, lang }) {
   } else if (isFinanceSimulator) {
     jsonLd = {
       '@context': 'https://schema.org',
-      '@type': 'WebApplication',
+      '@type': ['WebApplication', 'SoftwareApplication'],
       name: schemaAppName(m.title),
       description: m.description,
       inLanguage: L === 'en' ? 'en' : 'fr',
       applicationCategory: 'https://schema.org/FinanceApplication',
+      applicationSubCategory: 'Payroll and financial calculator',
       operatingSystem: 'Web browser',
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
       featureList: m.schemaFeatures || [],

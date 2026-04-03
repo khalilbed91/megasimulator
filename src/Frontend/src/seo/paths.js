@@ -1,5 +1,7 @@
 /** French SEO-oriented paths (primary). Sync with App.jsx redirects and vite sitemap generation. */
 
+import { GUIDE_SITEMAP_PATHS } from './guidePaths.js'
+
 export const PATH = {
   payroll: '/simulateur-paie-brut-net',
   retirement: '/simulation-retraite',
@@ -24,6 +26,7 @@ export const SITEMAP_PATHS = [
   PATH.contact,
   PATH.legalMentions,
   PATH.privacy,
+  ...GUIDE_SITEMAP_PATHS,
 ]
 
 export const TAB_TO_PATH = {
