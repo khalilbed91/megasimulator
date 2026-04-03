@@ -31,5 +31,16 @@ namespace MegaSimulator.Tests
 
             mockRepo.Verify(r => r.AddAsync(It.IsAny<MegaSimulator.Domain.Entities.Simulation>()), Times.Once);
         }
+
+        [Fact]
+        public async Task Simulate_MutuelleNetDeduction_SubtractsFromNet()
+        {
+            var mockFormula = new Mock<MegaSimulator.Application.Interfaces.IFormulaService>();
+            mockFormula.Setup(f => f.GetByNameAsync("brut_to_net_estimate")).ReturnsAsync((MegaSimulator.Domain.Entities.Formula?)null);
+            var ps = new PayrollService(mockFormula.Object, new PayrollParams());
+            var none = await ps.Simulate(new PayrollRequestDto { Brut = 3000m, Statut = "non-cadre", Parts = 0m });
+            var with = await ps.Simulate(new PayrollRequestDto { Brut = 3000m, Statut = "non-cadre", Parts = 0m, MutuelleNetDeduction = 50m });
+            Assert.Equal(none.Net - 50m, with.Net);
+        }
     }
 }

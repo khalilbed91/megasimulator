@@ -70,8 +70,12 @@ namespace MegaSimulator.Application.Services
         // New: full simulate flow returns detailed DTO and persists simulation when repository available
         public virtual async Task<MegaSimulator.Application.DTOs.PayrollResponseDto> Simulate(MegaSimulator.Application.DTOs.PayrollRequestDto req, System.Guid? userId = null)
         {
-            // Effective monthly brut = declared brut + monthly avantages + monthly primes
-            var brut = req.Brut + req.RevenusAnnexes + req.Primes;
+            // Base brute = salaire + annexes/primes + transports/télétravail + part employeur des titres-restaurant
+            var pctTicketEmp = Math.Clamp(req.TicketRestoEmployeurPct, 0m, 100m) / 100m;
+            var ticketM = Math.Max(0m, req.TicketRestoMensuel);
+            var ticketEmployeurBrut = ticketM * pctTicketEmp;
+            var brut = req.Brut + req.RevenusAnnexes + req.Primes
+                + Math.Max(0m, req.TransportMensuel) + Math.Max(0m, req.TeletravailMensuel) + ticketEmployeurBrut;
             var statut = req.Statut ?? "non-cadre";
 
             var netBeforeRetenue = await BrutToNet(brut, statut);
@@ -95,12 +99,19 @@ namespace MegaSimulator.Application.Services
                     net = decimal.Round(net - retenueAmount, 2);
                 }
             }
+
+            // Cotisations « salariales » (hors PAS) : cohérent avec la barre de répartition UI
+            var socialContribution = decimal.Round(brut - net, 2);
+
+            // Titres-restaurant : part salariale + mutuelle déduites du net après PAS
+            var partSalarialeTicket = ticketM * (1m - pctTicketEmp);
+            var mutuelle = Math.Max(0m, req.MutuelleNetDeduction);
+            net = decimal.Round(net - partSalarialeTicket - mutuelle, 2);
+
             var employerCost = await EmployerCost(brut);
             var (csgBase, csgDed, csgNonDed) = ComputeCsgComponents(brut);
             var agirc = ComputeAgircArrcoContribution(brut);
             var jei = IsJeiEligible(brut);
-
-            var socialContribution = decimal.Round(brut - net, 2);
 
             var response = new MegaSimulator.Application.DTOs.PayrollResponseDto
             {
@@ -117,7 +128,7 @@ namespace MegaSimulator.Application.Services
                 IsJeiEligible = jei,
                 RetenuePct = retenuePct,
                 RetenueAmount = retenueAmount,
-                NetAfterRetenue = net
+                NetAfterRetenue = decimal.Round(net + partSalarialeTicket + mutuelle, 2)
             };
 
             if (_simulationRepository != null)

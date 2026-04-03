@@ -11,6 +11,17 @@ const T = {
     caMensuel: 'CA mensuel HT', caMensuelPlaceholder: 'ex: 5 000',
     statut: 'Type de contrat / Statut',
     revenusAnnexes: 'Revenus annexes', primes: 'Primes / Bonus',
+    avantagesTitle: 'Transports, titres-restaurant & frais',
+    transportLabel: 'Transports',
+    transportHint: 'Montant mensuel pris en charge par l’employeur (intègre la base brute).',
+    ticketRestoLabel: 'Titres-restaurant',
+    ticketMontant: 'Montant mensuel (€)',
+    ticketEmployeurPct: 'Part employeur',
+    ticketPartSalariale: 'Part salariale (déduite du net)',
+    teletravailLabel: 'Forfait télétravail',
+    teletravailHint: 'Forfait mensuel (€), intègre la base brute.',
+    mutuelleLabel: 'Mutuelle',
+    mutuelleHint: 'Montant prélevé sur le net après impôt (part salariale).',
     simulate: 'Calculer', reset: 'Réinitialiser',
     resultsTitle: 'Résultats', empty: 'Remplissez le formulaire et cliquez sur Calculer.',
     fixFieldsHint: 'Corrigez les champs indiqués ci-dessus, puis cliquez à nouveau sur Calculer.',
@@ -47,6 +58,17 @@ const T = {
     caMensuel: 'Monthly revenue (excl. tax)', caMensuelPlaceholder: 'e.g. 5000',
     statut: 'Contract / Status type',
     revenusAnnexes: 'Additional income', primes: 'Bonuses',
+    avantagesTitle: 'Transport, meal vouchers & deductions',
+    transportLabel: 'Transport',
+    transportHint: 'Monthly amount paid by the employer (included in gross base).',
+    ticketRestoLabel: 'Meal vouchers',
+    ticketMontant: 'Monthly amount (€)',
+    ticketEmployeurPct: 'Employer share',
+    ticketPartSalariale: 'Employee share (deducted from net)',
+    teletravailLabel: 'Remote work allowance',
+    teletravailHint: 'Monthly allowance (€), included in gross base.',
+    mutuelleLabel: 'Health insurance',
+    mutuelleHint: 'Amount taken from net after tax (employee share).',
     simulate: 'Calculate', reset: 'Reset',
     resultsTitle: 'Results', empty: 'Fill in the form and click Calculate.',
     fixFieldsHint: 'Fix the highlighted fields above, then click Calculate again.',
@@ -86,6 +108,12 @@ const fmt = (v, lang) =>
     ? v.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : '—'
 
+function parseTicketEmployeurPct(raw) {
+  if (raw === '' || raw == null) return 50
+  const n = +raw
+  return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 50
+}
+
 /** Aligné sur PayrollService.EmployerCost (fallback brut × (1 + ratio)) — masse salariale totale ≈ brut × ce facteur */
 const EMPLOYER_COST_FACTOR = 1.45
 
@@ -113,15 +141,6 @@ function EuroInput({ value, onChange, placeholder, error, unit }) {
     </div>
   )
 }
-
-/* Preset avantages chips */
-const AVANTAGE_PRESETS = [
-  { id: 'resto',    labelFr: 'Ticket restaurant', labelEn: 'Meal voucher',    amount: 220, hintFr: '11€ × 20j × 60%',     hintEn: '11€ × 20d × 60%' },
-  { id: 'ttx',      labelFr: 'Forfait télétravail', labelEn: 'Remote work',   amount: 60,  hintFr: '3€/j × 20j',           hintEn: '3€/d × 20d' },
-  { id: 'tel',      labelFr: 'Forfait téléphone', labelEn: 'Phone allowance', amount: 25,  hintFr: 'Usage pro',             hintEn: 'Pro usage' },
-  { id: 'transport',labelFr: 'Transports', labelEn: 'Transport',              amount: 82,  hintFr: '50% carte Navig. ~82€', hintEn: '50% transit pass' },
-  { id: 'prime',    labelFr: 'Prime mensuelle', labelEn: 'Monthly bonus',     amount: 100, hintFr: 'Prime variable',        hintEn: 'Variable bonus' },
-]
 
 /** PAS 2026 rate suggestion based on estimated annual net */
 function suggestRetenue(brutAnn) {
@@ -318,8 +337,12 @@ export default function PayrollSimulator({ lang = 'fr' }){
   /* Common */
   const [brutAnnuel,     setBrutAnnuel]     = useState('')
   const [revenusAnnexes, setRevenusAnnexes] = useState('')
-  const [avantagesActifs, setAvantagesActifs] = useState([])
   const [primes,         setPrimes]         = useState('')
+  const [transportMensuel, setTransportMensuel] = useState('')
+  const [teletravailMensuel, setTeletravailMensuel] = useState('')
+  const [ticketRestoMensuel, setTicketRestoMensuel] = useState('')
+  const [ticketEmployeurPct, setTicketEmployeurPct] = useState('50')
+  const [mutuelleNet, setMutuelleNet] = useState('')
   const [result,         setResult]         = useState(null)
   const [loading,        setLoading]        = useState(false)
   const [submitAttempted, setSubmitAttempted] = useState(false)
@@ -404,8 +427,13 @@ export default function PayrollSimulator({ lang = 'fr' }){
         BrutAnnuel: brutAnn,
         Statut: isSalaried ? statut : 'non-cadre',
         Parts: fiscalMode === 'parts' ? +parts : 1,
-        RevenusAnnexes: +(revenusAnnexes || 0),
-        Primes: +(primes || 0),
+        RevenusAnnexes: isSalaried ? 0 : +(revenusAnnexes || 0),
+        Primes: isSalaried ? 0 : +(primes || 0),
+        TransportMensuel: isSalaried ? +(transportMensuel || 0) : 0,
+        TeletravailMensuel: isSalaried ? +(teletravailMensuel || 0) : 0,
+        TicketRestoMensuel: isSalaried ? +(ticketRestoMensuel || 0) : 0,
+        TicketRestoEmployeurPct: isSalaried ? parseTicketEmployeurPct(ticketEmployeurPct) : 0,
+        MutuelleNetDeduction: isSalaried ? +(mutuelleNet || 0) : 0,
         RetenuePct: fiscalMode === 'retenue' ? +retenuePct : 0,
         /* Extra context for future backend enrichment */
         FreelanceType: isFreelance ? freelanceType : null,
@@ -439,7 +467,9 @@ export default function PayrollSimulator({ lang = 'fr' }){
 
   const reset = () => {
     setBrutAnnuel(''); setCaAnnuel(''); setCaMensuel('')
-    setRevenusAnnexes(''); setAvantagesActifs([]); setPrimes(''); setRetenuePct(0); setParts(1)
+    setRevenusAnnexes(''); setPrimes('')
+    setTransportMensuel(''); setTeletravailMensuel(''); setTicketRestoMensuel(''); setTicketEmployeurPct('50'); setMutuelleNet('')
+    setRetenuePct(0); setParts(1)
     setPortagePercent(10); setPortageCompany(''); setFraisPro('')
     setSituationFam('celibataire'); setEnfants(0)
     setResult(null); setFiscalMode('parts'); setSubmitAttempted(false)
@@ -474,38 +504,56 @@ export default function PayrollSimulator({ lang = 'fr' }){
               )}
             </div>
             <div className="field-group" style={{ gridColumn: '1/-1' }}>
-              <label className="field-label">{t.revenusAnnexes} <span className="field-hint" style={{display:'inline',marginLeft:4}}>(€/mois)</span></label>
-              {/* Preset chips */}
-              <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:8 }}>
-                {AVANTAGE_PRESETS.map(p => {
-                  const active = avantagesActifs.includes(p.id)
-                  return (
-                    <button key={p.id} type="button"
-                      className={`avantage-chip${active ? ' active' : ''}`}
-                      onClick={() => {
-                        if (active) {
-                          setAvantagesActifs(a => a.filter(x => x !== p.id))
-                          setRevenusAnnexes(v => String(Math.max(0, (+v || 0) - p.amount)))
-                        } else {
-                          setAvantagesActifs(a => [...a, p.id])
-                          setRevenusAnnexes(v => String((+v || 0) + p.amount))
-                        }
-                      }}
-                    >
-                      <span style={{fontWeight:700}}>{lang === 'fr' ? p.labelFr : p.labelEn}</span>
-                      <span style={{opacity:0.7, fontSize:11}}>+{p.amount}€</span>
-                    </button>
-                  )
-                })}
+              <div className="field-label" style={{ marginBottom: 10 }}>{t.avantagesTitle}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="field-group" style={{ gridColumn: '1/-1' }}>
+                  <label className="field-label">{t.transportLabel}</label>
+                  <EuroInput value={transportMensuel} onChange={setTransportMensuel} placeholder="0" unit="/mois" />
+                  <div className="field-hint" style={{ marginTop: 4 }}>{t.transportHint}</div>
+                </div>
+                <div className="field-group" style={{ gridColumn: '1/-1' }}>
+                  <label className="field-label">{t.ticketRestoLabel}</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'end' }}>
+                    <div>
+                      <div className="field-hint" style={{ marginBottom: 4 }}>{t.ticketMontant}</div>
+                      <EuroInput value={ticketRestoMensuel} onChange={setTicketRestoMensuel} placeholder="0" unit="/mois" />
+                    </div>
+                    <div>
+                      <div className="field-hint" style={{ marginBottom: 4 }}>{t.ticketEmployeurPct}</div>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          className="field-input"
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={0.5}
+                          inputMode="decimal"
+                          value={ticketEmployeurPct}
+                          onChange={e => setTicketEmployeurPct(e.target.value)}
+                          style={{ paddingRight: 28 }}
+                        />
+                        <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', fontSize: 13, fontWeight: 600 }}>%</span>
+                      </div>
+                    </div>
+                  </div>
+                  {+ticketRestoMensuel > 0 && (
+                    <div className="field-hint" style={{ marginTop: 6 }}>
+                      {t.ticketPartSalariale}:{' '}
+                      {fmt(+ticketRestoMensuel * (1 - parseTicketEmployeurPct(ticketEmployeurPct) / 100), lang)} € / mois
+                    </div>
+                  )}
+                </div>
+                <div className="field-group" style={{ gridColumn: '1/-1' }}>
+                  <label className="field-label">{t.teletravailLabel}</label>
+                  <EuroInput value={teletravailMensuel} onChange={setTeletravailMensuel} placeholder="0" unit="/mois" />
+                  <div className="field-hint" style={{ marginTop: 4 }}>{t.teletravailHint}</div>
+                </div>
+                <div className="field-group" style={{ gridColumn: '1/-1' }}>
+                  <label className="field-label">{t.mutuelleLabel}</label>
+                  <EuroInput value={mutuelleNet} onChange={setMutuelleNet} placeholder="0" unit="/mois" />
+                  <div className="field-hint" style={{ marginTop: 4 }}>{t.mutuelleHint}</div>
+                </div>
               </div>
-              <EuroInput value={revenusAnnexes} onChange={v => { setRevenusAnnexes(v); setAvantagesActifs([]) }} placeholder="0" unit="/mois" />
-              {revenusAnnexes > 0 && (
-                <div className="field-hint" style={{marginTop:4}}>≈ {fmt(+revenusAnnexes * 12, lang)} €/an · impact net estimé: +{fmt(+revenusAnnexes * 0.78, lang)} €/mois</div>
-              )}
-            </div>
-            <div className="field-group">
-              <label className="field-label">{t.primes} <span className="field-hint" style={{display:'inline',marginLeft:4}}>(€/mois)</span></label>
-              <EuroInput value={primes} onChange={setPrimes} placeholder="0" unit="/mois" />
             </div>
           </div>
         )}
