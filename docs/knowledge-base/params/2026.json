@@ -18,8 +18,9 @@
   "agirc_arrco": {
     "tranche1_pct": 0.0787,
     "tranche2_pct": 0.2159,
-    "valeur_point": 1.45,
-    "note": "Tranche rates are global (salarial+patronal). Split parts in payroll tables if needed. These are estimates and must be verified."
+    "valeur_point": 1.4386,
+    "valeur_point_note": "Valeur de service du point, gel 1er nov. 2025 → 31 oct. 2026 — source : agirc-arrco.fr « Paramètres et chiffres du régime ».",
+    "note": "Tranche rates are global (salarial+patronal). Split parts in payroll tables if needed."
   },
   "csg_crds": {
     "assiette_pct": 98.25,
@@ -33,7 +34,12 @@
   },
   "loans": {
     "taux_usure": {
-      "immo_20_plus": 0.0513
+      "source": "Banque de France, taux d'usure applicables au 1er avril 2026 (parution T2 2026)",
+      "immo_fixe_lt_10_years_percent": 4.0,
+      "immo_fixe_10_to_lt_20_years_percent": 4.48,
+      "immo_fixe_20_years_and_more_percent": 5.19,
+      "conso_over_6000_eur_percent": 8.61,
+      "immo_20_plus": 0.0519
     },
     "max_immo_duration_years": 25,
     "max_immo_duration_with_works_years": 27,

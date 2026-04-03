@@ -18,8 +18,8 @@ namespace MegaSimulator.Tests
         [InlineData(1959, 168)]
         [InlineData(1961, 169)]
         [InlineData(1963, 170)]
-        [InlineData(1964, 171)]
-        [InlineData(1965, 172)]
+        [InlineData(1964, 170)]
+        [InlineData(1965, 171)]
         [InlineData(1980, 172)]
         public void GetTrimestresRequis_ReturnsCorrectValue(int annee, int expected)
         {
@@ -114,10 +114,9 @@ namespace MegaSimulator.Tests
                 PointsComplementaires = 8_000m
             };
             var result = await svc.Simulate(req);
-            // 8000 × 1.45 = 11600
-            Assert.Equal(11_600m, result.PensionComplementaireAnnuelle);
-            // Brute = 20000 + 11600 = 31600
-            Assert.Equal(31_600m, result.PensionBruteTotaleAnnuelle);
+            // 8000 × 1,4386 (valeur service du point Agirc-Arrco officielle nov. 2025–oct. 2026)
+            Assert.Equal(11_508.80m, result.PensionComplementaireAnnuelle);
+            Assert.Equal(31_508.80m, result.PensionBruteTotaleAnnuelle);
         }
 
         [Fact]
@@ -133,9 +132,9 @@ namespace MegaSimulator.Tests
                 PointsComplementaires = 8_000m
             };
             var result = await svc.Simulate(req);
-            // PensionNette = 31600 × (1 - 0.091) = 31600 × 0.909 = 28724.40
-            Assert.Equal(28_724.40m, result.PensionNetteAnnuelle);
-            Assert.Equal(decimal.Round(28_724.40m / 12m, 2), result.PensionNetteMensuelle);
+            // 31_508.80 × (1 − 0,091) — arrondi décimal .NET sur le produit → 28_641,50
+            Assert.Equal(28_641.50m, result.PensionNetteAnnuelle);
+            Assert.Equal(decimal.Round(28_641.50m / 12m, 2), result.PensionNetteMensuelle);
         }
 
         [Fact]

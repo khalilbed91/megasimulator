@@ -79,7 +79,8 @@ Implémentation : prendre en compte apport, frais initiaux, reste à vivre minim
     "reste_a_vivre_min": 800
   },
   "taux_usure": {
-    "immo_20_plus": 0.0513
+    "immo_20_plus": 0.0519,
+    "source_banque_france_avril_2026": "https://www.banque-france.fr/fr/statistiques/taux-et-cours/taux-dusure-2026-q2"
   },
   "assurance": {
     "mode": "sur_capital_initial|sur_crd",
@@ -171,11 +172,11 @@ Implémentation : prendre en compte apport, frais initiaux, reste à vivre minim
 |------|------------------------------|--------------|
 | Amortissement | Mensualité constante, assurance sur capital initial, aperçu tableau (24 lignes) | Assurance sur CRD non proposée en UI |
 | TAEG | **Indicatif** : nominal + assurance + frais étalés (approximation) | Le TAEG réglementaire peut différer ; ne pas l’assimiler à une offre bancaire |
-| Taux d’usure | Seuil **indicatif** (défaut 5,13 % long ; +0,5 pt si durée &lt; 20 ans ou hors immo) | Publié **trimestriellement** par la Banque de France — mettre à jour la constante ou `params/2026.json` |
+| Taux d’usure | **Aligné Banque de France** (crédits immobiliers personnes physiques, effet **1er avril 2026**, publication **T2 2026**) : **4,00 %** (&lt;10 ans), **4,48 %** (10 à &lt;20 ans), **5,19 %** (≥20 ans) ; prêt conso **&gt;6 000 €** : **8,61 %** | [Tableau officiel](https://www.banque-france.fr/fr/statistiques/taux-et-cours/taux-dusure-2026-q2) — nouvelle parution chaque trimestre |
 | HCSF | Ratio 35 %, reste à vivre 800 € | Seuils réels peuvent intégrer d’autres critères bancaires |
 | PTZ / PAL | Barèmes indicatifs zones / plafonds revenus | Revalider sur [economie.gouv.fr](https://www.economie.gouv.fr/) et sources officielles à chaque mise à jour produit |
 | Frais notaire | Ancien 7,5 % / neuf 2 % indicatifs | Ordres de grandeur seulement |
 
-**Conclusion** : le module prêts est cohérent avec une **simulation pédagogique** 2026. Pour une « conformité » temps réel : externaliser taux d’usure et barèmes PTZ dans des paramètres versionnés et les réviser après chaque publication officielle.
+**Conclusion** : le module prêts reste **pédagogique** sur le TAEG ; les **seuils d’usure** suivent désormais les taux publiés par la **Banque de France** pour avril 2026. Mettre à jour `LoanService.ResolveUsuryThresholdPercent` et `params/2026.json` à chaque nouvelle parution trimestrielle.
 
 Tests automatisés : `tests/MegaSimulator.Tests/LoanServiceTests.cs`.

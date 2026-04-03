@@ -1,7 +1,7 @@
 # MegaSimulator — General Guidelines & Project Status
 
 _Document interne — usage agent/équipe uniquement_  
-_Dernière mise à jour : 2026-04-03 (retraite trimestres 1964+, audit retraite/prêts, docs knowledge-base)_
+_Dernière mise à jour : 2026-04-03 (retraite : point Agirc-Arrco 1,4386 €, trimestres LFSS ; prêts : usure Banque de France avr. 2026)_
 
 ---
 
@@ -121,7 +121,7 @@ _Dernière mise à jour : 2026-04-03 (retraite trimestres 1964+, audit retraite/
 |---|---|
 | ✅ `RetirementRequestDto` | `AnneeNaissance`, `AgeDepart`, `SalaireAnnuelMoyen`, `TrimestresValides/Requis`, `PointsComplementaires`, `Regime`, `RevenusAnnuelsActuels` |
 | ✅ `RetirementResponseDto` | `PensionBaseAnnuelle`, `PensionComplementaireAnnuelle`, `PensionBruteTotaleAnnuelle`, `PensionNetteAnnuelle`, `PensionNetteMensuelle`, `TauxRemplacement`, `DecotePct`, `SurcotePct`, `TrimestresManquants` |
-| ✅ `RetirementService` | Calcul complet : décote/surcote (1.25%/trimestre), facteur trimestres, pension CNAV, Agirc-Arrco (valeur point 1.45), retenue sociale 9.1%, taux de remplacement |
+| ✅ `RetirementService` | Décote/surcote (1,25 %/trim.), pension CNAV, Agirc-Arrco **valeur point 1,4386 €** (officiel nov. 2025), prélèvement **9,1 %** (ordre de grandeur plafond), trimestres post-LFSS 2026 dans le code |
 | ✅ Décote plafonnée | Max 25% (20 trimestres manquants) |
 | ✅ Surcote | +1.25%/trimestre supplémentaire, facteur trimestres plafonné à 1 |
 | ✅ Persistance | Simulation sauvegardée en table `simulations` avec `type='retirement'`, `userId` depuis JWT |
@@ -157,8 +157,8 @@ _Dernière mise à jour : 2026-04-03 (retraite trimestres 1964+, audit retraite/
 
 ### 3.1 bis Audit simulateurs retraite & prêts (2026-04-03)
 
-- **Retraite** : logique métier alignée sur `docs/knowledge-base/retirement.md` pour les trimestres requis (dont 1964→171, 1965+→172). Écarts documentés : âge légal sans 63 ans 6 mois, SAM saisi tel quel (pas de plafonnement PASS automatique), valeur du point et taux en dur dans le service. Voir `retirement.md` §10.
-- **Prêts** : `LoanService` couvre amortissement, HCSF indicatif, PTZ/PAL pédagogiques, TAEG **approximatif**, usure **indicative**. Voir `docs/knowledge-base/loans.md` §12. Aucune revérification législative externe dans cette passe (sources officielles à consulter pour toute communication « à jour »).
+- **Retraite** : valeur du point **1,4386 €** (Agirc-Arrco officiel) ; trimestres **1964→170**, **1965→171**, **1966+→172** (reprise LFSS 2026 / presse — **à valider au JORF** ; naissance au **1er trimestre 1965** : 170 en droit, non distingué dans l’UI). Prélèvement **9,1 %** = plafond type, pas le barème CSG par RFR. Voir `retirement.md` §1, §2, §10.
+- **Prêts** : seuils d’**usure Banque de France** avril 2026 (4,00 / 4,48 / 5,19 % immo par durée ; 8,61 % conso &gt;6 k€) dans `LoanService` ; TAEG toujours **approximatif**. Voir `loans.md` §12 et `params/2026.json`.
 
 ### 3.2 Priorité moyenne
 

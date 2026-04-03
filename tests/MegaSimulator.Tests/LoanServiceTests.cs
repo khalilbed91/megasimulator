@@ -94,5 +94,40 @@ namespace MegaSimulator.Tests
             Assert.Equal(30_000m, r.ActionLogementAmountApplied);
             Assert.True(r.MonthlyActionLogement > 0);
         }
+
+        [Fact]
+        public async Task Simulate_UsuryThreshold_MatchesBanqueDeFrance_April2026()
+        {
+            var immo20 = await Svc().Simulate(new LoanRequestDto
+            {
+                Category = "immo",
+                PurchasePriceTtc = 200_000m,
+                DownPayment = 40_000m,
+                NominalRateAnnualPercent = 3m,
+                DurationMonths = 240,
+                TvaRegime = "ancien"
+            });
+            Assert.Equal(5.19m, immo20.UsuryThresholdPercent);
+
+            var immo15 = await Svc().Simulate(new LoanRequestDto
+            {
+                Category = "immo",
+                PurchasePriceTtc = 200_000m,
+                DownPayment = 40_000m,
+                NominalRateAnnualPercent = 3m,
+                DurationMonths = 180,
+                TvaRegime = "ancien"
+            });
+            Assert.Equal(4.48m, immo15.UsuryThresholdPercent);
+
+            var perso = await Svc().Simulate(new LoanRequestDto
+            {
+                Category = "perso",
+                Amount = 10_000m,
+                NominalRateAnnualPercent = 5m,
+                DurationMonths = 48
+            });
+            Assert.Equal(8.61m, perso.UsuryThresholdPercent);
+        }
     }
 }

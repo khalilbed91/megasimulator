@@ -161,7 +161,8 @@ function getTrimestresRequis(annee) {
   if (annee <= 1960) return 168
   if (annee <= 1962) return 169
   if (annee === 1963) return 170
-  if (annee === 1964) return 171
+  if (annee === 1964) return 170
+  if (annee === 1965) return 171
   return 172
 }
 

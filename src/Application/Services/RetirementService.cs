@@ -10,7 +10,8 @@ namespace MegaSimulator.Application.Services
     public class RetirementService : IRetirementService
     {
         private const decimal TauxPlein = 0.50m;
-        private const decimal ValeurPointAgircArrco = 1.45m;
+        /// <summary>Valeur de service du point Agirc-Arrco (gel 1er nov. 2025 → 31 oct. 2026). Source : agirc-arrco.fr « Paramètres et chiffres du régime ».</summary>
+        private const decimal ValeurPointAgircArrco = 1.4386m;
         private const decimal RetenueSocialePct = 0.091m;
         private const decimal DecoteSurcoteParTrimestre = 0.0125m;
 
@@ -40,8 +41,10 @@ namespace MegaSimulator.Application.Services
             if (anneeNaissance == 1959 || anneeNaissance == 1960) return 168;
             if (anneeNaissance == 1961 || anneeNaissance == 1962) return 169;
             if (anneeNaissance == 1963) return 170;
-            if (anneeNaissance == 1964) return 171;
-            // 1965 et après (barème 2026 — voir docs/knowledge-base/retirement.md)
+            // LFSS pour 2026 : assouplissement trimestres 1964–1965 (souvent présenté comme 170 pour 1964, 171 pour 1965 hors 1er trim.). Voir retirement.md §2 et doutes JORF.
+            if (anneeNaissance == 1964) return 170;
+            if (anneeNaissance == 1965) return 171;
+            // 1966 et suivantes : 172 trimestres (taux plein) dans les barèmes courants
             return 172;
         }
 

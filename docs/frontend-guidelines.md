@@ -242,7 +242,7 @@ Layout `sim-shell` (grille `1fr 400px`) identique au simulateur de paie :
 | Âge de départ souhaité | slider 60–70 | 64 | Affiche alerte si < âge légal |
 | Salaire annuel moyen brut (SAM) | EuroInput | — | Moyenne 25 meilleures années |
 | Trimestres validés | slider 0–200 | — | Nombre de trimestres acquis |
-| Trimestres requis | number input | selon année | Pré-rempli (ex. 1963→170, 1964→171, 1965+→172), aligné backend — modifiable |
+| Trimestres requis | number input | selon année | Pré-rempli (ex. 1963–1964→170, 1965→171, 1966+→172), aligné backend — modifiable (1965 T1 : 170 en droit réel) |
 | Points Agirc-Arrco | number input | — | Points complémentaires accumulés |
 | Régime | selector chips | général | général / fonctionnaire / libéral / artisan |
 | Revenus annuels actuels | EuroInput | — | Pour calcul taux de remplacement |

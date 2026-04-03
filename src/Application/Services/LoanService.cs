@@ -30,12 +30,26 @@ namespace MegaSimulator.Application.Services
         private const decimal PalMaxAmount = 40000m;
 
         private readonly ISimulationRepository? _simulationRepository;
-        private readonly decimal _usuryImmoLongPercent;
 
-        public LoanService(ISimulationRepository? simulationRepository = null, decimal usuryImmoLongPercent = 5.13m)
+        public LoanService(ISimulationRepository? simulationRepository = null)
         {
             _simulationRepository = simulationRepository;
-            _usuryImmoLongPercent = usuryImmoLongPercent;
+        }
+
+        /// <summary>
+        /// Seuils d'usure Banque de France, crédits immobiliers aux personnes physiques, effet au 1er avril 2026 (publication T2 2026).
+        /// Catégorie « Prêts à taux fixe » par tranche de durée. Prêt conso &gt; 6 000 € : 8,61 % (même vague).
+        /// </summary>
+        private static decimal ResolveUsuryThresholdPercent(string cat, int durationMonths)
+        {
+            if (string.Equals(cat, "immo", StringComparison.OrdinalIgnoreCase))
+            {
+                if (durationMonths >= 240) return 5.19m;
+                if (durationMonths >= 120) return 4.48m;
+                return 4.00m;
+            }
+
+            return 8.61m;
         }
 
         public decimal MonthlyAnnuity(decimal principal, decimal annualNominalPercent, int months)
@@ -239,9 +253,7 @@ namespace MegaSimulator.Application.Services
 
             var taegApprox = decimal.Round(
                 req.NominalRateAnnualPercent + req.InsuranceAnnualPercent + feeSpread, 3);
-            var usury = _usuryImmoLongPercent;
-            if (cat != "immo" || n < 240)
-                usury = _usuryImmoLongPercent + 0.5m;
+            var usury = ResolveUsuryThresholdPercent(cat, n);
             var usuryOk = taegApprox <= usury;
             if (!usuryOk)
                 warnings.Add($"TAEG approximatif ({taegApprox:N2} %) au-dessus du seuil d'usure indicatif ({usury:N2} %) — à vérifier par durée et trimestre Banque de France.");
