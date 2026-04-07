@@ -19,7 +19,22 @@ export default defineConfig({
     {
       name: 'megasimulator-seo-files',
       closeBundle() {
-        const base = (process.env.VITE_PUBLIC_SITE_URL || 'http://localhost:5173').replace(/\/+$/, '')
+        const isProd = process.env.NODE_ENV === 'production'
+        const fallbackBase = isProd ? 'https://megasimulateur.org' : 'http://localhost:5173'
+        const rawBase = (process.env.VITE_PUBLIC_SITE_URL || fallbackBase).replace(/\/+$/, '')
+
+        // Guardrail: never publish HTTP URLs for the real production domain.
+        // If you want HTTP for local dev, keep using localhost.
+        let base = rawBase
+        if (/^http:\/\/megasimulateur\.org$/i.test(base) || /^http:\/\/www\.megasimulateur\.org$/i.test(base)) {
+          base = base.replace(/^http:\/\//i, 'https://')
+        }
+        if (isProd && /^http:\/\//i.test(base) && !/^http:\/\/localhost(?::\d+)?$/i.test(base)) {
+          throw new Error(
+            `VITE_PUBLIC_SITE_URL must be https in production (got "${rawBase}"). ` +
+              `Set VITE_PUBLIC_SITE_URL=https://megasimulateur.org (no trailing slash) when building the frontend.`
+          )
+        }
         const lastmod = new Date().toISOString().slice(0, 10)
         const urls = SITEMAP_PATHS.map(
           (p) =>
