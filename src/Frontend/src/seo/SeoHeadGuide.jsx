@@ -30,6 +30,13 @@ function financeWebAppNode(toolPath, toolUrl, L) {
       applicationSubCategory: 'Mortgage and loan calculator',
     }
   }
+  if (toolPath === PATH.insurance) {
+    return {
+      ...common,
+      name: L === 'en' ? 'MegaSimulator insurance simulator' : 'Simulateur assurance MegaSimulator',
+      applicationSubCategory: 'Insurance premium calculator',
+    }
+  }
   return {
     ...common,
     name: L === 'en' ? 'MegaSimulator payroll simulator' : 'Simulateur de paie MegaSimulator',
@@ -48,6 +55,12 @@ function articleAboutThing(toolPath, L) {
     return {
       '@type': 'Thing',
       name: L === 'en' ? 'French mortgage, PTZ and loan costs' : 'Crédit immobilier, PTZ et coût des prêts en France',
+    }
+  }
+  if (toolPath === PATH.insurance) {
+    return {
+      '@type': 'Thing',
+      name: L === 'en' ? 'Home, car and motorcycle insurance in France' : 'Assurance habitation, auto et moto en France',
     }
   }
   return {

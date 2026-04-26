@@ -214,6 +214,27 @@ POST /api/payroll/simulate
 }
 ```
 
+### 6.6 GEO / Réponses rapides
+
+Chaque page simulateur publique doit rester lisible pour les utilisateurs et les moteurs de réponse IA :
+
+- `SeoIntro.jsx` : phrase courte visible, non bourrée de mots-clés.
+- `GeoFaqBlock.jsx` : bloc visible “Réponses rapides” / “Quick answers”.
+- `geoFaq.js` : source unique des questions/réponses par simulateur et par langue.
+- `SeoHead.jsx` : injecte le même contenu en JSON-LD `FAQPage`.
+
+Règle produit : les réponses doivent être courtes, factuelles, non contractuelles et alignées avec le comportement réel du simulateur.
+
+### 6.7 Liens externes post-simulation
+
+Après un calcul réussi, certains simulateurs affichent une carte `ExternalNextStep.jsx` dans le panneau résultats :
+
+- Assurance : comparateur externe selon le produit (`habitation`, `auto`, `moto`).
+- Retraite : portail officiel `info-retraite.fr`.
+- Crédit : site bancaire externe selon le type de projet (`immo`, `auto`, `perso`).
+
+Toujours afficher une mention “lien externe non sponsorisé” ou “lien officiel” tant qu’il n’existe pas de partenariat commercial signé. Ne jamais transmettre automatiquement les données de simulation à ces sites.
+
 Salarié : le front envoie `RevenusAnnexes` et `Primes` à **0** et renseigne les champs transports / titres-restaurant / télétravail / mutuelle. Freelance : `TransportMensuel`… à **0**, annexes/primes utilisés comme avant.
 
 ### 6.6 Résultats affichés (KPI cards)

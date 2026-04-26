@@ -4,6 +4,7 @@ description: >-
   MegaSimulator: run API + Vite locally, launch profile, rate limits, payroll PAS direct
   (UI sends Parts=0; backend legacy PAS/Parts still exists), insurance home/auto/moto MVP,
   full France postal-code referential (La Poste CSV, migration 011, DB import + IMemoryCache),
+  GEO quick answers + FAQPage JSON-LD, post-result external next-step links,
   simulation history cap (10), savings API, DB without salaires/simulation_results (migration 010),
   contact API (no mailto fallback), UI/UX brand (light-only purple–magenta, brand-mark.png, Logo sizing,
   Historique/Mon compte guest gate same as Account, JWT trim readStoredToken), production deploy
@@ -72,6 +73,8 @@ Sans tunnel, **127.0.0.1** = machine locale, pas le serveur.
 - **Épargne** : `POST /api/savings/simulate` — params section `savings` dans `docs/knowledge-base/params/2026.json` et `PayrollParams.Savings`.
 - **Assurance** : `POST /api/insurance/simulate` — habitation / auto / moto, résultat indicatif non contractuel, persistance `type='insurance'`.
 - **Codes postaux France** : `GET /api/reference/postal-codes?q=` ; table `france_postal_codes` (migration **011**), seed complet `src/Infrastructure/SeedData/france_postal_codes_official.csv` (La Poste, ~39k lignes), import au démarrage via `PostalCodeSeeder`, cache 12h via `PostalCodeService`. Exemples vérifiés : `924` → `92400 - Courbevoie`, `95130` → `Le Plessis Bouchard`.
+- **GEO / FAQ** : `GeoFaqBlock.jsx` affiche des réponses rapides ; `SeoHead.jsx` injecte `FAQPage` JSON-LD via `geoFaq.js`.
+- **Liens externes post-résultat** : `ExternalNextStep.jsx` dans assurance, retraite, crédit. Retraite = officiel `info-retraite.fr`; assurance / crédit = non sponsorisés, sans transmission de données.
 - **Contact** : `POST /api/contact` uniquement — **pas** de `mailto` de secours ; pas de domaine **`m-simulator.com`** dans l’app.
 - **Admin seed** : e-mail **`admin@megasimulateur.org`** (migration **009** + `Program.cs`).
 

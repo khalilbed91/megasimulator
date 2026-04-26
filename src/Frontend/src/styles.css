@@ -323,6 +323,114 @@ a.sidebar-brand:focus-visible {
 }
 .seo-intro p { margin: 0; }
 
+/* GEO: concise answer blocks for AI answer engines and users */
+.geo-faq {
+  max-width: 960px;
+  margin: -4px 0 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(217, 70, 239, 0.05));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.geo-faq-eyebrow {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.geo-faq-title {
+  margin: 0 0 12px;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.3;
+}
+.geo-faq-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.geo-faq-card {
+  padding: 12px 13px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.geo-faq-card h3 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.geo-faq-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+@media (max-width: 900px) {
+  .geo-faq-grid { grid-template-columns: 1fr; }
+}
+
+/* External next-step links after simulations */
+.external-next-step {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.10), rgba(236, 72, 153, 0.06));
+}
+.external-next-step-title {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.external-next-step p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.external-next-step-note {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.external-next-step-link {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: var(--sh-sm);
+}
+.external-next-step-link svg {
+  width: 14px;
+  height: 14px;
+}
+.external-next-step-link:hover {
+  filter: brightness(0.96);
+  color: white;
+}
+@media (max-width: 700px) {
+  .external-next-step {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 /* ── 6. Hero ──────────────────────────────────────────────────────── */
 .hero {
   text-align: center;

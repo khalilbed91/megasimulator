@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import ExternalNextStep from './components/ExternalNextStep'
 
 const T = {
   fr: {
@@ -56,6 +57,10 @@ const T = {
     warnings: 'Alertes',
     schedule: 'Aperçu amortissement (24 premiers mois)',
     disclaimer: 'Données PTZ / TVA / PAL : valeurs indicatives. Vérifiez éligibilité réelle (notaire, banque, Action Logement).',
+    nextTitle: 'Comparer avec une banque',
+    nextDesc: 'Après cette simulation, vous pouvez vérifier les conditions réelles auprès d’un acteur bancaire externe.',
+    nextLabel: 'Voir une offre bancaire',
+    nextNote: 'Lien externe non sponsorisé — MegaSimulator ne transmet aucune donnée.',
   },
   en: {
     title: 'Loan simulator',
@@ -112,6 +117,10 @@ const T = {
     warnings: 'Warnings',
     schedule: 'Amortization preview (24 mo)',
     disclaimer: 'PTZ/VAT/PAL: indicative only. Confirm with bank and advisors.',
+    nextTitle: 'Compare with a bank',
+    nextDesc: 'After this simulation, you can check real conditions with an external banking provider.',
+    nextLabel: 'View banking offer',
+    nextNote: 'External non-sponsored link — MegaSimulator does not transmit any data.',
   }
 }
 
@@ -123,6 +132,12 @@ function parseDec(s) {
 function fmt(n, lang) {
   if (n == null || isNaN(n)) return '—'
   return Number(n).toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function loanExternalUrl(category) {
+  if (category === 'auto') return 'https://www.credit-agricole.fr/particulier/credit/consommation/credit-auto.html'
+  if (category === 'perso') return 'https://www.credit-agricole.fr/particulier/credit/consommation.html'
+  return 'https://www.credit-agricole.fr/particulier/credit/immobilier.html'
 }
 
 export default function LoanSimulator({ lang = 'fr' }) {
@@ -393,6 +408,15 @@ export default function LoanSimulator({ lang = 'fr' }) {
                 <div className="kpi-label">{t.monthlyTotal}</div>
                 <div className="kpi-value">{fmt(r.monthlyTotalSteadyState ?? r.MonthlyTotalSteadyState, lang)} €</div>
               </div>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <ExternalNextStep
+                title={t.nextTitle}
+                description={t.nextDesc}
+                href={loanExternalUrl(category)}
+                label={t.nextLabel}
+                note={t.nextNote}
+              />
             </div>
             <div className="results-breakdown">
               <div className="results-row"><span className="results-row-label">{t.monthlyBank}</span><span>{fmt(r.monthlyBankPrincipalInterest ?? r.MonthlyBankPrincipalInterest, lang)} €</span></div>

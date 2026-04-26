@@ -13,6 +13,7 @@ import { pathToGuideId, PATH_GUIDES } from './seo/guidePaths'
 import SeoHead from './seo/SeoHead'
 import SeoHeadGuide from './seo/SeoHeadGuide'
 import SeoIntro from './seo/SeoIntro'
+import GeoFaqBlock from './seo/GeoFaqBlock'
 import { GUIDE_PAGES } from './guides/guideContent.jsx'
 import GuideHub from './guides/GuideHub'
 import GuideArticle from './guides/GuideArticle'
@@ -255,6 +256,9 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
           )}
 
           {!legalPage && tab && <SeoIntro tab={tab} lang={lang} />}
+          {!legalPage && tab && ['payroll', 'retirement', 'loans', 'savings', 'insurance'].includes(tab) && (
+            <GeoFaqBlock tab={tab} lang={lang} />
+          )}
 
           {!legalPage && guideId === 'index' && <GuideHub lang={lang} />}
           {!legalPage && guideId && guideId !== 'index' && <GuideArticle guideId={guideId} lang={lang} />}

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Helmet } from 'react-helmet-async'
 import { PATH } from './paths'
+import { getGeoFaq } from './geoFaq'
 
 const BRAND = 'MegaSimulator'
 
@@ -31,7 +32,7 @@ const META = {
       schemaFeatures: [
         'Calcul salaire brut vers net et coût employeur',
         'Statuts non-cadre, cadre, freelance et portage salarial',
-        'Prélèvement à la source et quotient familial (parts)',
+        'Prélèvement à la source direct, ajustable en pourcentage',
         'Avantages en nature (tickets restaurant, transports, télétravail)',
       ],
     },
@@ -120,7 +121,7 @@ const META = {
       schemaFeatures: [
         'Gross-to-net salary and employer cost',
         'Non-executive, executive, freelance and umbrella (portage) scenarios',
-        'Withholding tax and household parts (quotient familial)',
+        'Direct withholding tax percentage',
         'Benefits in kind (meal vouchers, commuting, remote work)',
       ],
     },
@@ -210,6 +211,7 @@ export default function SeoHead({ pageKey, lang }) {
 
   const isLegal = pageKey === 'mentions' || pageKey === 'privacy'
   const isFinanceSimulator = SIMULATOR_PAGE_KEYS.has(pageKey)
+  const faqItems = getGeoFaq(pageKey, L)
 
   let jsonLd
   if (isLegal) {
@@ -233,6 +235,25 @@ export default function SeoHead({ pageKey, lang }) {
       featureList: m.schemaFeatures || [],
     }
     if (origin) jsonLd.image = `${origin}/brand-mark.png?v=3`
+    if (faqItems.length) {
+      jsonLd = {
+        '@context': 'https://schema.org',
+        '@graph': [
+          jsonLd,
+          {
+            '@type': 'FAQPage',
+            mainEntity: faqItems.map((item) => ({
+              '@type': 'Question',
+              name: item.question,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: item.answer,
+              },
+            })),
+          },
+        ],
+      }
+    }
   } else {
     jsonLd = {
       '@context': 'https://schema.org',

@@ -4,7 +4,7 @@ import React from 'react'
 const INTRO = {
   fr: {
     payroll:
-      'Simulation salaire brut vers net, cadre ou non-cadre, avec option foyer fiscal ou taux de prélèvement. Inclut une approche pédagogique du portage salarial et du coût total employeur.',
+      'Simulation salaire brut vers net, cadre ou non-cadre, avec retenue à la source directe en pourcentage. Inclut une approche pédagogique du portage salarial et du coût total employeur.',
     retirement:
       'Estimation indicative de pension nette à partir de votre année de naissance, trimestres cotisés et salaire de référence — utile pour comparer un départ à l’âge légal ou avec décote / surcôte.',
     loans:
@@ -17,7 +17,7 @@ const INTRO = {
   },
   en: {
     payroll:
-      'Educational gross-to-net calculator with French payroll rules, optional withholding and umbrella-style scenarios.',
+      'Educational gross-to-net calculator with French payroll rules, direct withholding percentage and umbrella-style scenarios.',
     retirement:
       'Simplified retirement projection: net pension, quarters, and basic décote/surcote hints for planning.',
     loans:

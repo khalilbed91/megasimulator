@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react'
+import ExternalNextStep from './components/ExternalNextStep'
 
 /* ─── Translations ─────────────────────────────────────────── */
 const T = {
@@ -67,6 +68,10 @@ const T = {
     errObjectif: 'Objectif invalide (nombre positif)',
     warningRegime: 'Seul le régime général est calculé en V1. Les régimes spéciaux (fonctionnaire, libéral) sont indicatifs.',
     validationSummary: 'Vérifiez les champs en erreur ci-dessus, puis cliquez à nouveau sur Calculer.',
+    nextTitle: 'Vérifier vos droits officiels',
+    nextDesc: 'Après cette projection pédagogique, consultez votre relevé de carrière et vos estimations officielles sur le portail public.',
+    nextLabel: 'Aller sur info-retraite.fr',
+    nextNote: 'Lien externe officiel — MegaSimulator ne transmet aucune donnée.',
   },
   en: {
     title: 'Retirement Simulator',
@@ -133,6 +138,10 @@ const T = {
     errObjectif: 'Invalid target (positive number)',
     warningRegime: 'Only the general regime is calculated in V1. Special regimes are indicative only.',
     validationSummary: 'Fix the fields marked in red above, then click Calculate again.',
+    nextTitle: 'Check your official pension rights',
+    nextDesc: 'After this educational projection, review your career statement and official estimates on the public portal.',
+    nextLabel: 'Open info-retraite.fr',
+    nextNote: 'Official external link — MegaSimulator does not transmit any data.',
   }
 }
 
@@ -603,6 +612,16 @@ export default function RetirementSimulator({ lang = 'fr' }) {
                 <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10 }}>{t.pensionAnnuelle}</div>
                 <div style={{ fontSize: 15, fontWeight: 600 }}>{fmt(pleinA, lang)} €</div>
               </div>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <ExternalNextStep
+                title={t.nextTitle}
+                description={t.nextDesc}
+                href="https://www.info-retraite.fr/portail-info/home.html"
+                label={t.nextLabel}
+                note={t.nextNote}
+              />
             </div>
 
             {typeof potentiel === 'number' && potentiel > 0 && r.trimestresManquants > 0 && (

@@ -165,6 +165,16 @@ Le simulateur habitation ne demande pas une adresse complète. Il utilise un ré
 
 Le `zoneFactor` est une hypothèse produit. Il est plus élevé pour Paris, petite couronne et grandes métropoles, mais ne constitue pas un tarif assureur.
 
+#### Parcours après simulation
+
+Après affichage de la prime indicative, l’UI propose un lien externe vers un comparateur assurance :
+
+- habitation → page assurance habitation ;
+- auto → page assurance auto ;
+- moto → page assurance moto.
+
+Ce lien est affiché comme **non sponsorisé** et MegaSimulator ne transmet pas les données de simulation. Si un partenariat réel est signé plus tard, le wording et le suivi devront être revus pour respecter la transparence commerciale.
+
 ### 4.2 Auto
 
 Entrées :

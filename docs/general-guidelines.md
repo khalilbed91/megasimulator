@@ -1,7 +1,7 @@
 # MegaSimulator — General Guidelines & Project Status
 
 _Document interne — usage agent/équipe uniquement_  
-_Dernière mise à jour : 2026-04-26 (assurance MVP, référentiel codes postaux La Poste, paie PAS direct)_
+_Dernière mise à jour : 2026-04-26 (assurance MVP, référentiel codes postaux La Poste, paie PAS direct, GEO/FAQ et liens externes post-simulation)_
 
 ---
 
@@ -76,6 +76,8 @@ _Dernière mise à jour : 2026-04-26 (assurance MVP, référentiel codes postaux
 | ✅ Mode invité | Simulateurs + contact + vues Historique/Compte en **gate** (pas de redirection forcée vers la paie) |
 | ✅ Logo & favicon | `public/brand-mark.png`, `Logo.jsx`, `SeoHead` / `index.html` |
 | ✅ Footer site | Une ligne © + liens légaux ; layout sticky en bas sur pages courtes |
+| ✅ GEO / Answer Engine Optimization | Blocs “Réponses rapides” visibles par simulateur + JSON-LD `FAQPage` pour paie, retraite, prêts, épargne, assurance |
+| ✅ Guides publics | Hub `/guides` + articles `Article` JSON-LD ; ajout guide assurance habitation / auto / moto dans le sitemap |
 
 ### 2.4 PayrollSimulator — composant avancé
 
@@ -87,6 +89,7 @@ _Dernière mise à jour : 2026-04-26 (assurance MVP, référentiel codes postaux
 | ✅ Mode fiscal simplifié | Retenue à la source directe uniquement ; plus de parts, situation familiale ou enfants dans l’UI |
 | ✅ PAS responsive au brut | Le taux par défaut se met à jour automatiquement selon le brut annuel saisi, puis reste ajustable directement en `%` |
 | ✅ Slider + input retenue PAS | Range 0–55% et champ numérique `%`; le frontend envoie `Parts: 0` pour annuler le fallback quotient familial |
+| ✅ Lien externe post-résultat | Après calcul, carte “next step” vers un acteur externe pertinent, clairement indiquée comme lien externe non sponsorisé |
 | ✅ Avantages en nature | Presets chips : ticket resto, télétravail, téléphone, transports, prime |
 | ✅ Résultats KPI | Net mensuel/annuel, cotisations, coût employeur, retenue, frais portage ; montants arrondis à 2 décimales |
 | ✅ Breakdown bar | 3 segments animés : Net / Cotisations / Charges patronales |
@@ -156,7 +159,19 @@ _Dernière mise à jour : 2026-04-26 (assurance MVP, référentiel codes postaux
 | ✅ Auto / moto | Formules tiers / étendu / tous risques, franchise, valeur véhicule, usage, stationnement, conducteur, CRM, sinistres |
 | ✅ Référentiel codes postaux | Table `france_postal_codes` + seed CSV officiel La Poste + cache mémoire ; exemples validés : `924` → Courbevoie, `95130` → Franconville / Le Plessis-Bouchard |
 | ✅ Historique | `SimulationHistory.jsx` affiche les simulations assurance avec produit, couverture et prime |
+| ✅ Lien externe post-résultat | Assurance : lien vers comparateur externe selon produit (habitation / auto / moto), sans transmission de données utilisateur |
 | ✅ Tests | `InsuranceServiceTests` couvre CRM et simulations habitation / auto / moto |
+
+### 2.10 GEO & maillage externe — MVP ✅
+
+| Fait | Description |
+|---|---|
+| ✅ FAQ visibles par simulateur | `GeoFaqBlock.jsx` + `geoFaq.js` : réponses courtes, structurées, adaptées aux moteurs de réponse IA |
+| ✅ `FAQPage` JSON-LD | `SeoHead.jsx` injecte les questions/réponses des simulateurs dans le structured data |
+| ✅ Guide assurance | `/guides/assurance-habitation-auto-moto-2026` ajouté dans `guidePaths.js`, sitemap et `GuideHub` |
+| ✅ `Article` JSON-LD assurance | `SeoHeadGuide.jsx` relie l’article assurance au simulateur assurance |
+| ✅ Liens post-simulation | `ExternalNextStep.jsx` affiché dans résultats assurance, retraite et crédit |
+| ✅ Liens officiels / externes | Retraite → `info-retraite.fr`; crédit → Crédit Agricole (non sponsorisé); assurance → LesFurets (non sponsorisé) |
 
 ---
 
@@ -284,6 +299,7 @@ Prérequis : PostgreSQL accessible avec la chaîne de connexion du profil `Local
 | 2026-04-01 | DB legacy + épargne UI | Migration **010** : drop `salaires`, `simulation_results` ; retrait API Salaire* et persistance redondante ; simulateur épargne (leviers ~60 € Navigo→vélo, mise en page résultats) ; retraite : garde anti-course requêtes + normalisation JSON. |
 | 2026-04-02 | Marque & UX | Monogramme PNG transparent ; palette violet→magenta ; thème clair unique ; formulaires (focus, 44px) ; Historique invité = gate identique à Mon compte ; docs `brand-guidelines` / `frontend-guidelines` mises à jour. |
 | 2026-04-26 | Assurance + postal + paie PAS | Simulateur assurance habitation/auto/moto livré ; référentiel codes postaux La Poste importé en DB/cache ; paie simplifiée vers retenue à la source directe responsive au brut annuel. |
+| 2026-04-26 | GEO + liens externes | Ajout FAQ visibles + `FAQPage` JSON-LD ; guide assurance public ; cartes post-résultat vers portail retraite officiel, comparateur assurance et banque externe. |
 
 ---
 

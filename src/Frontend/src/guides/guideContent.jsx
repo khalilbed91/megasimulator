@@ -21,12 +21,19 @@ const loanLink = (children, lang) => (
   </Link>
 )
 
+const insuranceLink = (children, lang) => (
+  <Link to={PATH.insurance} className="guide-inline-link">
+    {children || (lang === 'en' ? 'insurance simulator' : 'simulateur assurance')}
+  </Link>
+)
+
 /** IDs des articles (hors hub index). */
 export const GUIDE_ARTICLE_IDS = [
   'salarieFreelanceNet2026',
   'portageVsMicro2026',
   'projectionRetraite2026',
   'creditImmoDecryptage2026',
+  'assuranceHabitationAutoMoto2026',
 ]
 
 export const GUIDE_PAGES = {
@@ -35,9 +42,9 @@ export const GUIDE_PAGES = {
     fr: {
       metaTitle: 'Guides paie, retraite & crédits | MegaSimulator',
       description:
-        'Articles pratiques : salaire / freelance, portage vs micro-entrepreneur, projection retraite, crédit immo (PTZ, mensualités) — liens vers les simulateurs.',
+        'Articles pratiques : salaire / freelance, portage vs micro-entrepreneur, projection retraite, crédit immo et assurance habitation / auto / moto — liens vers les simulateurs.',
       keywords:
-        'guide salaire, retraite, crédit immobilier, PTZ, freelance, portage salarial, micro-entrepreneur, simulateur',
+        'guide salaire, retraite, crédit immobilier, PTZ, freelance, portage salarial, assurance habitation, assurance auto, simulateur',
       topbarTitle: 'Guides',
       headline: 'Guides pratiques',
       lead:
@@ -46,8 +53,8 @@ export const GUIDE_PAGES = {
     en: {
       metaTitle: 'Payroll, retirement & loan guides | MegaSimulator',
       description:
-        'Practical articles on payroll vs freelance, umbrella vs micro-entrepreneur, retirement projection, and French mortgage basics — with links to our tools.',
-      keywords: 'payroll guide, retirement, mortgage, PTZ, freelance, umbrella company, micro-entrepreneur',
+        'Practical articles on payroll vs freelance, umbrella vs micro-entrepreneur, retirement projection, French mortgage basics and insurance — with links to our tools.',
+      keywords: 'payroll guide, retirement, mortgage, PTZ, freelance, insurance, home insurance france',
       topbarTitle: 'Guides',
       headline: 'Practical guides',
       lead:
@@ -97,8 +104,9 @@ export const GUIDE_PAGES = {
                 trompeuse. Gardez en tête : charges, délais de paiement, vacances non rémunérées, et besoin de trésorerie.
               </p>
               <p>
-                Le {payrollLink(null, 'fr')} MegaSimulator permet de figer des hypothèses (statut, parts, PAS) et de
-                relire le net et le coût côté employeur en salarié — utile comme repère avant d’isoler la partie freelance.
+                Le {payrollLink(null, 'fr')} MegaSimulator permet de figer des hypothèses (statut, retenue à la source
+                directe, avantages) et de relire le net et le coût côté employeur en salarié — utile comme repère avant
+                d’isoler la partie freelance.
               </p>
             </>
           ),
@@ -154,8 +162,8 @@ export const GUIDE_PAGES = {
                 Remember unpaid leave, payment delays, and working capital needs.
               </p>
               <p>
-                MegaSimulator’s {payrollLink(null, 'en')} fixes assumptions (status, household parts, withholding) and shows
-                net and employer cost in employment — a useful anchor before isolating freelance mechanics.
+                MegaSimulator’s {payrollLink(null, 'en')} fixes assumptions (status, direct withholding and benefits) and
+                shows net and employer cost in employment — a useful anchor before isolating freelance mechanics.
               </p>
             </>
           ),
@@ -198,7 +206,7 @@ export const GUIDE_PAGES = {
               </p>
               <p className="guide-cta-inline">
                 Pour chiffrer côte à côte des hypothèses de revenu, utilisez le {payrollLink('simulateur de paie', 'fr')}{' '}
-                (modes salarié, freelance et portage salarial) avec les mêmes paramètres de prélèvement et de foyer.
+                (modes salarié, freelance et portage salarial) avec les mêmes paramètres de prélèvement.
               </p>
             </>
           ),
@@ -251,7 +259,7 @@ export const GUIDE_PAGES = {
               </p>
               <p className="guide-cta-inline">
                 To compare income assumptions side by side, use the {payrollLink('payroll simulator', 'en')} (employee,
-                freelance and umbrella-style paths) with consistent withholding and household settings.
+                freelance and umbrella-style paths) with consistent withholding settings.
               </p>
             </>
           ),
@@ -535,6 +543,137 @@ export const GUIDE_PAGES = {
               <p>
                 Real bank offers, insurance and fees differ. Use the tool to frame conversations with your bank or broker,
                 not as a funding promise.
+              </p>
+            </>
+          ),
+        },
+      ],
+    },
+  },
+  assuranceHabitationAutoMoto2026: {
+    path: PATH_GUIDES.assuranceHabitationAutoMoto2026,
+    simulatorPath: PATH.insurance,
+    datePublished: '2026-04-26',
+    fr: {
+      metaTitle: 'Assurance habitation, auto et moto 2026 : obligations et simulation | MegaSimulator',
+      description:
+        'Comprendre les assurances obligatoires en France : habitation locataire, responsabilité civile auto/moto, franchise, garanties et bonus-malus — avec simulateur.',
+      keywords:
+        'assurance habitation obligatoire, assurance auto tiers, assurance moto, bonus malus, franchise assurance, simulateur assurance',
+      topbarTitle: 'Assurance',
+      headline: 'Assurance habitation, auto et moto : ce qui est obligatoire et ce qui fait varier le prix',
+      ctaSimulator: 'Lancer le simulateur assurance',
+      sections: [
+        {
+          h2: 'Réponse rapide',
+          body: (
+            <>
+              <p>
+                En France, la responsabilité civile est obligatoire pour tout véhicule terrestre à moteur. Côté habitation,
+                un locataire doit au minimum couvrir les risques locatifs ; un copropriétaire doit être couvert en
+                responsabilité civile. Le reste dépend du contrat et du niveau de protection choisi.
+              </p>
+              <p className="guide-cta-inline">
+                Le {insuranceLink('simulateur assurance', 'fr')} permet de comparer une prime indicative habitation, auto
+                ou moto selon la formule, la franchise, la zone et quelques facteurs de risque.
+              </p>
+            </>
+          ),
+        },
+        {
+          h2: 'Habitation : pourquoi le code postal suffit au départ',
+          body: (
+            <>
+              <p>
+                Pour une première estimation, MegaSimulator ne demande pas toute l’adresse. Le code postal et la commune
+                donnent un facteur de zone, puis la surface, la formule et la franchise expliquent l’essentiel de la prime
+                pédagogique. Les capitaux mobiliers restent des hypothèses internes pour garder un parcours court.
+              </p>
+            </>
+          ),
+        },
+        {
+          h2: 'Auto et moto : tiers, options et bonus-malus',
+          body: (
+            <>
+              <p>
+                Le minimum légal est l’assurance au tiers, mais elle ne couvre pas les dommages au véhicule de l’assuré.
+                Les formules étendues ajoutent vol, incendie, bris de glace ou tous risques. Le CRM bonus-malus, le
+                stationnement, la valeur du véhicule et les sinistres passés modifient l’ordre de grandeur.
+              </p>
+            </>
+          ),
+        },
+        {
+          h2: 'Limite importante',
+          body: (
+            <>
+              <p>
+                La prime affichée n’est pas un devis. Les assureurs fixent leurs tarifs avec leurs propres modèles,
+                exclusions et frais. Utilisez le résultat pour comprendre les leviers avant de demander des offres réelles.
+              </p>
+            </>
+          ),
+        },
+      ],
+    },
+    en: {
+      metaTitle: 'Home, car and motorcycle insurance in France 2026 | MegaSimulator',
+      description:
+        'Understand mandatory insurance in France: tenant home cover, car and motorcycle liability, deductible, coverage and no-claim coefficient — with simulator.',
+      keywords:
+        'home insurance france, car insurance france, motorcycle insurance, no-claim coefficient, insurance simulator',
+      topbarTitle: 'Insurance',
+      headline: 'Home, car and motorcycle insurance: what is mandatory and what changes price',
+      ctaSimulator: 'Open insurance simulator',
+      sections: [
+        {
+          h2: 'Quick answer',
+          body: (
+            <>
+              <p>
+                In France, third-party liability is mandatory for motor vehicles. For housing, tenants need at least rental
+                risk cover; co-owners need civil liability cover. Additional protection depends on the policy and coverage
+                level selected.
+              </p>
+              <p className="guide-cta-inline">
+                The {insuranceLink('insurance simulator', 'en')} compares an indicative home, car or motorcycle premium by
+                coverage, deductible, zone and selected risk factors.
+              </p>
+            </>
+          ),
+        },
+        {
+          h2: 'Home insurance: why postal code is enough first',
+          body: (
+            <>
+              <p>
+                For a first estimate, MegaSimulator does not ask for the full address. Postal code and city provide a zone
+                factor; surface, coverage and deductible explain the main educational price drivers. Contents values are
+                internal assumptions to keep the flow short.
+              </p>
+            </>
+          ),
+        },
+        {
+          h2: 'Car and motorcycle: third-party, options and no-claim coefficient',
+          body: (
+            <>
+              <p>
+                The legal minimum is third-party cover, but it does not cover damage to the insured vehicle. Extended
+                packages can add theft, fire, glass or all-risk cover. No-claim coefficient, parking, vehicle value and
+                claims history change the estimate.
+              </p>
+            </>
+          ),
+        },
+        {
+          h2: 'Important limitation',
+          body: (
+            <>
+              <p>
+                The displayed premium is not a quote. Insurers price with their own models, exclusions and fees. Use the
+                result to understand drivers before requesting real offers.
               </p>
             </>
           ),

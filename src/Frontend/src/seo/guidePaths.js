@@ -11,6 +11,7 @@ export const PATH_GUIDES = {
   portageVsMicro2026: '/guides/portage-salarial-vs-auto-entrepreneur-2026',
   projectionRetraite2026: '/guides/projection-retraite-pension-nette-2026',
   creditImmoDecryptage2026: '/guides/credit-immobilier-ptz-taux-mensualite-2026',
+  assuranceHabitationAutoMoto2026: '/guides/assurance-habitation-auto-moto-2026',
 }
 
 const _guidePathToId = {
@@ -19,6 +20,7 @@ const _guidePathToId = {
   [normalizeGuidePath(PATH_GUIDES.portageVsMicro2026)]: 'portageVsMicro2026',
   [normalizeGuidePath(PATH_GUIDES.projectionRetraite2026)]: 'projectionRetraite2026',
   [normalizeGuidePath(PATH_GUIDES.creditImmoDecryptage2026)]: 'creditImmoDecryptage2026',
+  [normalizeGuidePath(PATH_GUIDES.assuranceHabitationAutoMoto2026)]: 'assuranceHabitationAutoMoto2026',
 }
 
 /** `index` | guide id | null */
@@ -33,4 +35,5 @@ export const GUIDE_SITEMAP_PATHS = [
   PATH_GUIDES.portageVsMicro2026,
   PATH_GUIDES.projectionRetraite2026,
   PATH_GUIDES.creditImmoDecryptage2026,
+  PATH_GUIDES.assuranceHabitationAutoMoto2026,
 ]

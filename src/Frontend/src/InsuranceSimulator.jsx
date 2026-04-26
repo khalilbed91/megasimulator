@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import ExternalNextStep from './components/ExternalNextStep'
 
 const T = {
   fr: {
@@ -78,6 +79,10 @@ const T = {
     warnings: 'Alertes',
     assumptions: 'Hypothèses',
     disclaimer: 'Estimation indicative non contractuelle. Les tarifs réels dépendent de l’assureur, de l’adresse exacte, des antécédents et des conditions du contrat.',
+    nextTitle: 'Comparer avec un acteur assurance',
+    nextDesc: 'Après cette estimation, vous pouvez vérifier les garanties et prix réels sur un comparateur externe.',
+    nextLabel: 'Comparer les offres',
+    nextNote: 'Lien externe non sponsorisé — MegaSimulator ne transmet aucune donnée.',
     yes: 'Oui',
     no: 'Non',
   },
@@ -158,6 +163,10 @@ const T = {
     warnings: 'Warnings',
     assumptions: 'Assumptions',
     disclaimer: 'Indicative non-contractual estimate. Real prices depend on insurer, exact address, claims history and policy terms.',
+    nextTitle: 'Compare with an insurance provider',
+    nextDesc: 'After this estimate, you can check real coverage and pricing on an external comparison site.',
+    nextLabel: 'Compare offers',
+    nextNote: 'External non-sponsored link — MegaSimulator does not transmit any data.',
     yes: 'Yes',
     no: 'No',
   }
@@ -189,6 +198,12 @@ function eur(n, lang) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })
+}
+
+function insuranceExternalUrl(product) {
+  if (product === 'auto') return 'https://www.lesfurets.com/assurance-auto'
+  if (product === 'moto') return 'https://www.lesfurets.com/assurance-moto'
+  return 'https://www.lesfurets.com/assurance-habitation'
 }
 
 function Kpi({ label, value, unit, color }) {
@@ -614,6 +629,14 @@ export default function InsuranceSimulator({ lang = 'fr' }) {
               <Kpi label={t.legalMin} value={eur(r.legalMinimumAnnualPremium ?? r.LegalMinimumAnnualPremium, lang)} unit="€ / an" color="indigo" />
               <Kpi label={t.crmUsed} value={fmt(r.crmUsed ?? r.CrmUsed, lang, 3)} color="warning" />
             </div>
+
+            <ExternalNextStep
+              title={t.nextTitle}
+              description={t.nextDesc}
+              href={insuranceExternalUrl(product)}
+              label={t.nextLabel}
+              note={t.nextNote}
+            />
 
             <div className="page-panel-card" style={{ padding: 14 }}>
               <div className="kpi-label">{t.mandatory}</div>
