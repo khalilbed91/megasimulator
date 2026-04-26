@@ -9,6 +9,7 @@ const PAGE_PATH = {
   retirement: PATH.retirement,
   loans: PATH.loans,
   savings: PATH.savings,
+  insurance: PATH.insurance,
   contact: PATH.contact,
   history: PATH.history,
   account: PATH.account,
@@ -17,7 +18,7 @@ const PAGE_PATH = {
 }
 
 /** Tabs that expose interactive financial simulators — JSON-LD WebApplication + FinanceApplication. */
-const SIMULATOR_PAGE_KEYS = new Set(['payroll', 'retirement', 'loans', 'savings'])
+const SIMULATOR_PAGE_KEYS = new Set(['payroll', 'retirement', 'loans', 'savings', 'insurance'])
 
 const META = {
   fr: {
@@ -67,6 +68,17 @@ const META = {
         'Versement mensuel pour atteindre un objectif d’épargne',
         'Hypothèses inflation et rendement type Livret A',
         'Écart par rapport à l’épargne actuelle et leviers budgétaires indicatifs',
+      ],
+    },
+    insurance: {
+      title: `Simulateur assurance habitation auto moto | ${BRAND}`,
+      description:
+        'Estimez une prime indicative d’assurance habitation, auto ou moto en France : obligations légales, responsabilité civile, garanties, franchise et bonus-malus.',
+      keywords: 'simulateur assurance, assurance habitation, assurance auto, assurance moto, bonus malus',
+      schemaFeatures: [
+        'Habitation : risques locatifs, responsabilité civile, MRH',
+        'Auto : tiers, tiers étendu, tous risques et bonus-malus',
+        'Moto : responsabilité civile, vol/incendie, équipement et contrôle technique',
       ],
     },
     contact: {
@@ -143,6 +155,17 @@ const META = {
         'Monthly savings needed to reach a goal',
         'Inflation and regulated-savings yield assumptions',
         'Gap vs current savings and indicative budget levers',
+      ],
+    },
+    insurance: {
+      title: `Home, car and motorcycle insurance simulator | ${BRAND}`,
+      description:
+        'Indicative insurance premium estimate for France: home, car and motorcycle obligations, liability cover, deductibles and no-claim coefficient.',
+      keywords: 'insurance simulator france, home insurance, car insurance, motorcycle insurance',
+      schemaFeatures: [
+        'Home insurance obligations and coverage levels',
+        'Car insurance third-party / extended / all-risk scenarios',
+        'Motorcycle insurance, theft/fire and rider equipment',
       ],
     },
     contact: {

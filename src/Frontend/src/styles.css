@@ -723,6 +723,7 @@ textarea.form-control {
 .history-badge--payroll    { background: rgba(99,102,241,0.14); color: var(--indigo); }
 .history-badge--loan       { background: rgba(59,130,246,0.12); color: #60a5fa; }
 .history-badge--savings    { background: rgba(16,185,129,0.14); color: #34d399; }
+.history-badge--insurance  { background: rgba(192,38,211,0.14); color: var(--accent); }
 .history-badge--other      { background: rgba(148,163,184,0.12); color: var(--muted); }
 
 /* Savings simulator — résultats lisibles (labels / valeurs séparés) */

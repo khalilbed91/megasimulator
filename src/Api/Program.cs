@@ -51,6 +51,9 @@ builder.Services.AddScoped<PayrollService>();
 builder.Services.AddScoped<MegaSimulator.Application.Interfaces.IRetirementService, MegaSimulator.Application.Services.RetirementService>();
 builder.Services.AddScoped<MegaSimulator.Application.Interfaces.ILoanService, MegaSimulator.Application.Services.LoanService>();
 builder.Services.AddScoped<MegaSimulator.Application.Interfaces.ISavingsService, MegaSimulator.Application.Services.SavingsService>();
+builder.Services.AddScoped<MegaSimulator.Application.Interfaces.IInsuranceService, MegaSimulator.Application.Services.InsuranceService>();
+builder.Services.AddScoped<MegaSimulator.Application.Interfaces.IPostalCodeService, MegaSimulator.Infrastructure.Services.PostalCodeService>();
+builder.Services.AddScoped<MegaSimulator.Infrastructure.Services.PostalCodeSeeder>();
 // Infrastructure repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRequestRepository>();
@@ -171,6 +174,12 @@ using (var scope = app.Services.CreateScope())
     {
         await migrator.MigrateAsync();
     }
+
+        var postalSeeder = scope.ServiceProvider.GetService<MegaSimulator.Infrastructure.Services.PostalCodeSeeder>();
+        if (postalSeeder != null)
+        {
+            await postalSeeder.SeedAsync();
+        }
 
         // Ensure admin user exists and password matches known dev default (BCrypt may differ by runtime version)
         try

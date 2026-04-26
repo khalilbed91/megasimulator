@@ -23,6 +23,12 @@ Fournir une version reformulée et structurée des règles de paie 2026 afin de 
 - Coût employeur :
 	- Coût_total_employeur = Brut + Cotisations_patronales
 
+- Retenue à la source (PAS) côté produit :
+	- L’écran paie ne demande plus de nombre de parts, situation familiale ou enfants.
+	- Le mode fiscal expose uniquement un taux de retenue direct en pourcentage.
+	- Le taux par défaut est suggéré à partir du brut annuel saisi (`brutAnnuel × 0,78` pour approximer le net annuel), puis l’utilisateur peut l’ajuster.
+	- Le frontend envoie `Parts = 0` pour empêcher le fallback quotient familial côté API et `RetenuePct` pour appliquer le taux choisi.
+
 ## 3. Salariés du privé — règles synthétiques
 
 - Estimations de base (approximatives pour l'UI/estimator) :
@@ -103,6 +109,12 @@ Notes :
 	Base_CSG = Brut * (csg_crds.assiette_pct / 100)
 	CSG_deductible = Base_CSG * (csg_crds.csg_deductible_pct / 100)
 	CSG_non_deductible = Base_CSG * (csg_crds.csg_non_deductible_pct / 100)
+
+- Retenue à la source directe :
+
+	Retenue = Net_avant_PAS * (RetenuePct / 100)
+
+	Net_apres_PAS = Net_avant_PAS - Retenue
 
 - Prime CDD :
 

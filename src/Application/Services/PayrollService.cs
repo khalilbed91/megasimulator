@@ -24,6 +24,9 @@ namespace MegaSimulator.Application.Services
         {
         }
 
+        private static decimal Money(decimal value) => decimal.Round(value, 2);
+        private static decimal Percent(decimal value) => decimal.Round(value, 2);
+
         // Simple brut->net using a percentage parameter or formula
         public virtual async Task<decimal> BrutToNet(decimal brut, string statut = "non-cadre")
         {
@@ -115,23 +118,23 @@ namespace MegaSimulator.Application.Services
 
             var response = new MegaSimulator.Application.DTOs.PayrollResponseDto
             {
-                Net = net,
-                NetMonthly = net,
-                NetImposable = netBeforeRetenue,
+                Net = Money(net),
+                NetMonthly = Money(net),
+                NetImposable = Money(netBeforeRetenue),
                 Parts = req.Parts,
-                EmployerCost = employerCost,
-                SocialContribution = socialContribution,
-                CsgBase = csgBase,
-                CsgDeductible = csgDed,
-                CsgNonDeductible = csgNonDed,
-                AgircArrco = agirc,
+                EmployerCost = Money(employerCost),
+                SocialContribution = Money(socialContribution),
+                CsgBase = Money(csgBase),
+                CsgDeductible = Money(csgDed),
+                CsgNonDeductible = Money(csgNonDed),
+                AgircArrco = Money(agirc),
                 IsJeiEligible = jei,
-                RetenuePct = retenuePct,
-                RetenueAmount = retenueAmount,
-                NetAfterRetenue = decimal.Round(net + partSalarialeTicket + mutuelle, 2)
+                RetenuePct = Percent(retenuePct),
+                RetenueAmount = Money(retenueAmount),
+                NetAfterRetenue = Money(net + partSalarialeTicket + mutuelle)
             };
 
-            if (_simulationRepository != null)
+            if (_simulationRepository != null && req.Persist)
             {
                 var sim = new Domain.Entities.Simulation
                 {

@@ -11,6 +11,8 @@ const INTRO = {
       'Calculez mensualités et coût d’un projet : prêt immobilier (frais de notaire, TVA neuf, PTZ, Action Logement), crédit auto ou prêt personnel — repères HCSF inclus à titre pédagogique.',
     savings:
       'Définissez un montant cible et un horizon : le simulateur estime l’effort mensuel (objectif indexé inflation, rendement type livret), l’écart avec votre épargne actuelle et des leviers budgétaires indicatifs.',
+    insurance:
+      'Estimez une prime indicative pour habitation, auto ou moto : obligations de responsabilité civile, garanties, franchise, bonus-malus et facteurs de risque — sans valeur de devis contractuel.',
     default: '',
   },
   en: {
@@ -22,6 +24,8 @@ const INTRO = {
       'Educational loan math for mortgages (fees, PTZ, Action Logement), auto and consumer loans.',
     savings:
       'Set a target amount and horizon: monthly effort (inflation-indexed goal, regulated-style yield), gap vs current savings, and indicative budget levers.',
+    insurance:
+      'Indicative home, car or motorcycle insurance premium: liability obligations, coverage level, deductible, no-claim coefficient and risk factors.',
     default: '',
   },
 }

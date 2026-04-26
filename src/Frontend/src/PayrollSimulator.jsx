@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Translations
@@ -32,11 +32,9 @@ const T = {
     errCA: 'Entrez un CA annuel valide (> 0)',
     errCAM: 'Entrez un CA mensuel valide (> 0)',
     fiscalMode: 'Mode fiscal',
-    partsLabel: 'Foyer fiscal (parts)',
     retenueLabel: 'Retenue à la source',
-    partsCount: 'Nombre de parts',
-    retenueSuggested: 'Taux suggéré selon le revenu',
-    retenueAdjust: 'Ajuster le taux',
+    retenueAdjust: 'Taux de retenue appliqué',
+    retenueHint: 'Taux ajusté automatiquement selon le brut annuel. Vous pouvez le modifier directement.',
     structureType: 'Structure juridique',
     portageCompany: 'Société de portage',
     portagePercent: 'Frais portage (%)',
@@ -47,9 +45,6 @@ const T = {
     freelanceSASU: 'SASU — IS + dividendes',
     freelanceEURL: 'EURL — IR ou IS',
     freelanceME: 'Micro-entreprise',
-    situationFam: 'Situation familiale',
-    celibataire: 'Célibataire', marie: 'Marié(e) / Pacsé(e)', divorce: 'Divorcé(e)', veuf: 'Veuf/Veuve',
-    enfants: 'Enfants à charge',
   },
   en: {
     inputsTitle: 'Parameters',
@@ -79,11 +74,9 @@ const T = {
     errCA: 'Enter a valid annual revenue (> 0)',
     errCAM: 'Enter a valid monthly revenue (> 0)',
     fiscalMode: 'Tax mode',
-    partsLabel: 'Household (tax parts)',
     retenueLabel: 'Withholding tax',
-    partsCount: 'Tax parts',
-    retenueSuggested: 'Suggested rate by income',
-    retenueAdjust: 'Adjust rate',
+    retenueAdjust: 'Applied withholding rate',
+    retenueHint: 'Rate automatically adjusted from annual gross. You can edit it directly.',
     structureType: 'Legal structure',
     portageCompany: 'Portage company',
     portagePercent: 'Portage fee (%)',
@@ -94,9 +87,6 @@ const T = {
     freelanceSASU: 'SASU — Corporate tax + dividends',
     freelanceEURL: 'EURL — Income tax or corporate',
     freelanceME: 'Micro-enterprise',
-    situationFam: 'Marital status',
-    celibataire: 'Single', marie: 'Married / Civil union', divorce: 'Divorced', veuf: 'Widowed',
-    enfants: 'Dependent children',
   }
 }
 
@@ -108,10 +98,36 @@ const fmt = (v, lang) =>
     ? v.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : '—'
 
+const fmtPct = (v, lang) =>
+  typeof v === 'number'
+    ? v.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US', { maximumFractionDigits: 2 })
+    : '—'
+
+const AUTO_RECALC_DELAY_MS = 450
+
 function parseTicketEmployeurPct(raw) {
   if (raw === '' || raw == null) return 50
   const n = +raw
   return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 50
+}
+
+function clampRetenuePct(raw) {
+  if (raw === '' || raw == null) return 0
+  const n = +raw
+  return Number.isFinite(n) ? Math.min(55, Math.max(0, n)) : 0
+}
+
+/** PAS 2026 suggestion from annual gross, without tax-parts inputs. */
+function suggestRetenueFromAnnualGross(brutAnnuel) {
+  if (!brutAnnuel || brutAnnuel <= 0) return 0
+  const approxNetAnnuel = brutAnnuel * 0.78
+  if (approxNetAnnuel <= 14_490) return 0
+  if (approxNetAnnuel <= 21_917) return 2
+  if (approxNetAnnuel <= 31_425) return 7.5
+  if (approxNetAnnuel <= 58_360) return 14
+  if (approxNetAnnuel <= 80_669) return 22
+  if (approxNetAnnuel <= 177_106) return 30
+  return 41
 }
 
 /** Aligné sur PayrollService.EmployerCost (fallback brut × (1 + ratio)) — masse salariale totale ≈ brut × ce facteur */
@@ -140,31 +156,6 @@ function EuroInput({ value, onChange, placeholder, error, unit }) {
       {error && <div className="field-error" style={{marginTop:4}}>{error}</div>}
     </div>
   )
-}
-
-/** PAS 2026 rate suggestion based on estimated annual net */
-function suggestRetenue(brutAnn) {
-  if (!brutAnn || brutAnn <= 0) return 0
-  const approxNet = brutAnn * 0.78
-  if (approxNet <= 14_490)  return 0
-  if (approxNet <= 21_917)  return 2
-  if (approxNet <= 31_425)  return 7.5
-  if (approxNet <= 58_360)  return 14
-  if (approxNet <= 80_669)  return 22
-  if (approxNet <= 177_106) return 30
-  return 41
-}
-
-/** Parts suggest based on situation familiale + enfants */
-function suggestParts(situation, enfants) {
-  const base   = situation === 'marie' ? 2 : 1
-  const extras = (en => {
-    if (en <= 0) return 0
-    if (en === 1) return 0.5
-    if (en === 2) return 1
-    return 1 + (en - 2) // +1 per extra child from 3rd
-  })(+enfants || 0)
-  return base + extras
 }
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -266,64 +257,47 @@ function StatusPicker({ value, onChange, lang }){
   )
 }
 
-/** Fiscal toggle: parts OR retenue — mutually exclusive */
-function FiscalToggle({ mode, onMode, parts, onParts, retenue, onRetenue, brutSuggested, lang, t }){
-  const suggested = suggestRetenue(brutSuggested)
+/** Fiscal mode: direct retenue à la source percentage. */
+function FiscalToggle({ retenue, onRetenue, t }){
   return (
     <div className="fiscal-toggle-wrap">
       <div className="field-label" style={{marginBottom:10}}>{t.fiscalMode}</div>
       <div className="fiscal-pill-row">
-        <button type="button" className={`fiscal-pill${mode==='parts'?' active':''}`} onClick={()=>onMode('parts')}>
-          <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-          {t.partsLabel}
-        </button>
-        <button type="button" className={`fiscal-pill${mode==='retenue'?' active':''}`} onClick={()=>onMode('retenue')}>
+        <button type="button" className="fiscal-pill active">
           <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
           {t.retenueLabel}
         </button>
       </div>
 
-      {mode === 'parts' && (
-        <div style={{marginTop:14}}>
-          <div className="field-label" style={{marginBottom:8}}>{t.partsCount}</div>
-          <div className="parts-selector">
-            {[1, 1.5, 2, 2.5, 3, 3.5, 4, 5].map(p => (
-              <button key={p} type="button"
-                className={`parts-chip${+parts === p ? ' active' : ''}`}
-                onClick={() => onParts(p)}>
-                {p}
-              </button>
-            ))}
-          </div>
-          <div className="field-hint" style={{marginTop:6}}>
-            {lang === 'fr' ? `Sélectionné : ${parts} part${parts > 1 ? 's' : ''}` : `Selected: ${parts} part${parts > 1 ? 's' : ''}`}
-          </div>
-        </div>
-      )}
-
-      {mode === 'retenue' && (
-        <div style={{marginTop:14}}>
-          {suggested > 0 && (
-            <div className="retenue-suggest" onClick={() => onRetenue(suggested)}>
-              <svg viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 4v4l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-              {t.retenueSuggested}: <strong>{suggested}%</strong> — cliquer pour appliquer
-            </div>
-          )}
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:10,marginBottom:4}}>
-            <div className="field-label">{t.retenueAdjust}</div>
-            <div style={{fontSize:22,fontWeight:900,color:'var(--accent)',minWidth:52,textAlign:'right'}}>{retenue}%</div>
-          </div>
-          <input
-            type="range" min={0} max={55} step={0.5}
-            value={retenue}
-            onChange={e => onRetenue(+e.target.value)}
-            className="retenue-slider"
-          />
-          <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'var(--muted)',marginTop:2}}>
-            <span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>41%</span><span>55%</span>
+      <div style={{marginTop:14}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,marginTop:10,marginBottom:4}}>
+          <div className="field-label">{t.retenueAdjust}</div>
+          <div style={{position:'relative',width:112}}>
+            <input
+              className="field-input"
+              type="number"
+              min={0}
+              max={55}
+              step={0.5}
+              inputMode="decimal"
+              value={retenue}
+              onChange={e => onRetenue(clampRetenuePct(e.target.value))}
+              style={{paddingRight:28,textAlign:'right',fontWeight:800,color:'var(--accent)'}}
+            />
+            <span style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',color:'var(--muted)',fontSize:13,fontWeight:700}}>%</span>
           </div>
         </div>
-      )}
+        <input
+          type="range" min={0} max={55} step={0.5}
+          value={retenue}
+          onChange={e => onRetenue(clampRetenuePct(e.target.value))}
+          className="retenue-slider"
+        />
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'var(--muted)',marginTop:2}}>
+          <span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>41%</span><span>55%</span>
+        </div>
+        <div className="field-hint" style={{marginTop:6}}>{t.retenueHint}</div>
+      </div>
     </div>
   )
 }
@@ -333,6 +307,7 @@ function FiscalToggle({ mode, onMode, parts, onParts, retenue, onRetenue, brutSu
 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export default function PayrollSimulator({ lang = 'fr' }){
   const t = useMemo(() => T[lang] || T['fr'], [lang])
+  const requestSeqRef = useRef(0)
 
   /* Common */
   const [brutAnnuel,     setBrutAnnuel]     = useState('')
@@ -350,14 +325,8 @@ export default function PayrollSimulator({ lang = 'fr' }){
   /* Status */
   const [statut, setStatut] = useState('non-cadre')
 
-  /* Fiscal toggle */
-  const [fiscalMode, setFiscalMode] = useState('parts')  // 'parts' | 'retenue'
-  const [parts,      setParts]      = useState(1)
+  /* Fiscal mode: direct percentage only */
   const [retenuePct, setRetenuePct] = useState(0)
-
-  /* Fiscal — situation familiale (drives parts suggestion) */
-  const [situationFam, setSituationFam] = useState('celibataire')
-  const [enfants,      setEnfants]      = useState(0)
 
   /* Freelance-specific */
   const [freelanceType, setFreelanceType] = useState('me')   // 'me' | 'eurl' | 'sasu'
@@ -368,21 +337,6 @@ export default function PayrollSimulator({ lang = 'fr' }){
   const [portagePercent,  setPortagePercent]  = useState(10)
   const [portageCompany,  setPortageCompany]  = useState('')
   const [fraisPro,        setFraisPro]        = useState('')
-
-  /* Auto-suggest parts when situation/enfants changes */
-  useEffect(() => {
-    if (fiscalMode === 'parts') {
-      setParts(suggestParts(situationFam, enfants))
-    }
-  }, [situationFam, enfants, fiscalMode])
-
-  /* Auto-suggest retenue when brut changes */
-  useEffect(() => {
-    if (fiscalMode === 'retenue') {
-      const s = suggestRetenue(+brutAnnuel || +caAnnuel || (+caMensuel * 12))
-      if (s > 0) setRetenuePct(s)
-    }
-  }, [brutAnnuel, caAnnuel, caMensuel, fiscalMode])
 
   /* â”€â”€ Validation â”€â”€ */
   const errors = {}
@@ -396,7 +350,7 @@ export default function PayrollSimulator({ lang = 'fr' }){
   const isValid = Object.keys(errors).length === 0
 
   /* â”€â”€ Compute effective brut for portage/freelance before API call â”€â”€ */
-  const computeEffectiveBrut = () => {
+  const computeEffectiveBrut = useCallback(() => {
     if (isSalaried) return +brutAnnuel
     if (isFreelance) {
       const ca = +caAnnuel
@@ -413,20 +367,24 @@ export default function PayrollSimulator({ lang = 'fr' }){
       return brutMonthly * 12
     }
     return 0
-  }
+  }, [brutAnnuel, caAnnuel, caMensuel, freelanceType, isFreelance, isPortage, isSalaried, portagePercent])
 
-  const simulate = async () => {
-    setSubmitAttempted(true)
+  const simulate = useCallback(async ({ persist = true, silent = false } = {}) => {
+    if (!silent) setSubmitAttempted(true)
     if (!isValid) return
-    setLoading(true)
-    setResult(null)
+    const requestId = requestSeqRef.current + 1
+    requestSeqRef.current = requestId
+    if (!silent) {
+      setLoading(true)
+      setResult(null)
+    }
     try {
       const brutAnn = computeEffectiveBrut()
       const payload = {
         Brut: brutAnn / 12,
         BrutAnnuel: brutAnn,
         Statut: isSalaried ? statut : 'non-cadre',
-        Parts: fiscalMode === 'parts' ? +parts : 1,
+        Parts: 0,
         RevenusAnnexes: isSalaried ? 0 : +(revenusAnnexes || 0),
         Primes: isSalaried ? 0 : +(primes || 0),
         TransportMensuel: isSalaried ? +(transportMensuel || 0) : 0,
@@ -434,12 +392,13 @@ export default function PayrollSimulator({ lang = 'fr' }){
         TicketRestoMensuel: isSalaried ? +(ticketRestoMensuel || 0) : 0,
         TicketRestoEmployeurPct: isSalaried ? parseTicketEmployeurPct(ticketEmployeurPct) : 0,
         MutuelleNetDeduction: isSalaried ? +(mutuelleNet || 0) : 0,
-        RetenuePct: fiscalMode === 'retenue' ? +retenuePct : 0,
+        RetenuePct: +retenuePct,
         /* Extra context for future backend enrichment */
         FreelanceType: isFreelance ? freelanceType : null,
         PortagePercent: isPortage ? portagePercent : null,
         CaAnnuel: isFreelance ? +caAnnuel : null,
         CaMensuel: isPortage  ? +caMensuel : null,
+        Persist: persist,
       }
       const tok  = localStorage.getItem('msim_token')
       const res  = await fetch('/api/payroll/simulate', {
@@ -452,6 +411,7 @@ export default function PayrollSimulator({ lang = 'fr' }){
         body: JSON.stringify(payload),
       })
       const json = await res.json()
+      if (requestId !== requestSeqRef.current) return
       if (!res.ok) {
         setResult({ error: json?.message || json?.title || `HTTP ${res.status}` })
         return
@@ -459,20 +419,63 @@ export default function PayrollSimulator({ lang = 'fr' }){
       setSubmitAttempted(false)
       setResult(json)
     } catch (e) {
-      setResult({ error: e.message })
+      if (requestId === requestSeqRef.current) setResult({ error: e.message })
     } finally {
-      setLoading(false)
+      if (requestId === requestSeqRef.current && !silent) setLoading(false)
     }
-  }
+  }, [
+    brutAnnuel,
+    caAnnuel,
+    caMensuel,
+    computeEffectiveBrut,
+    freelanceType,
+    isFreelance,
+    isPortage,
+    isSalaried,
+    isValid,
+    mutuelleNet,
+    portagePercent,
+    primes,
+    retenuePct,
+    revenusAnnexes,
+    statut,
+    teletravailMensuel,
+    ticketEmployeurPct,
+    ticketRestoMensuel,
+    transportMensuel,
+  ])
+
+  const hasValidSimulationInput = Boolean(
+    isValid && (
+      (isSalaried && brutAnnuel) ||
+      (isFreelance && caAnnuel) ||
+      (isPortage && caMensuel)
+    )
+  )
+
+  useEffect(() => {
+    if (!hasValidSimulationInput) {
+      setRetenuePct(0)
+      return
+    }
+    setRetenuePct(suggestRetenueFromAnnualGross(computeEffectiveBrut()))
+  }, [computeEffectiveBrut, hasValidSimulationInput])
+
+  useEffect(() => {
+    if (!hasValidSimulationInput) return undefined
+    const timer = window.setTimeout(() => {
+      simulate({ persist: false, silent: true })
+    }, AUTO_RECALC_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [hasValidSimulationInput, simulate])
 
   const reset = () => {
     setBrutAnnuel(''); setCaAnnuel(''); setCaMensuel('')
     setRevenusAnnexes(''); setPrimes('')
     setTransportMensuel(''); setTeletravailMensuel(''); setTicketRestoMensuel(''); setTicketEmployeurPct('50'); setMutuelleNet('')
-    setRetenuePct(0); setParts(1)
+    setRetenuePct(0)
     setPortagePercent(10); setPortageCompany(''); setFraisPro('')
-    setSituationFam('celibataire'); setEnfants(0)
-    setResult(null); setFiscalMode('parts'); setSubmitAttempted(false)
+    setResult(null); setSubmitAttempted(false)
   }
 
   const netMonthly   = result?.netMonthly   ?? result?.net ?? null
@@ -655,31 +658,10 @@ export default function PayrollSimulator({ lang = 'fr' }){
 
         <div className="sim-divider" />
 
-        {/* â”€â”€â”€ Situation familiale (for automatic parts suggestion) â”€â”€â”€ */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-          <div className="field-group">
-            <label className="field-label">{t.situationFam}</label>
-            <select className="field-select" value={situationFam} onChange={e => setSituationFam(e.target.value)}>
-              <option value="celibataire">{t.celibataire}</option>
-              <option value="marie">{t.marie}</option>
-              <option value="divorce">{t.divorce}</option>
-              <option value="veuf">{t.veuf}</option>
-            </select>
-          </div>
-          <div className="field-group">
-            <label className="field-label">{t.enfants}</label>
-            <input className="field-input" type="number" min={0} max={10} value={enfants}
-              onChange={e => setEnfants(+e.target.value)} />
-          </div>
-        </div>
-
-        {/* â”€â”€â”€ Fiscal toggle â”€â”€â”€ */}
+        {/* â”€â”€â”€ Fiscal mode â”€â”€â”€ */}
         <FiscalToggle
-          mode={fiscalMode}   onMode={setFiscalMode}
-          parts={parts}       onParts={setParts}
           retenue={retenuePct} onRetenue={setRetenuePct}
-          brutSuggested={+brutAnnuel || +caAnnuel || (+caMensuel * 12)}
-          lang={lang} t={t}
+          t={t}
         />
 
         <div className="sim-divider" style={{ margin: '18px 0 14px' }} />
@@ -687,7 +669,7 @@ export default function PayrollSimulator({ lang = 'fr' }){
         {/* â”€â”€â”€ CTA buttons â”€â”€â”€ */}
         <div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button type="button" className="btn-primary-custom" onClick={simulate} disabled={loading}>
+            <button type="button" className="btn-primary-custom" onClick={() => simulate()} disabled={loading}>
               {loading ? (
                 <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ animation: 'spin 0.8s linear infinite' }}>
                   <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" strokeDasharray="28 56" strokeLinecap="round" />
@@ -747,14 +729,14 @@ export default function PayrollSimulator({ lang = 'fr' }){
                 icon={<svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>} />
             </div>
 
-            {fiscalMode === 'retenue' && retenuePct > 0 && netMonthly != null && (
+            {retenuePct > 0 && netMonthly != null && (
               <div className="kpi-card danger" style={{ padding: '14px 18px', flexDirection: 'row', alignItems: 'center', gap: 14 }}>
                 <div>
                   <div className="kpi-label">{t.withholding}</div>
-                  <div className="kpi-value" style={{ fontSize: 20 }}>{fmt(netMonthly * retenuePct / 100, lang)} €</div>
+                  <div className="kpi-value" style={{ fontSize: 20 }}>{fmt(result.retenueAmount ?? 0, lang)} €</div>
                   <div className="kpi-unit">prélevé / mois</div>
                 </div>
-                <div style={{ marginLeft: 'auto', fontSize: 22, fontWeight: 900, color: 'var(--danger)' }}>−{retenuePct}%</div>
+                <div style={{ marginLeft: 'auto', fontSize: 22, fontWeight: 900, color: 'var(--danger)' }}>−{fmtPct(retenuePct, lang)}%</div>
               </div>
             )}
 

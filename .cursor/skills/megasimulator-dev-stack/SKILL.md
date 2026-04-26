@@ -1,7 +1,9 @@
 ---
 name: megasimulator-dev-stack
 description: >-
-  MegaSimulator: run API + Vite locally, launch profile, rate limits, payroll PAS/Parts,
+  MegaSimulator: run API + Vite locally, launch profile, rate limits, payroll PAS direct
+  (UI sends Parts=0; backend legacy PAS/Parts still exists), insurance home/auto/moto MVP,
+  full France postal-code referential (La Poste CSV, migration 011, DB import + IMemoryCache),
   simulation history cap (10), savings API, DB without salaires/simulation_results (migration 010),
   contact API (no mailto fallback), UI/UX brand (light-only purple–magenta, brand-mark.png, Logo sizing,
   Historique/Mon compte guest gate same as Account, JWT trim readStoredToken), production deploy
@@ -68,6 +70,8 @@ Sans tunnel, **127.0.0.1** = machine locale, pas le serveur.
 
 - **Historique** : **10** simulations max / utilisateur (`SimulationRepository.MaxSimulationsPerUser`). Stockage = table **`simulations`** (payload JSON). Les tables **`salaires`** et **`simulation_results`** ont été **supprimées** (migration **010**) — pas d’API salaires historiques ; résultats paie enrichis restent dans `payload`.
 - **Épargne** : `POST /api/savings/simulate` — params section `savings` dans `docs/knowledge-base/params/2026.json` et `PayrollParams.Savings`.
+- **Assurance** : `POST /api/insurance/simulate` — habitation / auto / moto, résultat indicatif non contractuel, persistance `type='insurance'`.
+- **Codes postaux France** : `GET /api/reference/postal-codes?q=` ; table `france_postal_codes` (migration **011**), seed complet `src/Infrastructure/SeedData/france_postal_codes_official.csv` (La Poste, ~39k lignes), import au démarrage via `PostalCodeSeeder`, cache 12h via `PostalCodeService`. Exemples vérifiés : `924` → `92400 - Courbevoie`, `95130` → `Le Plessis Bouchard`.
 - **Contact** : `POST /api/contact` uniquement — **pas** de `mailto` de secours ; pas de domaine **`m-simulator.com`** dans l’app.
 - **Admin seed** : e-mail **`admin@megasimulateur.org`** (migration **009** + `Program.cs`).
 
@@ -78,8 +82,10 @@ Sans tunnel, **127.0.0.1** = machine locale, pas le serveur.
 
 ## Piège paie / tests
 
-- `PayrollRequestDto.Parts` **défaut = 1**. Si `RetenuePct` = 0 et `Parts` > 0, le **PAS** s’applique sur le net.
-- Pour un net sans PAS : **`Parts = 0`** ou retenue explicite.
+- Produit front actuel : **PAS direct uniquement**. Plus de situation familiale, enfants ou nombre de parts dans `PayrollSimulator.jsx`.
+- Le taux de retenue par défaut est responsive au brut annuel saisi, puis ajustable manuellement en `%`.
+- Le frontend envoie **`Parts = 0`** et **`RetenuePct`**. Le backend garde `PayrollRequestDto.Parts` (défaut = 1) pour compat API : si `RetenuePct = 0` et `Parts > 0`, le PAS quotient familial s’applique encore.
+- Pour un net sans PAS via API : **`Parts = 0`** et **`RetenuePct = 0`**.
 
 ## UI / marque (frontend)
 

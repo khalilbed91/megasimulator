@@ -19,5 +19,7 @@ namespace MegaSimulator.Application.DTOs
         /// <summary>Cotisation mutuelle (part salariale) à déduire du net après impôt (€/mois).</summary>
         public decimal MutuelleNetDeduction { get; set; }
         public decimal RetenuePct { get; set; }
+        /// <summary>Persist the simulation in history. Auto-refresh calls can disable this.</summary>
+        public bool Persist { get; set; } = true;
     }
 }

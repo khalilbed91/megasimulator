@@ -7,6 +7,7 @@ import SimulationHistory from './SimulationHistory'
 import RetirementSimulator from './RetirementSimulator'
 import SavingsSimulator from './SavingsSimulator'
 import LoanSimulator from './LoanSimulator'
+import InsuranceSimulator from './InsuranceSimulator'
 import { PATH, pathToTab, pathForTab, pathToLegalPage } from './seo/paths'
 import { pathToGuideId, PATH_GUIDES } from './seo/guidePaths'
 import SeoHead from './seo/SeoHead'
@@ -22,14 +23,14 @@ import Logo from './components/Logo'
 const T = {
   fr: {
     appName: 'Mega simulateur', subtitle: 'Paie & Finance',
-    navPayroll: 'Simulateur paie', navRetirement: 'Retraite', navLoans: 'Prêts', navSavings: 'Épargne',
+    navPayroll: 'Simulateur paie', navRetirement: 'Retraite', navLoans: 'Prêts', navSavings: 'Épargne', navInsurance: 'Assurance',
     navAccount: 'Mon compte', navContact: 'Contact', navSignIn: 'Se connecter', navSignOut: 'Se déconnecter',
     navHistory: 'Historique',
     sectionSim: 'Simulations', sectionUser: 'Espace personnel',
     comingSoon: 'Prochainement', comingSoonDesc: 'Ce module est en cours de développement.',
-    tabPayroll: 'Paie', tabRetirement: 'Retraite', tabLoans: 'Prêts', tabSavings: 'Épargne',
+    tabPayroll: 'Paie', tabRetirement: 'Retraite', tabLoans: 'Prêts', tabSavings: 'Épargne', tabInsurance: 'Assurance',
     guest: 'Invité', topbarPayroll: 'Simulateur de paie', topbarRetirement: 'Simulation retraite',
-    topbarLoans: 'Simulation prêts', topbarSavings: 'Simulation épargne', topbarAccount: 'Mon compte', topbarContact: 'Contact',
+    topbarLoans: 'Simulation prêts', topbarSavings: 'Simulation épargne', topbarInsurance: 'Simulation assurance', topbarAccount: 'Mon compte', topbarContact: 'Contact',
     topbarHistory: 'Historique des simulations',
     topMentions: 'Mentions légales',
     topPrivacy: 'Politique de confidentialité',
@@ -41,14 +42,14 @@ const T = {
   },
   en: {
     appName: 'Mega simulateur', subtitle: 'Payroll & Finance',
-    navPayroll: 'Payroll sim', navRetirement: 'Retirement', navLoans: 'Loans', navSavings: 'Savings',
+    navPayroll: 'Payroll sim', navRetirement: 'Retirement', navLoans: 'Loans', navSavings: 'Savings', navInsurance: 'Insurance',
     navAccount: 'My account', navContact: 'Contact', navSignIn: 'Sign in', navSignOut: 'Sign out',
     navHistory: 'History',
     sectionSim: 'Simulators', sectionUser: 'Account',
     comingSoon: 'Coming soon', comingSoonDesc: 'This module is under development.',
-    tabPayroll: 'Payroll', tabRetirement: 'Retirement', tabLoans: 'Loans', tabSavings: 'Savings',
+    tabPayroll: 'Payroll', tabRetirement: 'Retirement', tabLoans: 'Loans', tabSavings: 'Savings', tabInsurance: 'Insurance',
     guest: 'Guest', topbarPayroll: 'Payroll simulator', topbarRetirement: 'Retirement planner',
-    topbarLoans: 'Loan simulator', topbarSavings: 'Savings simulator', topbarAccount: 'My account', topbarContact: 'Contact',
+    topbarLoans: 'Loan simulator', topbarSavings: 'Savings simulator', topbarInsurance: 'Insurance simulator', topbarAccount: 'My account', topbarContact: 'Contact',
     topbarHistory: 'Simulation history',
     topMentions: 'Legal notices',
     topPrivacy: 'Privacy policy',
@@ -62,7 +63,7 @@ const T = {
 
 const topbarTitles = (t, tab) => ({
   payroll: t.topbarPayroll, retirement: t.topbarRetirement,
-  loans: t.topbarLoans, savings: t.topbarSavings, account: t.topbarAccount, contact: t.topbarContact,
+  loans: t.topbarLoans, savings: t.topbarSavings, insurance: t.topbarInsurance, account: t.topbarAccount, contact: t.topbarContact,
   history: t.topbarHistory
 })[tab] || t.topbarPayroll
 
@@ -153,6 +154,9 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
         {navItem('savings', tr.navSavings,
           <svg viewBox="0 0 24 24" fill="none"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         )}
+        {navItem('insurance', tr.navInsurance,
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 12l2 2 4-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        )}
 
         <div className="nav-divider" />
         <div className="nav-section-label">{tr.navGuides}</div>
@@ -225,7 +229,7 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
         <main className="page-body" id="main-content">
           {legalPage && <LegalPageView page={legalPage} lang={lang} />}
 
-          {!legalPage && tab && ['payroll', 'retirement', 'loans', 'savings'].includes(tab) && (
+          {!legalPage && tab && ['payroll', 'retirement', 'loans', 'savings', 'insurance'].includes(tab) && (
             <div className="tab-bar" role="tablist">
               <button role="tab" aria-selected={tab==='payroll'} className={`tab-btn${tab==='payroll'?' active':''}`} onClick={()=>goTab('payroll')}>
                 <svg viewBox="0 0 24 24" fill="none"><path d="M9 7h6M9 11h6M9 15h4M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -243,6 +247,10 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
                 <svg viewBox="0 0 24 24" fill="none"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 {tr.tabSavings}
               </button>
+              <button role="tab" aria-selected={tab==='insurance'} className={`tab-btn${tab==='insurance'?' active':''}`} onClick={()=>goTab('insurance')}>
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                {tr.tabInsurance}
+              </button>
             </div>
           )}
 
@@ -258,6 +266,8 @@ export default function Home({ token, onSignOut, onRequestLogin, onRequestSignup
           {!legalPage && tab === 'loans' && <LoanSimulator lang={lang} />}
 
           {!legalPage && tab === 'savings' && <SavingsSimulator lang={lang} />}
+
+          {!legalPage && tab === 'insurance' && <InsuranceSimulator lang={lang} />}
 
           {!legalPage && tab === 'history' && (
             <SimulationHistory token={token} lang={lang} onRequestLogin={openLogin} onRequestSignup={openSignup} />

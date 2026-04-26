@@ -172,11 +172,13 @@ brutAnn = brutMensuel * 12
 
 ### 6.4 Mode fiscal (FiscalToggle)
 
-Toggle exclusif **Foyer fiscal** ↔ **Retenue à la source** :
-- **Foyer fiscal** : sélecteur de parts (chips 1/1.5/2/2.5/3/3.5/4/5) + auto-suggestion basée sur situation familiale + enfants
-- **Retenue à la source** : slider 0–55% + badge de suggestion auto (barème PAS 2026) cliquable
+Mode fiscal simplifié :
+- **Retenue à la source directe uniquement** : champ numérique `%` + slider 0–55%.
+- Le taux par défaut est recalculé automatiquement à partir du `brutAnnuel` effectif.
+- Ne plus afficher de foyer fiscal, parts, situation familiale ou enfants dans le produit front.
+- Le payload doit envoyer `Parts: 0` pour annuler le fallback PAS par quotient familial côté API.
 
-**Barème PAS 2026 (suggestion auto) :**
+**Barème PAS 2026 (suggestion auto depuis net annuel estimé = brut annuel × 0,78) :**
 
 | Net annuel estimé | Taux suggéré |
 |---|---|
@@ -196,7 +198,7 @@ POST /api/payroll/simulate
   "Brut": <brutAnn/12>,
   "BrutAnnuel": <brutAnn>,
   "Statut": "non-cadre|cadre",
-  "Parts": <number>,
+  "Parts": 0,
   "RevenusAnnexes": <number>,
   "Primes": <number>,
   "TransportMensuel": <number>,

@@ -1,7 +1,7 @@
 # MegaSimulator — General Guidelines & Project Status
 
 _Document interne — usage agent/équipe uniquement_  
-_Dernière mise à jour : 2026-04-03 (retraite : point Agirc-Arrco 1,4386 €, trimestres LFSS ; prêts : usure Banque de France avr. 2026)_
+_Dernière mise à jour : 2026-04-26 (assurance MVP, référentiel codes postaux La Poste, paie PAS direct)_
 
 ---
 
@@ -26,7 +26,7 @@ _Dernière mise à jour : 2026-04-03 (retraite : point Agirc-Arrco 1,4386 €, t
 |---|---|
 | ✅ Solution .NET multi-projets | Api / Application / Domain / Infrastructure — architecture clean |
 | ✅ PostgreSQL via Docker Compose | DB `simulator`, user `simu`, migrations versionnées dans `src/Infrastructure/Migrations/` |
-| ✅ Migrations 001–010 | Schéma : `users`, `simulations`, `formulas`, `system_info`, … ; **007** hash BCrypt admin ; **008** `contact_requests` ; **009** e-mail admin `@megasimulateur.org` ; **010** suppression tables legacy **`salaires`** et **`simulation_results`** (inutilisées par le produit — résultats paie dans `simulations.payload`) |
+| ✅ Migrations 001–011 | Schéma : `users`, `simulations`, `formulas`, `system_info`, … ; **007** hash BCrypt admin ; **008** `contact_requests` ; **009** e-mail admin `@megasimulateur.org` ; **010** suppression tables legacy **`salaires`** et **`simulation_results`** ; **011** table `france_postal_codes` pour le référentiel codes postaux |
 | ✅ Tool `ApplyMigrations` | `tools/ApplyMigrations/Program.cs` — applique les migrations SQL au démarrage |
 | ✅ Authentification JWT | `AuthController`, `AuthService`, `UserRepository` — login, register, change password |
 | ✅ Google OAuth (GSI) | `POST /api/auth/google/token` — ID token vérifié via `tokeninfo` (**pas de secret** pour ce flux). **Secret client** (`GOOGLE:ClientSecret` / `GOOGLE__CLIENTSECRET`) uniquement pour le flux code → `/api/auth/google/callback` |
@@ -36,6 +36,9 @@ _Dernière mise à jour : 2026-04-03 (retraite : point Agirc-Arrco 1,4386 €, t
 | ✅ FormulaService + Repository | Gestion des formules de calcul en base, CRUD |
 | ✅ SimulationService | Simulations en `simulations` (payload JSON) ; paie : fusion `results` dans le payload ; **plafond 10 / utilisateur** (purge FIFO dans `SimulationRepository`) — plus de table `simulation_results` |
 | ✅ **SavingsService** + **SavingsController** | `POST /api/savings/simulate` ; params `savings` dans `2026.json` / `PayrollParams` ; persistance `type='savings'` si utilisateur connecté |
+| ✅ **InsuranceService** + **InsuranceController** | `POST /api/insurance/simulate` ; habitation / auto / moto ; prime indicative, breakdown, warnings réglementaires, persistance `type='insurance'` |
+| ✅ **ReferenceController** | `GET /api/reference/postal-codes?q=` ; autocomplete code postal / ville depuis la table `france_postal_codes` chargée en cache |
+| ✅ **PostalCodeSeeder** | Importe la base officielle La Poste CSV (`src/Infrastructure/SeedData/france_postal_codes_official.csv`, ~39k lignes) au démarrage si la table est incomplète |
 | ✅ **RetirementService** | `src/Application/Services/RetirementService.cs` — calcul CNAV + Agirc-Arrco + décote/surcote + retenue sociale 9.1% ; persiste en `simulations` table avec `type='retirement'` |
 | ✅ **IRetirementService** | `src/Application/Interfaces/IRetirementService.cs` — interface avec 5 méthodes |
 | ✅ **RetirementController** | `POST /api/retirement/simulate` — extraction userId depuis JWT, même pattern que PayrollController |
@@ -44,6 +47,7 @@ _Dernière mise à jour : 2026-04-03 (retraite : point Agirc-Arrco 1,4386 €, t
 | ✅ **Rate limiting** | `Program.cs` : politiques `contact` (5/min), `auth` (10/min), `simulate` (15/min) — attributs sur auth, contact, simulateurs |
 | ✅ Seed admin | Migration 007 : hash BCrypt correct pour `admin/111aaa**` |
 | ✅ Tests unitaires | `PayrollServiceTests`, `SimulationServiceTests`, `FormulaServiceTests`, `AuthServiceTests`, `RetirementServiceTests`, `LoanServiceTests` |
+| ✅ Tests assurance | `InsuranceServiceTests` couvre habitation, auto, moto et CRM |
 | ✅ Tests d'intégration | Dossier `tests/MegaSimulator.Tests/Integration/` — base posée |
 | ✅ **Déploiement VPS** | `docker-compose.deploy.yml` + `deploy/DEPLOY.md` (Nginx, Cloudflare, tunnel SSH Postgres, `git reset --hard` sur le serveur si besoin) |
 
@@ -80,16 +84,15 @@ _Dernière mise à jour : 2026-04-03 (retraite : point Agirc-Arrco 1,4386 €, t
 | ✅ StatusPicker 4 statuts | Non-cadre / Cadre / Freelance / Portage salarial — cartes visuelles 2×2 |
 | ✅ Sous-formulaire Freelance | Type structure ME/EURL/SASU, CA annuel HT, estimation brut équivalent |
 | ✅ Sous-formulaire Portage | CA mensuel HT, slider frais portage (3–20%), société de portage, frais pro |
-| ✅ Toggle fiscal exclusif | Foyer fiscal (parts) ↔ Retenue à la source — ne peuvent pas coexister |
-| ✅ Sélecteur de parts | Chips 1/1.5/2/2.5/3/3.5/4/5, auto-suggestion basée sur situation familiale + enfants |
-| ✅ Slider retenue PAS | Range 0–55%, badge suggestion auto (barème PAS 2026), cliquable |
-| ✅ Situation familiale | Célibataire/Marié/Divorcé/Veuf + nombre d'enfants → parts suggérées |
+| ✅ Mode fiscal simplifié | Retenue à la source directe uniquement ; plus de parts, situation familiale ou enfants dans l’UI |
+| ✅ PAS responsive au brut | Le taux par défaut se met à jour automatiquement selon le brut annuel saisi, puis reste ajustable directement en `%` |
+| ✅ Slider + input retenue PAS | Range 0–55% et champ numérique `%`; le frontend envoie `Parts: 0` pour annuler le fallback quotient familial |
 | ✅ Avantages en nature | Presets chips : ticket resto, télétravail, téléphone, transports, prime |
-| ✅ Résultats KPI | Net mensuel/annuel, cotisations, coût employeur, retenue, frais portage |
+| ✅ Résultats KPI | Net mensuel/annuel, cotisations, coût employeur, retenue, frais portage ; montants arrondis à 2 décimales |
 | ✅ Breakdown bar | 3 segments animés : Net / Cotisations / Charges patronales |
 | ✅ Pas de bloc JSON « technique » admin | Ancienne vue debug retirée du simulateur paie |
-| ✅ Parts fiscales (int→decimal) | Bug crash corrigé : `Parts` était `int`, valeurs 1.5/2.5 causaient 400 |
-| ✅ PAS quotient familial | `ComputePasTaux()` barème 2026 basé sur `netAnnuel / parts` |
+| ✅ Compat backend parts | `PayrollRequestDto.Parts` reste `decimal` pour compatibilité API, mais l’UI paie utilise désormais `Parts: 0` |
+| ✅ PAS quotient familial backend | `ComputePasTaux()` existe encore pour clients API historiques ; le produit front privilégie la retenue directe |
 | ✅ Revenus annexes calcul | `brut = req.Brut + req.RevenusAnnexes + req.Primes` dans `PayrollService` |
 | ✅ Focus input corrigé | `EuroInput` déplacé au niveau module (non plus dans le composant) — évite les remounts |
 
@@ -100,7 +103,7 @@ _Dernière mise à jour : 2026-04-03 (retraite : point Agirc-Arrco 1,4386 €, t
 | ✅ `SimulationHistory.jsx` | Page Historique dans la sidebar, appelle `GET /api/simulation/mine` |
 | ✅ `GET /api/simulation/mine` | Endpoint sécurisé `[Authorize]`, userId depuis JWT (pas URL) — empêche IDOR |
 | ✅ Suppression simulation | `DELETE /api/simulation/{id}` avec vérification owner avant suppression |
-| ✅ Cartes historique | **Paie** : brut→net, retenue, parts ; **Retraite** : année naissance, SAM, pension nette mensuelle, etc. ; **Épargne** : objectif, effort mensuel ; autres `type` → ligne générique |
+| ✅ Cartes historique | **Paie** : brut→net, retenue ; **Retraite** : année naissance, SAM, pension nette mensuelle ; **Prêts** ; **Épargne** ; **Assurance** : produit, formule, prime mensuelle/annuelle |
 | ✅ Header Authorization | `PayrollSimulator.jsx` envoie désormais le token à chaque simulation |
 | ✅ `UseAuthentication()` ajouté | **Bug critique corrigé** : le middleware JWT n'était pas dans le pipeline → userId toujours null |
 | ✅ Simulations liées à l'user | Toutes nouvelles simulations sauvegardées avec `userid` (plus de NULL) |
@@ -131,7 +134,7 @@ _Dernière mise à jour : 2026-04-03 (retraite : point Agirc-Arrco 1,4386 €, t
 | ✅ Breakdown panel | Base CNAV + complémentaire + brute totale ; panel trimestres (décote/surcote/manquants en couleur) |
 | ✅ Warning V1 | Message d'avertissement régimes spéciaux non couverts |
 | ✅ Home.jsx wired | Tab `retirement` renderise `<RetirementSimulator>` — plus de "coming soon" |
-| ✅ xUnit `RetirementServiceTests` | `GetTrimestresRequis` (générations dont 1964→171, 1965+→172, aligné `retirement.md`), âge légal, décote/surcote, simulate, objectif — tous verts |
+| ✅ xUnit `RetirementServiceTests` | `GetTrimestresRequis` (générations dont 1964→170, 1965→171, 1966+→172, aligné `retirement.md` et au fallback backend), âge légal, décote/surcote, simulate, objectif — tous verts |
 | ✅ Anti-race Calculer | `RetirementSimulator` : compteur de requête + `normalizeRetirementResponse` (camelCase / PascalCase) pour éviter qu’une réponse lente écrase la dernière saisie |
 
 ### 2.8 SavingsSimulator — MVP ✅
@@ -142,6 +145,18 @@ _Dernière mise à jour : 2026-04-03 (retraite : point Agirc-Arrco 1,4386 €, t
 | ✅ Leviers indicatifs | Montants affichés depuis presets front (`DEFAULT_SWITCH_PRESETS`) pour cohérence avec la copie produit (ex. Navigo→vélo **~60 €/mois**) même si l’API a des params en retard |
 | ✅ Résultats | Sections lisibles : objectif indexé, effort mensuel, écart vs épargne actuelle, écart après leviers |
 | ✅ `SavingsService` | Formules objectif indexé, versement requis, écart ; labels leviers côté API + fichier params |
+
+### 2.9 InsuranceSimulator — MVP ✅
+
+| Fait | Description |
+|---|---|
+| ✅ Tab **Assurance** | `Home.jsx` + routes SEO ; page dédiée au simulateur habitation / auto / moto |
+| ✅ API assurance | `InsuranceController` + `InsuranceService` + DTOs dédiés ; sauvegarde en `simulations` avec `type='insurance'` |
+| ✅ Habitation simplifiée | Saisie orientée utilisateur : code postal, surface, formule, franchise ; capital mobilier / objets de valeur sont des hypothèses internes, pas des champs obligatoires |
+| ✅ Auto / moto | Formules tiers / étendu / tous risques, franchise, valeur véhicule, usage, stationnement, conducteur, CRM, sinistres |
+| ✅ Référentiel codes postaux | Table `france_postal_codes` + seed CSV officiel La Poste + cache mémoire ; exemples validés : `924` → Courbevoie, `95130` → Franconville / Le Plessis-Bouchard |
+| ✅ Historique | `SimulationHistory.jsx` affiche les simulations assurance avec produit, couverture et prime |
+| ✅ Tests | `InsuranceServiceTests` couvre CRM et simulations habitation / auto / moto |
 
 ---
 
@@ -175,7 +190,7 @@ _Dernière mise à jour : 2026-04-03 (retraite : point Agirc-Arrco 1,4386 €, t
 | # | Tâche | Contexte |
 |---|---|---|
 | L1 | **Simulateur épargne** | ✅ MVP livré (`SavingsSimulator.jsx`, API) — règles / paramètres : `docs/knowledge-base/savings.md` + `params/2026.json` → affinages UX ou formules si besoin |
-| L2 | **Simulateur assurance** | Règles dans `docs/knowledge-base/insurance.md` |
+| L2 | **Simulateur assurance** | ✅ MVP livré. Suite : enrichir taxes/frais, options garanties, exports et éventuelle tarification par données statistiques réelles |
 | L3 | **Dashboard analytics admin** | Vue admin : simulations, utilisateurs, distributions |
 | L4 | **Google Cloud — origines JS** | `http://localhost:5173` et si besoin `http://127.0.0.1:5173` ; client type **Application Web** ; voir README section dépannage `401 invalid_client` |
 
@@ -209,7 +224,7 @@ _Dernière mise à jour : 2026-04-03 (retraite : point Agirc-Arrco 1,4386 €, t
 
 ### 4.4 Agent / IA — conduite sur ce dépôt
 
-- **Lire les skills Cursor pertinentes** avant ops / déploiement / DB : `.cursor/skills/megasimulator-dev-stack/SKILL.md` (ports 5000/5173, proxy, deploy, tunnel Postgres, quotas, PAS/Parts).
+- **Lire les skills Cursor pertinentes** avant ops / déploiement / DB : `.cursor/skills/megasimulator-dev-stack/SKILL.md` (ports 5000/5173, proxy, deploy, tunnel Postgres, quotas, paie PAS direct, référentiel postal).
 - **Recherche web / fetch URL** : l’agent **peut** les utiliser pour infos à jour (réglementation, paquets, etc.) mais **doit demander l’accord explicite** à l’utilisateur **avant** (voir `.cursor/skills/web-search-ask-first/SKILL.md`).
 - Si l’utilisateur refuse ou ne répond pas : s’en tenir au dépôt, à `docs/general-guidelines.md`, `deploy/DEPLOY.md` et au code.
 - **Périmètre des changements** : modifier uniquement ce qui est demandé ; pas de refactor « bonus » ni fichiers markdown non sollicités.
@@ -268,6 +283,7 @@ Prérequis : PostgreSQL accessible avec la chaîne de connexion du profil `Local
 | 2026-03-30 | Contact + rate limit + UserController | Formulaire contact persisté (`008_add_contact_requests`), quotas API, endpoints utilisateur réservés au propriétaire ou admin. |
 | 2026-04-01 | DB legacy + épargne UI | Migration **010** : drop `salaires`, `simulation_results` ; retrait API Salaire* et persistance redondante ; simulateur épargne (leviers ~60 € Navigo→vélo, mise en page résultats) ; retraite : garde anti-course requêtes + normalisation JSON. |
 | 2026-04-02 | Marque & UX | Monogramme PNG transparent ; palette violet→magenta ; thème clair unique ; formulaires (focus, 44px) ; Historique invité = gate identique à Mon compte ; docs `brand-guidelines` / `frontend-guidelines` mises à jour. |
+| 2026-04-26 | Assurance + postal + paie PAS | Simulateur assurance habitation/auto/moto livré ; référentiel codes postaux La Poste importé en DB/cache ; paie simplifiée vers retenue à la source directe responsive au brut annuel. |
 
 ---
 

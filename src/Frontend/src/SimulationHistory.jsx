@@ -4,7 +4,7 @@ const T = {
   fr: {
     title: 'Historique des simulations',
     empty: 'Aucune simulation trouvée.',
-    emptyHint: 'Lancez une simulation de paie, retraite, prêt ou épargne pour la retrouver ici.',
+    emptyHint: 'Lancez une simulation de paie, retraite, prêt, épargne ou assurance pour la retrouver ici.',
     loading: 'Chargement…',
     error: 'Impossible de charger l\'historique.',
     colDate: 'Date',
@@ -26,10 +26,15 @@ const T = {
     colSavingsTarget: 'Objectif',
     colSavingsMonthly: 'Épargne / mois requise',
     colHorizonMonths: 'Mois',
+    colInsuranceProduct: 'Produit',
+    colInsuranceMonthly: 'Prime / mois',
+    colInsuranceAnnual: 'Prime / an',
+    colInsuranceCoverage: 'Formule',
     typePayroll: 'Paie',
     typeRetirement: 'Retraite',
     typeLoan: 'Prêt',
     typeSavings: 'Épargne',
+    typeInsurance: 'Assurance',
     typeOther: 'Simulation',
     deleteBtn: 'Supprimer',
     deleteConfirm: 'Supprimer cette simulation ?',
@@ -42,7 +47,7 @@ const T = {
   en: {
     title: 'Simulation history',
     empty: 'No simulations found.',
-    emptyHint: 'Run a payroll, retirement, loan, or savings simulation to see it here.',
+    emptyHint: 'Run a payroll, retirement, loan, savings, or insurance simulation to see it here.',
     loading: 'Loading…',
     error: 'Could not load history.',
     colDate: 'Date',
@@ -64,10 +69,15 @@ const T = {
     colSavingsTarget: 'Target',
     colSavingsMonthly: 'Required monthly',
     colHorizonMonths: 'Months',
+    colInsuranceProduct: 'Product',
+    colInsuranceMonthly: 'Premium / mo.',
+    colInsuranceAnnual: 'Premium / yr',
+    colInsuranceCoverage: 'Coverage',
     typePayroll: 'Payroll',
     typeRetirement: 'Retirement',
     typeLoan: 'Loan',
     typeSavings: 'Savings',
+    typeInsurance: 'Insurance',
     typeOther: 'Simulation',
     deleteBtn: 'Delete',
     deleteConfirm: 'Delete this simulation?',
@@ -119,6 +129,7 @@ function simTypeOf(sim) {
   if (t === 'payroll') return 'payroll'
   if (t === 'loan' || t === 'loans') return 'loan'
   if (t === 'savings') return 'savings'
+  if (t === 'insurance') return 'insurance'
   return t || 'other'
 }
 
@@ -469,6 +480,65 @@ export default function SimulationHistory({ token, lang, onRequestLogin, onReque
                       </div>
                     </>
                   )}
+                </div>
+                <div className="history-card-actions">
+                  <button
+                    type="button"
+                    className="history-delete-btn"
+                    onClick={() => handleDelete(sim.id)}
+                    disabled={deletingId === sim.id}
+                    aria-label={tr.deleteBtn}
+                    title={tr.deleteBtn}
+                  >
+                    {deletingId === sim.id
+                      ? <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeDasharray="30 10"/></svg>
+                      : <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    }
+                  </button>
+                </div>
+              </div>
+            )
+          }
+
+          if (kind === 'insurance') {
+            const product = res.Product ?? res.product ?? req.Product ?? req.product ?? ''
+            const coverage = res.CoverageLevel ?? res.coverageLevel ?? req.CoverageLevel ?? req.coverageLevel ?? ''
+            const monthly = res.MonthlyPremium ?? res.monthlyPremium ?? null
+            const annual = res.AnnualPremium ?? res.annualPremium ?? null
+            const productLabel = product === 'home'
+              ? (lang === 'en' ? 'Home' : 'Habitation')
+              : product === 'moto'
+                ? (lang === 'en' ? 'Motorcycle' : 'Moto')
+                : product === 'auto'
+                  ? (lang === 'en' ? 'Car' : 'Auto')
+                  : product || '—'
+
+            return (
+              <div key={sim.id} className="history-card">
+                <div className="history-card-left">
+                  <div className="history-date">{fmtDate(sim.createdAt)}</div>
+                  <span className="history-badge history-badge--insurance">{tr.typeInsurance}</span>
+                </div>
+                <div className="history-card-figures">
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colInsuranceProduct}</div>
+                    <div className="history-figure-value">{productLabel}</div>
+                  </div>
+                  <div className="history-figure-sep">·</div>
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colInsuranceCoverage}</div>
+                    <div className="history-figure-value">{coverage || '—'}</div>
+                  </div>
+                  <div className="history-figure-sep">→</div>
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colInsuranceMonthly}</div>
+                    <div className="history-figure-value history-figure-value--accent">{fmt(monthly)}</div>
+                  </div>
+                  <div className="history-figure-sep">·</div>
+                  <div className="history-figure">
+                    <div className="history-figure-label">{tr.colInsuranceAnnual}</div>
+                    <div className="history-figure-value">{fmt(annual)}</div>
+                  </div>
                 </div>
                 <div className="history-card-actions">
                   <button

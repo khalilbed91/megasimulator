@@ -15,4 +15,7 @@
     <PackageReference Include="StackExchange.Redis" Version="2.6.90" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="SeedData\france_postal_codes_official.csv" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
